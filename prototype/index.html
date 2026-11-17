@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FixSaathi Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Layout: intro column · phone (the product) · "under the hood" column mapping each moment to Google AI */
+  --bg:#eef1f5; --panel:#ffffff; --ink:#1d2330; --muted:#5d6676; --line:#dfe3ea;
+  --accent:#1a73e8; --safe:#188038; --warn:#e37400; --alert:#d93025;
+  --cam:#2b313b; --display:"Poppins",system-ui,sans-serif; --body:"Figtree",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161d; --panel:#1b212b; --ink:#e8ecf2; --muted:#9aa4b4; --line:#2c3441; --accent:#8ab4f8; --safe:#81c995; --warn:#fdd663; --alert:#f28b82; --cam:#0d1117; color-scheme:dark;}}
+:root[data-theme="dark"]{--bg:#12161d; --panel:#1b212b; --ink:#e8ecf2; --muted:#9aa4b4; --line:#2c3441; --accent:#8ab4f8; --safe:#81c995; --warn:#fdd663; --alert:#f28b82; --cam:#0d1117; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;font-weight:600}
+button{font:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.banner{background:var(--ink);color:var(--bg);text-align:center;padding:8px 16px;font-size:13px}
+.wrap{display:grid;grid-template-columns:minmax(220px,300px) 380px minmax(240px,320px);gap:32px;justify-content:center;padding:28px 16px 40px;align-items:start}
+.intro h1{font-size:30px;line-height:1.15}
+.intro h1 span{color:var(--accent)}
+.intro p{color:var(--muted);margin:10px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:13px;color:var(--ink)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--panel));font-weight:600}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:22px;font-weight:600}
+.lang{display:flex;gap:6px;margin-top:8px}
+.note{font-size:12.5px;color:var(--muted);margin-top:22px;border-left:3px solid var(--line);padding-left:10px}
+/* phone */
+.phone{width:380px;max-width:100%;height:760px;background:#11151b;border-radius:44px;padding:12px;box-shadow:0 18px 50px rgba(20,30,50,.25)}
+.screen{height:100%;background:var(--panel);border-radius:34px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.status{display:flex;justify-content:space-between;padding:12px 22px 6px;font-size:12px;font-weight:600}
+.appbar{display:flex;align-items:center;gap:8px;padding:6px 16px 10px;border-bottom:1px solid var(--line)}
+.logo{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:13px}
+.appbar b{font-family:var(--display);font-size:15px}
+.live{margin-left:auto;font-size:11px;font-weight:700;color:var(--alert);display:none;align-items:center;gap:5px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--alert);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){.live i,.typing i{animation:none}}
+.body{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.card{border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--panel)}
+.card h3{font-size:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin-top:6px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.btn{border:0;border-radius:999px;padding:12px 16px;background:var(--accent);color:#fff;font-weight:600;width:100%}
+.btn.safe{background:var(--safe)} .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.upload{display:flex;align-items:center;gap:10px;border:1px dashed var(--line);border-radius:14px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.upload input{position:absolute;opacity:0;width:1px;height:1px}
+.cam{position:sticky;top:0;z-index:2;height:180px;border-radius:16px;background:var(--cam);overflow:hidden;flex-shrink:0}
+.cam img{width:100%;height:100%;object-fit:cover}
+.cam svg{width:100%;height:100%}
+.tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;font-weight:600;padding:4px 8px;border-radius:8px}
+.cam .mark{position:absolute;border:2px dashed #fbbc04;border-radius:10px;transition:all .4s}
+.mark.found{border:2.5px solid #ea4335;border-radius:50%}
+.marklbl{position:absolute;background:#fbbc04;color:#202124;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
+.mark.found+.marklbl{background:#ea4335;color:#fff}
+.msgs{display:flex;flex-direction:column;gap:8px}
+.ai{align-self:flex-start;background:color-mix(in srgb,var(--accent) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:14px;max-width:92%}
+.me{align-self:flex-end;background:var(--ink);color:var(--bg);border-radius:16px 16px 4px 16px;padding:8px 12px;font-size:14px;max-width:80%}
+.sys{align-self:center;font-size:12px;color:var(--safe);font-weight:600;display:flex;gap:6px;align-items:center}
+.typing{display:flex;gap:4px;padding:12px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:pulse 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+.causes{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.cause{font-size:13px}
+.bar{height:6px;border-radius:4px;background:var(--line);margin-top:3px;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:4px}
+.actions{padding:10px 16px 18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;background:var(--panel)}
+.row{display:flex;gap:8px}.row .btn{flex:1}
+.steps{font-size:12px;color:var(--muted);display:flex;gap:4px}
+.steps span{flex:1;height:4px;border-radius:3px;background:var(--line)}
+.steps span.on{background:var(--safe)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:color-mix(in srgb,var(--safe) 14%,var(--panel));color:var(--safe)}
+.thumbs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.thumbs div{height:70px;border-radius:10px;background:var(--cam);overflow:hidden;position:relative}
+.thumbs small{position:absolute;bottom:4px;left:6px;color:#fff;font-size:10px;font-weight:600}
+/* hood */
+.hood h2{font-size:17px}
+.hood p.sub{color:var(--muted);font-size:13px;margin:4px 0 12px}
+.tl{display:flex;flex-direction:column;gap:8px}
+.node{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--panel);font-size:13px;opacity:.55;transition:opacity .3s,border-color .3s}
+.node b{display:block;font-family:var(--display);font-weight:600;font-size:13px}
+.node span{color:var(--muted)}
+.node.on{opacity:1;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.node.done{opacity:1}
+.node.done b::after{content:" ✓";color:var(--safe)}
+@media (max-width:1080px){.wrap{grid-template-columns:1fr;max-width:420px;margin:auto}.phone{margin:auto}}
+@media (max-width:420px){.phone{height:720px;border-radius:30px;padding:6px}.screen{border-radius:26px}}
+</style>
+</head>
+<body>
+<div class="banner">Interactive prototype for Startup Buildathon India 2026 · AI responses are scripted for this demo; in the product they come live from Gemini.</div>
+<main class="wrap">
+  <section class="intro" aria-label="About">
+    <h1>Fix<span>Saathi</span>: a live AI repair copilot for India's field technicians</h1>
+    <p>Point the phone at the machine, describe the problem in Hinglish, and get hands-free, safety-first guidance, step by step. The service report writes itself.</p>
+    <div class="lbl">Try a job</div>
+    <div class="chips" id="scen" role="group" aria-label="Choose a scenario"></div>
+    <div class="lbl">Guidance language</div>
+    <div class="lang" role="group" aria-label="Language">
+      <button class="chip" id="l-hi" aria-pressed="true">Hinglish</button>
+      <button class="chip" id="l-en" aria-pressed="false">English</button>
+    </div>
+    <p class="note">Built by Team Tensor Trailblazers (Prerana P Jois, Priyam Thakur). On the City Buildathon MVP, the camera feed and voice stream to Gemini Live; here you can upload your own photo to see the flow.</p>
+  </section>
+
+  <section class="phone" aria-label="FixSaathi app">
+    <div class="screen">
+      <div class="status"><span>9:41</span><span>5G · 82%</span></div>
+      <div class="appbar"><div class="logo">F</div><b>FixSaathi</b><div class="live" id="live"><i></i>LIVE</div></div>
+      <div class="body" id="body"></div>
+      <div class="actions" id="actions"></div>
+    </div>
+  </section>
+
+  <section class="hood" aria-label="Under the hood">
+    <h2>Under the hood</h2>
+    <p class="sub">What runs at each moment of the job.</p>
+    <div class="tl" id="tl"></div>
+  </section>
+</main>
+
+<script>
+const S = {
+  fan: {
+    label: "Ceiling fan not running", appliance: "Ceiling fan, 1200 mm", cust: "R. Sharma · Jayanagar, Bengaluru",
+    symptom: { hi: "Pankha chalu karne par hum ki awaaz aa rahi hai, par ghoom nahi raha.", en: "The fan hums when switched on but doesn't spin." },
+    ident: { hi: "Ceiling fan dikh raha hai. Hum ki awaaz aur na ghoomna aksar capacitor ki problem hoti hai.", en: "I can see a ceiling fan. Humming without spinning usually points to the capacitor." },
+    mark: { x: 41, y: 9, w: 18, h: 18, lbl: "Capacitor" },
+    causes: [["Capacitor failure", 82, "var(--alert)"], ["Bearing jammed", 11, "var(--warn)"], ["Winding issue", 7, "var(--muted)"]],
+    found: { hi: "Capacitor phoola hua lag raha hai. Isse replace karna padega.", en: "The capacitor looks swollen. It needs replacing." },
+    steps: [
+      { hi: "Canopy kholiye aur capacitor ke do wires ki photo le lijiye, taaki wapas same jagah lagayein.", en: "Open the canopy and photograph the capacitor's two wires so you can reconnect them the same way." },
+      { hi: "Purana capacitor nikaaliye. Naya capacitor same rating ka ho: 2.5 µF, 440 V.", en: "Remove the old capacitor. Use a new one with the same rating: 2.5 µF, 440 V." },
+      { hi: "Naya capacitor same do wires se jodiye aur tape lagaiye. Canopy band kijiye.", en: "Connect the new capacitor to the same two wires and tape them. Close the canopy." },
+      { hi: "Ab main switch ON karke fan chalaiye. Speed 1 se 5 tak check kijiye.", en: "Switch the mains back on and run the fan. Check speeds 1 to 5." }
+    ],
+    part: "Capacitor 2.5 µF ×1", mins: 18, scene: "fan"
+  },
+  ac: {
+    label: "Split AC not cooling", appliance: "Split AC, 1.5 ton inverter", cust: "Meera K · HSR Layout, Bengaluru",
+    symptom: { hi: "AC chal raha hai par thanda nahi kar raha, sirf hawa aa rahi hai.", en: "The AC runs but doesn't cool; only air is coming out." },
+    ident: { hi: "Indoor unit ka filter dikh raha hai. Pehle filter aur outdoor unit check karenge.", en: "I can see the indoor unit filter. We'll check the filter and outdoor unit first." },
+    mark: { x: 14, y: 28, w: 72, h: 22, lbl: "Air filter" },
+    causes: [["Clogged air filter", 61, "var(--alert)"], ["Low refrigerant / leak", 27, "var(--warn)"], ["Outdoor fan not running", 12, "var(--muted)"]],
+    found: { hi: "Filter par dhool ki moti layer hai. Saaf karne se cooling wapas aa sakti hai.", en: "The filter has a thick layer of dust. Cleaning it may restore cooling." },
+    steps: [
+      { hi: "Front panel uthaiye aur dono air filter dheere se nikaaliye.", en: "Lift the front panel and gently slide out both air filters." },
+      { hi: "Filter ko paani se ulti taraf se dhoiye. Poora sookhne dijiye.", en: "Rinse the filters from the back side with water. Let them dry fully." },
+      { hi: "Outdoor unit ka fan chal raha hai ya nahi, camera dikhaiye.", en: "Show me the outdoor unit so I can check its fan is spinning." },
+      { hi: "Filter wapas lagaiye, AC 24°C par chalaiye, 10 minute baad vent ka temperature dikhaiye.", en: "Refit the filters, run the AC at 24°C and show me the vent temperature after 10 minutes." }
+    ],
+    part: "No parts (filter cleaned)", mins: 32, scene: "ac"
+  },
+  mcb: {
+    label: "MCB keeps tripping", appliance: "Distribution board, 6-way", cust: "Patel Stores · Koramangala, Bengaluru",
+    symptom: { hi: "Geyser chalu karte hi MCB trip ho jaata hai.", en: "The MCB trips as soon as the geyser is switched on." },
+    ident: { hi: "Distribution board dikh raha hai. Geyser wali line ka MCB pehchaan liya.", en: "I can see the distribution board and the geyser circuit's MCB." },
+    mark: { x: 54, y: 30, w: 14, h: 34, lbl: "Geyser MCB" },
+    causes: [["Earth leakage in geyser element", 58, "var(--alert)"], ["MCB under-rated for load", 29, "var(--warn)"], ["Loose / burnt connection", 13, "var(--muted)"]],
+    found: { hi: "MCB rating 10 A hai, geyser 2 kW ka hai. Pehle element ki leakage check karenge.", en: "The MCB is rated 10 A and the geyser is 2 kW. We'll check the element for leakage first." },
+    steps: [
+      { hi: "Geyser ke terminals se wires alag kijiye. Multimeter ko insulation / resistance mode par rakhiye.", en: "Disconnect the wires from the geyser terminals. Set the multimeter to resistance mode." },
+      { hi: "Element terminal aur geyser body ke beech reading lijiye. Reading camera ko dikhaiye.", en: "Measure between the element terminal and the geyser body. Show the reading to the camera." },
+      { hi: "Reading kam hai, element leak kar raha hai. Customer ko element replacement ka estimate bataiye.", en: "The reading is low, so the element is leaking. Give the customer an estimate to replace the element." },
+      { hi: "Naya element lagne tak geyser line OFF rakhiye aur MCB par tag lagaiye.", en: "Keep the geyser circuit OFF and tag the MCB until the new element is fitted." }
+    ],
+    part: "Element replacement quoted", mins: 25, scene: "mcb"
+  }
+};
+const SAFETY = {
+  fan: { hi: "Pehle main switch OFF kijiye. Capacitor ko chhoone se pehle uske dono terminal screwdriver se short karke discharge kijiye.", en: "First switch the mains OFF. Before touching the capacitor, discharge it by shorting both terminals with an insulated screwdriver." },
+  ac: { hi: "Pehle AC ko remote se band kijiye aur wall socket / MCB se power OFF kijiye.", en: "First turn the AC off with the remote, then cut power at the wall socket or MCB." },
+  mcb: { hi: "Main switch OFF kijiye. Tester se check kijiye ki geyser line mein current nahi hai.", en: "Switch the mains OFF. Use a tester to confirm there's no voltage on the geyser circuit." }
+};
+const HOOD = [
+  ["job", "Job intake", "Firebase Auth · Firestore job record"],
+  ["live", "Gemini Live", "Camera + voice stream, understands the machine and Hinglish"],
+  ["safety", "Safety agent (Gemini)", "Blocks every step until power-off is confirmed"],
+  ["diag", "Diagnosis agent (Gemini)", "Ranks likely faults, picks the next check"],
+  ["nano", "Part marker", "Gemini returns the part's location; the app draws the marker"],
+  ["guide", "Guided fix", "One step at a time; each step checked on camera"],
+  ["report", "Report agent → Firestore", "Structured service report, photos to Cloud Storage"],
+  ["dash", "Pub/Sub → dashboard", "Service-centre manager sees the job instantly"]
+];
+let st = { sc: "fan", lang: "hi", photo: null, phase: "home", step: 0, hood: {} };
+const $ = id => document.getElementById(id);
+const t = o => o[st.lang];
+
+function scene(kind){
+  if (st.photo) return `<img src="${st.photo}" alt="Your uploaded photo">`;
+  if (kind === "fan") return `<svg viewBox="0 0 300 210" aria-label="Ceiling fan seen through the camera"><rect width="300" height="210" fill="#3a414c"/><rect x="138" y="0" width="24" height="18" fill="#6b7380"/><rect x="132" y="18" width="36" height="30" rx="5" fill="#59616d"/><rect x="141" y="25" width="18" height="15" rx="3" fill="#2e333b"/><rect x="147" y="48" width="6" height="40" fill="#8a919c"/><g fill="#b9bec6"><path d="M150 100 L60 80 Q45 95 62 108 Z"/><path d="M150 100 L240 80 Q255 95 238 108 Z"/><path d="M150 100 L140 190 Q155 200 165 186 Z"/></g><circle cx="150" cy="100" r="17" fill="#d4d8de"/></svg>`;
+  if (kind === "ac") return `<svg viewBox="0 0 300 210" aria-label="Split AC indoor unit seen through the camera"><rect width="300" height="210" fill="#4a505b"/><rect x="30" y="40" width="240" height="90" rx="14" fill="#e9ecef"/><rect x="42" y="56" width="216" height="40" rx="4" fill="#9a8f7c"/><g stroke="#7d725f" stroke-width="2">${Array.from({length:12},(_,i)=>`<line x1="${50+i*17}" y1="58" x2="${50+i*17}" y2="94"/>`).join("")}</g><rect x="40" y="108" width="220" height="10" rx="5" fill="#ced4da"/><circle cx="244" cy="50" r="3" fill="#34a853"/></svg>`;
+  return `<svg viewBox="0 0 300 210" aria-label="Distribution board seen through the camera"><rect width="300" height="210" fill="#3e444e"/><rect x="40" y="30" width="220" height="150" rx="8" fill="#d7dade"/><rect x="55" y="60" width="190" height="80" rx="4" fill="#f1f3f4"/>${Array.from({length:6},(_,i)=>`<g><rect x="${64+i*30}" y="70" width="22" height="60" rx="3" fill="#fff" stroke="#9aa0a6"/><rect x="${70+i*30}" y="${i===3?102:80}" width="10" height="16" rx="2" fill="${i===3?'#ea4335':'#5f6368'}"/></g>`).join("")}<text x="150" y="160" text-anchor="middle" font-size="10" fill="#5f6368" font-family="sans-serif">MAIN · L1 L2 L3 L4 L5 L6</text></svg>`;
+}
+function hood(on, doneList){
+  $("tl").innerHTML = HOOD.map(([k,b,s]) => `<div class="node ${k===on?'on':''} ${doneList.includes(k)?'done':''}"><b>${b}</b><span>${s}</span></div>`).join("");
+}
+function chips(){
+  $("scen").innerHTML = Object.entries(S).map(([k,v]) => `<button class="chip" data-k="${k}" aria-pressed="${k===st.sc}">${v.label}</button>`).join("");
+  $("scen").querySelectorAll("button").forEach(b => b.onclick = () => { st.sc = b.dataset.k; st.photo = null; home(); });
+}
+function setLang(l){ st.lang = l; $("l-hi").setAttribute("aria-pressed", l==="hi"); $("l-en").setAttribute("aria-pressed", l==="en"); render(); }
+$("l-hi").onclick = () => setLang("hi"); $("l-en").onclick = () => setLang("en");
+
+function home(){ st.phase = "home"; st.step = 0; chips(); render(); }
+function render(){
+  const s = S[st.sc], B = $("body"), A = $("actions");
+  $("live").style.display = st.phase === "home" || st.phase === "report" || st.phase === "sent" ? "none" : "flex";
+  if (st.phase === "home"){
+    hood("job", []);
+    B.innerHTML = `
+      <div class="card"><h3>Today's job</h3><dl class="kv"><dt>Customer</dt><dd>${s.cust}</dd><dt>Appliance</dt><dd>${s.appliance}</dd><dt>Complaint</dt><dd>${s.label}</dd></dl></div>
+      <div class="card"><h3>What the technician says</h3><p style="margin:6px 0 0;font-size:14px">"${t(s.symptom)}"</p></div>
+      <label class="upload" for="ph"><input type="file" id="ph" accept="image/*"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l2-2h4l2 2"/></svg><span>${st.photo ? "Photo added. Tap to change." : "Optional: use your own photo as the camera view"}</span></label>
+      <p style="font-size:12.5px;color:var(--muted);margin:0">On the job, the technician just opens the camera and talks. Nothing to type.</p>`;
+    $("ph").onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { st.photo = r.result; render(); }; r.readAsDataURL(f); };
+    A.innerHTML = `<button class="btn" id="go">Start live session</button>`;
+    $("go").onclick = startLive;
+    return;
+  }
+  if (st.phase === "report" || st.phase === "sent"){
+    hood(st.phase === "sent" ? "dash" : "report", ["job","live","safety","diag","nano","guide"].concat(st.phase==="sent"?["report"]:[]));
+    const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    B.innerHTML = `
+      <h3 style="font-size:16px">Service report</h3>
+      <span class="pill">✓ ${st.sc === "mcb" ? "Diagnosed on first visit" : "Fixed on first visit"}</span>
+      <div class="card"><dl class="kv"><dt>Job</dt><dd>#FS-${st.sc==="fan"?"1042":st.sc==="ac"?"1043":"1044"}</dd><dt>Date</dt><dd>${today}</dd><dt>Customer</dt><dd>${s.cust.split(" · ")[0]}</dd><dt>Appliance</dt><dd>${s.appliance}</dd><dt>Root cause</dt><dd>${s.causes[0][0]}</dd><dt>Parts</dt><dd>${s.part}</dd><dt>Safety checks</dt><dd>Confirmed</dd><dt>Time on job</dt><dd>${s.mins} min</dd></dl></div>
+      <div class="card"><h3>Photos</h3><div class="thumbs"><div>${scene(s.scene)}<small>Before</small></div><div>${scene(s.scene)}<small>After</small></div></div></div>
+      ${st.phase === "sent" ? `<div class="card" style="border-color:var(--safe)"><h3>Sent to service centre</h3><p style="margin:4px 0 0;font-size:13px;color:var(--muted)">Manager dashboard updated. Fault logged to the knowledge base for ${s.appliance.split(",")[0].toLowerCase()} repairs.</p></div>` : ""}`;
+    A.innerHTML = st.phase === "sent" ? `<button class="btn ghost" id="again">Start another job</button>` : `<button class="btn safe" id="send">Send to service centre</button>`;
+    if ($("send")) $("send").onclick = () => { st.phase = "sent"; render(); };
+    if ($("again")) $("again").onclick = home;
+    return;
+  }
+  // live phases
+  const m = s.mark, found = ["diag","guide"].includes(st.phase);
+  let msgs = `<div class="me">${t(s.symptom)}</div><div class="ai">${t(s.ident)}</div>`;
+  const doneH = ["job","live"];
+  if (st.phase !== "ident"){ msgs += `<div class="ai"><b>${st.lang==="hi"?"Safety pehle:":"Safety first:"}</b> ${t(SAFETY[st.sc])}</div>`; doneH.push(); }
+  if (found || st.phase === "safe-ok"){ msgs += `<div class="sys">✓ ${st.lang==="hi"?"Power OFF confirm hua":"Power off confirmed"}</div>`; doneH.push("safety"); }
+  if (found){
+    doneH.push("diag","nano");
+    msgs += `<div class="ai">${t(s.found)}<div class="causes">${s.causes.map(([n,p,c]) => `<div class="cause">${n} <span style="float:right;color:var(--muted)">${p}%</span><div class="bar"><span style="width:${p}%;background:${c}"></span></div></div>`).join("")}</div></div>`;
+  }
+  if (st.phase === "guide"){
+    for (let i = 0; i <= st.step && i < s.steps.length; i++){
+      msgs += `<div class="ai"><b>Step ${i+1}/${s.steps.length}:</b> ${t(s.steps[i])}</div>`;
+      if (i < st.step) msgs += `<div class="sys">✓ ${st.lang==="hi"?"Camera par check kiya":"Checked on camera"}</div>`;
+    }
+  }
+  B.innerHTML = `<div class="cam">${scene(s.scene)}<div class="tag">${st.photo ? "Your photo" : "Camera"} · ${s.appliance.split(",")[0]}</div>
+    ${st.phase!=="ident" ? `<div class="mark ${found?'found':''}" style="left:${m.x}%;top:${m.y}%;width:${m.w}%;height:${m.h}%"></div><div class="marklbl" style="left:${Math.min(m.x+m.w+2,70)}%;top:${m.y+2}%">${m.lbl}${found?" ✗":"?"}</div>`:""}</div>
+    ${st.phase==="guide" ? `<div class="steps">${s.steps.map((_,i)=>`<span class="${i<st.step?'on':''}"></span>`).join("")}</div>` : ""}
+    <div class="msgs" id="msgs">${msgs}</div>`;
+  B.scrollTop = B.scrollHeight;
+  const nodeOn = { ident: "live", safety: "safety", "safe-ok": "diag", diag: "nano", guide: "guide" }[st.phase];
+  hood(nodeOn, doneH);
+  if (st.phase === "ident") A.innerHTML = `<button class="btn" id="n">${st.lang==="hi"?"Theek hai, aage badhein":"OK, continue"}</button>`;
+  else if (st.phase === "safety") A.innerHTML = `<button class="btn safe" id="n">✓ ${st.lang==="hi"?"Power OFF kar diya":"I've switched the power off"}</button><p style="margin:0;font-size:12px;color:var(--muted);text-align:center">${st.lang==="hi"?"Ye confirm kiye bina repair steps nahi milenge.":"Repair steps stay locked until this is confirmed."}</p>`;
+  else if (st.phase === "safe-ok") A.innerHTML = `<button class="btn" id="n">${st.lang==="hi"?"Fault dhoondo":"Find the fault"}</button>`;
+  else if (st.phase === "diag") A.innerHTML = `<button class="btn" id="n">${st.lang==="hi"?"Repair guide shuru karo":"Guide me through the fix"}</button><button class="btn ghost" id="esc">${st.lang==="hi"?"Senior ko escalate karo":"Escalate to a senior"}</button>`;
+  else A.innerHTML = `<div class="row"><button class="btn ghost" id="rep">${st.lang==="hi"?"Dobara bolo":"Repeat"}</button><button class="btn safe" id="n">${st.step >= s.steps.length-1 ? (st.lang==="hi"?"Kaam ho gaya":"Job done") : (st.lang==="hi"?"Ho gaya, agla step":"Done, next step")}</button></div>`;
+  if ($("esc")) $("esc").onclick = () => { const x = $("msgs"); x.insertAdjacentHTML("beforeend", `<div class="sys" style="color:var(--accent)">${st.lang==="hi"?"Senior technician ko photo aur notes ke saath bhej diya.":"Sent to a senior technician with photos and notes."}</div>`); B.scrollTop = B.scrollHeight; };
+  if ($("rep")) $("rep").onclick = () => { const x = $("msgs"); x.insertAdjacentHTML("beforeend", `<div class="ai">${t(s.steps[st.step])}</div>`); B.scrollTop = B.scrollHeight; };
+  $("n").onclick = () => think(() => {
+    const order = ["ident","safety","safe-ok","diag","guide"];
+    if (st.phase === "guide"){ if (st.step >= s.steps.length-1){ st.phase = "report"; } else st.step++; }
+    else st.phase = order[order.indexOf(st.phase)+1];
+    render();
+  });
+}
+function think(next){
+  const x = $("msgs"); if (x){ x.insertAdjacentHTML("beforeend", `<div class="ai typing" aria-label="FixSaathi is thinking"><i></i><i></i><i></i></div>`); $("body").scrollTop = $("body").scrollHeight; }
+  $("actions").querySelectorAll("button").forEach(b => b.disabled = true);
+  const fast = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(next, fast ? 50 : 650);
+}
+function startLive(){ st.phase = "ident"; st.step = 0; think(render); render(); }
+home();
+</script>
+</body>
+</html>
