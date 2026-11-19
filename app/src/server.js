@@ -1,4 +1,5 @@
 // FixSaathi server: serves the apps, relays live audio/video to Gemini Live, runs the agents.
+import { similarRepairs } from './similar.js';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -37,6 +38,14 @@ app.get('/api/health', (_req, res) =>
   res.json({ ok: true, ai: hasCreds || rehearsal, rehearsal, mode: config.useVertex ? 'vertex' : 'gemini-api', liveModels: config.liveModels, agentModel: config.agentModel, store: config.store, accessCode: Boolean(config.accessCode) }),
 );
 app.get('/api/jobs', async (_req, res) => res.json((await store.list(100)).map(summary)));
+app.get('/api/similar', async (req, res) => {
+  try {
+    const q = String(req.query.q || '').slice(0, 300);
+    res.json(await similarRepairs(rehearsal ? null : ai, await store.list(200), q, 5));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 app.get('/api/jobs/:id', async (req, res) => {
   const job = await store.get(req.params.id);
   job ? res.json(job) : res.status(404).json({ error: 'Not found' });

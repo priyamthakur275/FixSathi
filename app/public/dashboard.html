@@ -55,6 +55,12 @@
       <div class="card kpi"><div class="l">Avg AI cost / repair</div><div class="v" id="kCost">–</div><div class="s" id="kLat"></div></div>
     </div>
 
+    <div class="card" style="padding:16px;margin-bottom:16px">
+      <div style="font-weight:700;margin-bottom:8px">Find similar past repairs <span class="muted" style="font-weight:400;font-size:13px">(Gemini embeddings)</span></div>
+      <input id="simQ" placeholder="e.g. fan hums but won't spin" style="width:100%;padding:12px;border-radius:10px;border:1px solid #cfd6e4;font-size:16px">
+      <div id="simOut" class="muted" style="margin-top:10px;font-size:14px"></div>
+    </div>
+
     <div class="grid">
       <div class="card" style="padding:6px 6px 2px">
         <table>
@@ -70,6 +76,19 @@
     const $ = (id) => document.getElementById(id);
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
     const code = new URLSearchParams(location.search).get('code') || localStorage.getItem('fs_code') || '';
+    let simT;
+    $('simQ').addEventListener('input', (e) => {
+      clearTimeout(simT);
+      simT = setTimeout(async () => {
+        const text = e.target.value.trim();
+        if (!text) { $('simOut').innerHTML = ''; return; }
+        const r = await fetch('/api/similar?q=' + encodeURIComponent(text) + (code ? '&code=' + encodeURIComponent(code) : ''));
+        const d = await r.json();
+        $('simOut').innerHTML = d.results?.length
+          ? d.results.map((x) => `<div style="padding:6px 0;border-top:1px solid #e6eaf2"><b>${esc(x.title)}</b> <span class="chip grey small">${x.source === 'repair' ? 'past repair' : 'knowledge base'}</span><div>${esc(x.snippet)}</div></div>`).join('')
+          : 'No similar repairs yet.';
+      }, 350);
+    });
     const q = code ? `?code=${encodeURIComponent(code)}` : '';
     const jobs = new Map();
     let selected = null;
