@@ -12,6 +12,7 @@ export const config = {
     .map((s) => s.trim())
     .filter(Boolean),
   agentModel: process.env.GEMINI_AGENT_MODEL || 'gemini-3.6-flash',
+  imageModel: process.env.NANO_BANANA_MODEL || 'gemini-3.1-flash-image', // Nano Banana 2
   voice: process.env.GEMINI_VOICE || 'Puck',
   // Storage: "firestore" on Google Cloud, otherwise a local JSON file.
   store: process.env.STORE || (process.env.GOOGLE_CLOUD_PROJECT ? 'firestore' : 'file'),

@@ -23,6 +23,10 @@
     .steps li { display: flex; gap: 10px; align-items: flex-start; }
     .steps .n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
     .steps li.done .n { background: var(--green); }
+    .steps .pic { margin-left: auto; flex: none; border: 0; background: var(--blue-50); color: var(--blue); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .steps .card-img { width: 100%; border-radius: 10px; margin-top: 6px; border: 1px solid var(--line); }
+    .steps li { flex-wrap: wrap; }
+    .steps .txt { flex: 1; min-width: 0; }
     .cause { display: flex; gap: 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid #f1f3f4; }
     .cause:first-of-type { border-top: 0; }
     .mark-wrap { position: relative; border-radius: 10px; overflow: hidden; }
@@ -64,7 +68,7 @@
       <label for="complaint">Complaint (optional, you can also just say it)</label>
       <input id="complaint" placeholder="e.g. Pankha slow chal raha hai" />
       <label for="lang">Language</label>
-      <select id="lang"><option value="hinglish">Hinglish (Hindi + English)</option><option value="english">English</option></select>
+      <select id="lang"><option value="hinglish">Hinglish (Hindi + English)</option><option value="english">English</option><option value="kannada">ಕನ್ನಡ Kannada</option><option value="tamil">தமிழ் Tamil</option></select>
       <div id="codeWrap" class="hidden"><label for="code">Access code</label><input id="code" placeholder="Team access code" /></div>
       <button id="startBtn" class="btn" style="width:100%;margin-top:16px">Start live guidance</button>
       <p class="muted small" style="margin:10px 0 0">Needs camera and microphone. Use headphones in noisy places.</p>
@@ -126,6 +130,12 @@
       <div class="row"><h3 class="grow">✅ Service report sent</h3><span id="rOutcome" class="chip green"></span></div>
       <div id="rBody" class="kv"></div>
       <p class="muted small" style="margin:0">Saved to the manager dashboard.</p>
+      <div id="fbBox" class="card" style="box-shadow:none;border:1px solid var(--line)">
+        <b>Was FixSaathi's guidance correct?</b>
+        <div class="row" style="margin-top:8px"><button class="btn green" id="fbYes">👍 Yes</button><button class="btn danger" id="fbNo">👎 No</button></div>
+        <input id="fbComment" placeholder="What was wrong or missing? (optional)" style="margin-top:8px" />
+      </div>
+      <p id="fbThanks" class="chip green hidden">Thanks! Feedback saved.</p>
       <div class="row"><a class="btn ghost" href="/dashboard" target="_blank">Open dashboard</a><span class="grow"></span><button class="btn" onclick="location.reload()">New job</button></div>
     </div>
   </dialog>

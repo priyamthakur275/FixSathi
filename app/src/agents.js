@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DIAGNOSIS_PROMPT, REPORT_PROMPT, LOCATE_PROMPT } from './prompts.js';
 import { config } from './config.js';
+import { addAgentUsage, addImageUsage } from './metrics.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const KB = JSON.parse(fs.readFileSync(path.join(here, '..', 'knowledge', 'faults.json'), 'utf8'));
@@ -17,7 +18,7 @@ export function kbFor(appliance = '') {
   return null;
 }
 
-async function jsonCall(ai, { system, parts, schema }) {
+async function jsonCall(ai, { system, parts, schema, metrics }) {
   const res = await ai.models.generateContent({
     model: config.agentModel,
     contents: [{ role: 'user', parts }],
@@ -28,6 +29,7 @@ async function jsonCall(ai, { system, parts, schema }) {
       temperature: 0.2,
     },
   });
+  if (metrics) addAgentUsage(metrics, res.usageMetadata);
   return JSON.parse(res.text);
 }
 
@@ -52,7 +54,7 @@ const diagnosisSchema = {
   required: ['causes', 'next_check', 'escalate'],
 };
 
-export async function diagnose(ai, { appliance, brand_model, symptom, observations }, frameB64) {
+export async function diagnose(ai, { appliance, brand_model, symptom, observations }, frameB64, metrics) {
   const kb = kbFor(appliance);
   const parts = [
     {
@@ -68,7 +70,7 @@ export async function diagnose(ai, { appliance, brand_model, symptom, observatio
   ];
   if (frameB64) parts.push({ inlineData: { mimeType: 'image/jpeg', data: frameB64 } });
   try {
-    return await jsonCall(ai, { system: DIAGNOSIS_PROMPT, parts, schema: diagnosisSchema });
+    return await jsonCall(ai, { system: DIAGNOSIS_PROMPT, parts, schema: diagnosisSchema, metrics });
   } catch (err) {
     // Fallback: knowledge base only, so the demo never dead-ends.
     console.error('diagnosis agent failed, using KB fallback:', err.message);
@@ -90,12 +92,13 @@ const locateSchema = {
   required: ['found', 'label'],
 };
 
-export async function locatePart(ai, part, frameB64) {
+export async function locatePart(ai, part, frameB64, metrics) {
   if (!frameB64) return { found: false, label: part, reason: 'No camera frame yet' };
   const out = await jsonCall(ai, {
     system: 'You locate parts in photos of appliances. Be precise.',
     parts: [{ inlineData: { mimeType: 'image/jpeg', data: frameB64 } }, { text: LOCATE_PROMPT(part) }],
     schema: locateSchema,
+    metrics,
   });
   if (out.found && Array.isArray(out.box_2d) && out.box_2d.length === 4) {
     out.box_2d = out.box_2d.map((v) => Math.max(0, Math.min(1000, Math.round(v))));
@@ -135,7 +138,7 @@ export async function writeReport(ai, session) {
     transcript: session.transcript.slice(-120),
   };
   try {
-    return await jsonCall(ai, { system: REPORT_PROMPT, parts: [{ text: JSON.stringify(data) }], schema: reportSchema });
+    return await jsonCall(ai, { system: REPORT_PROMPT, parts: [{ text: JSON.stringify(data) }], schema: reportSchema, metrics: session.metrics });
   } catch (err) {
     console.error('report agent failed, using structured fallback:', err.message);
     const c = session.completion || {};
@@ -154,4 +157,24 @@ export async function writeReport(ai, session) {
       customer_summary: 'The appliance was inspected and serviced. Please contact us if the problem returns.',
     };
   }
+}
+
+// Nano Banana: a simple visual instruction card for one repair step.
+export async function stepCard(ai, { instruction, appliance = '', frameB64 }, metrics) {
+  const parts = [];
+  if (frameB64) parts.push({ inlineData: { mimeType: 'image/jpeg', data: frameB64 } });
+  parts.push({
+    text: `Create a clean, simple instruction card for an Indian field technician repairing a ${appliance || 'home appliance'}.
+Step: "${instruction}".
+${frameB64 ? 'Use the attached photo of the real appliance as reference. ' : ''}Show the action clearly as a flat, labelled illustration with one arrow pointing at the part, a short English caption, and a small red safety icon if power must be off. White background, large readable text, no brand logos.`,
+  });
+  const res = await ai.models.generateContent({
+    model: config.imageModel,
+    contents: [{ role: 'user', parts }],
+    config: { responseModalities: ['TEXT', 'IMAGE'] },
+  });
+  const img = res.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+  if (!img) throw new Error('No image returned');
+  if (metrics) addImageUsage(metrics, res.usageMetadata);
+  return { data: img.inlineData.data, mimeType: img.inlineData.mimeType || 'image/png' };
 }

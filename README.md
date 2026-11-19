@@ -20,7 +20,9 @@ Team **Tensor Trailblazers** (Prerana P Jois, Priyam Thakur). Shortlisted for th
 - **Diagnosis agent:** Gemini API ranks likely causes using a fault knowledge base that includes a working technician's input.
 - **Part marking:** Gemini returns the part's bounding box on the latest frame, and the app draws the marker.
 - **Report agent:** a structured JSON service report with before/after photos.
-- **Manager dashboard:** live job feed, first-time-fix rate, safety compliance, escalations.
+- **Nano Banana step cards:** a 🖼️ Picture button turns any step into a visual instruction card from the real camera frame.
+- **Manager dashboard:** live job feed, first-time-fix rate, safety compliance, escalations, technician-rated accuracy, and **measured AI cost and reply time per repair**.
+- **Languages:** Hinglish, English, Kannada, Tamil.
 - **Google Cloud:** Cloud Run (asia-south1), Firestore, Secret Manager, Cloud Build.
 
 ```bash

@@ -3,6 +3,10 @@ export function liveSystemInstruction({ language = 'hinglish', technician = 'Tec
   const lang =
     language === 'english'
       ? 'Speak in simple, clear Indian English.'
+      : language === 'kannada'
+      ? 'Speak in simple Kannada, mixing in common English words for parts (capacitor, MCB, tester, filter), the way Bengaluru technicians talk. Keep sentences very short.'
+      : language === 'tamil'
+      ? 'Speak in simple Tamil, mixing in common English words for parts (capacitor, MCB, tester, filter), the way Chennai technicians talk. Keep sentences very short.'
       : 'Speak in simple Hinglish (Hindi + English mix, Roman script in transcripts), the way an experienced Indian senior technician talks to a junior. Use common English words for parts: capacitor, MCB, tester, filter, coil.';
 
   return `You are FixSaathi, a calm and experienced senior repair technician guiding a field technician (${technician}) live through their phone camera and voice. You can see what their camera sees (about one frame per second) and hear them.

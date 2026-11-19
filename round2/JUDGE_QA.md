@@ -19,7 +19,7 @@ Pilot with two multi-brand service centres and rooftop-solar installers in Benga
 Verified fault-to-fix data by brand, model and region, plus distribution into service networks and workflows (reports, dashboards, spare parts). Gemini is a supplier we build on; the domain data and customer relationships are ours.
 
 **7. Cost per session? Does it scale?**
-Video is sent at 1 frame per second and audio at 16 kHz to keep tokens low; the Live session uses context compression for long repairs. Cloud Run scales from zero, so we pay only for active sessions. We will measure exact cost per repair in the pilot and keep it well under the subscription price. *(Do not quote a number you have not measured.)*
+We measure it on every job: the dashboard shows the real AI cost per repair from Gemini's token usage, priced at Google's published rates. In our tests it averaged ₹__ per repair *(fill from the dashboard)*, so even 40 repairs a month is far below the ₹299–499 subscription. Video goes at 1 frame per second and audio at 16 kHz to keep tokens low, the Live session uses context compression, and Cloud Run scales from zero.
 
 **8. What about poor network on site?**
 Planned Gemma on-device mode: the safety checklist and job notes work offline and sync later. Live guidance needs data, and most urban job sites have 4G.
@@ -28,6 +28,7 @@ Planned Gemma on-device mode: the safety checklist and job notes work offline an
 Only the camera frames needed for the repair are processed; photos are stored per service company, isolated in Firestore, and used only in anonymised form for analytics. We will add a customer consent step before recording.
 
 **10. What did you validate?**
+Technicians rate every job 👍/👎 in the app: __% rated correct across __ jobs *(fill from the dashboard)*.
 Real appliance photos tested on Gemini (it read labels and spotted loose wiring and a damp ceiling on its own), a working AC and appliance technician in Mumbai reviewed the guidance and added safety knowledge, and the working MVP you just saw. *(Add your real test-run count.)*
 
 **11. Why you two?**

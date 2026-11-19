@@ -21,7 +21,7 @@ Check http://localhost:8080/api/health: `"ai": true` means the key is loaded.
 
 **UI test without a key:** `npm run rehearsal` runs a scripted session with an orange "REHEARSAL MODE" banner. Use it only to test the screens, never as the real demo.
 
-**Tests:** `npm test` checks the safety gate, diagnosis fallback, report and escalation (6 tests).
+**Tests:** `npm test` runs 12 checks: safety gate, diagnosis and fallback, part locator, step card, report, escalation, cost and latency maths.
 
 ## 3. Use it on a phone
 Browsers only allow camera and mic on **https** (or localhost). Two options:
@@ -48,6 +48,12 @@ The script enables the APIs, creates Firestore in asia-south1, stores the key in
 | Noisy venue | Type in the text box; it works the same. |
 | Diagnosis or report agent fails | The app falls back to the knowledge base and a structured report, so the demo continues. Check `GEMINI_AGENT_MODEL`. |
 | Camera black on laptop | Allow camera in the browser, close other apps using it. |
+
+## Measured numbers for the pitch
+- **Cost per repair:** each job records real token usage from Gemini (live audio/video, agents, step cards) and prices it with Google's published rates (`src/metrics.js`, overridable via env). Set `USD_INR` to today's rate. Image (step card) cost is excluded unless you set `PRICE_IMAGE_OUT`.
+- **Reply time:** time from the technician finishing speaking to FixSaathi's first audio.
+- **Accuracy:** the technician taps 👍/👎 "Was the guidance correct?" after each job.
+All three show on the dashboard. Use only these measured values in the pitch.
 
 ## How it works
 ```

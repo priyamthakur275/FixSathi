@@ -20,12 +20,12 @@ Jitendra, a technician in Mumbai we spoke to, told us something scarier: in old 
    → Lock turns green. Ask: **"Capacitor kahan hai?"** → the part is **marked on screen**.
 5. Steps appear one at a time. Say **"ho gaya"** after each.
 6. Say: **"Fan ab theek chal raha hai."** → **report** pops up.
-7. Switch to the laptop: the **manager dashboard** already shows the job: safety confirmed, unsafe step blocked, first-time fix, before/after photo.
+7. Switch to the laptop: the **manager dashboard** already shows the job: safety confirmed, first-time fix, before/after photo, **measured AI cost (₹) and reply time**, and the accuracy % from technician ratings.
 
 ## 2:00–2:40 Business and traction (Prerana)
 "We sell to service centres and repair companies at about ₹299–499 per technician per month. Saving one repeat visit a month pays for it. Brands get fault analytics by model and region. Independent technicians get a freemium plan.
 Every guided repair adds verified fault-to-fix data, which becomes our moat.
-Validation so far: real appliance tests on Gemini, a working technician in Mumbai reviewing our steps, and [N] test repairs built this weekend." *(use your real count)*
+Validation so far: [N] test repairs, rated correct [X]% of the time by technicians, at about ₹[Y] of AI cost per repair, plus [Bengaluru technicians / service centre] who tried it and Jitendra in Mumbai reviewing our safety steps." *(fill only with real dashboard numbers and real names)*
 
 ## 2:40–3:00 Close (Prerana)
 "Our next step is a pilot with two multi-brand service centres in Bengaluru, measuring first-time-fix rate and repeat visits. We are Prerana and Priyam, final-year CSE at BMSCE. FixSaathi: safe repairs, first time, in the technician's own language."

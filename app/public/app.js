@@ -128,6 +128,7 @@ function handle(m) {
       $('conn').className = 'chip green small';
       $('conn').textContent = '● Live';
       $('jobId').textContent = m.jobId;
+      state.jobId = m.jobId;
       state.frameTimer = setInterval(() => { const f = captureFrame(); if (f) send({ type: 'frame', data: f }); }, 1000);
       break;
     case 'audio': playPcm(m.data); break;
@@ -210,11 +211,49 @@ function addStep(step) {
   const list = $('steps');
   for (const li of list.children) li.classList.add('done');
   const li = document.createElement('li');
-  li.innerHTML = `<span class="n">${esc(step.n)}</span><span>${esc(step.instruction)}</span>`;
+  li.innerHTML = `<span class="n">${esc(step.n)}</span><span class="txt">${esc(step.instruction)}</span><button class="pic" title="Picture card (Nano Banana)">🖼️ Picture</button>`;
+  li.querySelector('.pic').onclick = (e) => stepPicture(e.currentTarget, li, step.instruction);
   list.appendChild(li);
   $('stepCount').textContent = list.children.length;
 }
+async function stepPicture(btn, li, instruction) {
+  btn.disabled = true;
+  btn.textContent = '⏳ Drawing…';
+  try {
+    const r = await fetch('/api/step-card' + (state.code ? `?code=${encodeURIComponent(state.code)}` : ''), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId: state.jobId, instruction, frame: captureFrame() }),
+    });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error);
+    const img = document.createElement('img');
+    img.className = 'card-img';
+    img.alt = 'Step card: ' + instruction;
+    img.src = `data:${out.mimeType};base64,${out.data}`;
+    li.appendChild(img);
+    btn.remove();
+  } catch (err) {
+    toast('Picture failed: ' + err.message, 4000);
+    btn.disabled = false;
+    btn.textContent = '🖼️ Picture';
+  }
+}
+
+async function sendFeedback(correct) {
+  try {
+    await fetch(`/api/jobs/${encodeURIComponent(state.jobId)}/feedback` + (state.code ? `?code=${encodeURIComponent(state.code)}` : ''), {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correct, comment: $('fbComment').value }),
+    });
+    $('fbBox').classList.add('hidden');
+    $('fbThanks').classList.remove('hidden');
+  } catch { toast('Could not save feedback'); }
+}
+$('fbYes').onclick = () => sendFeedback(true);
+$('fbNo').onclick = () => sendFeedback(false);
+
 function showReport({ jobId, report: r }) {
+  state.jobId = jobId;
   $('rOutcome').textContent = (r.outcome || '').replace('_', ' ');
   $('rOutcome').className = 'chip ' + (r.outcome === 'fixed' ? 'green' : 'amber');
   const rows = [
