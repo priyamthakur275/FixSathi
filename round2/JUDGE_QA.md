@@ -36,3 +36,10 @@ Priyam has shipped Gemini-based SaaS and real-time computer vision. Prerana buil
 
 **12. What is next in 3 months?**
 Pilot with 2 service centres and about 20 technicians, measure first-time-fix rate and repeat visits, add Kannada and Tamil, and expand the knowledge base to the top 20 faults.
+
+## Added 19 Nov (Google tooling)
+**Q: How did you use Google's agentic tooling?**
+A: We keep our safety rules in an Agent Skill (`.agents/skills/fixsaathi-safety-guardrails/SKILL.md`) so Antigravity applies them to every edit. The live product uses Gemini Live (voice + camera), Gemini 3.6 Flash agents, Nano Banana step pictures and Gemini embeddings for "similar past repairs" search.
+
+**Q: How does it learn from past repairs?**
+A: Every finished job is embedded and searchable, so a technician or manager can type "fan hums but won't spin" and see similar past repairs plus knowledge-base entries. (Roadmap/Day-2 build: move this to AlloyDB with ScaNN vector search. Say "planned" until it is actually built.)
