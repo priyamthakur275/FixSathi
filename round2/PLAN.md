@@ -1,54 +1,95 @@
-# Bengaluru City Buildathon plan (20–21 Nov): Tensor Trailblazers
+# Master plan: Bengaluru City Buildathon (20–21 Nov) → Regional Showcase
 
-**Goal:** walk in with a working app, and spend the event making it reliable, real and well pitched. Do not start new features after Day 1 evening.
+**Goal:** be one of the teams the jury sends to the Regional Showcase.
+**How the jury decides:** they score the *developed product*, on five things from the official criteria: founder profile, product potential, market viability, technical architecture, and how deeply Google AI powers the product.
+**Our edge:** we arrive with a working, deployed product (mentors confirmed pre-built work is allowed), so we spend the event on proof, polish and pitch while others are still building.
 
-## Official schedule (from the shortlist email)
-- **Venue:** Total Mall, Koramangala 2nd Block, Bengaluru 560068 (opposite Madiwala police station). Arrive **8:00–9:00 AM**; programme starts **9:00 AM**, both days.
-- **Day 1 (20 Nov): Ideate and design:** kick-off, hands-on time with Google AI tools, problem selection, mentor rounds.
-- **Day 2 (21 Nov): Build and showcase:** build and submit the product, present to the jury, shortlist announcement.
-- Max **2 members** attend. Google Cloud credits are for learning and codelabs; **Google AI Pro** is for the prototype build, with a 24-hour window (12 h to redeem + 12 h to build).
+## What will win the room (in priority order)
+1. **A flawless live demo on a real fan**: voice in Hinglish, safety lock, diagnosis, part marked, report on the dashboard. Under 75 seconds, zero failures.
+2. **Real-world proof no other team has**: Bengaluru technicians who tried FixSaathi, their words on video, and ideally a signed letter of interest from a service centre.
+3. **Real numbers**: test repairs done, correct diagnoses, unsafe steps blocked, measured cost per repair.
+4. **Deep, visible Google AI**: Gemini Live + Gemini API agents with function calling + Cloud Run + Firestore, built in AI Studio/Antigravity, with real screenshots.
+5. **A tight 3-minute pitch** with a clear business model and a pilot plan.
 
-## Today (19 Nov)
-| Time | Who | Task |
+## Roles
+- **Priyam (CTO):** the app, the demo, deployment, technical Q&A.
+- **Prerana (CEO):** technician and service-centre validation, deck, pitch, business Q&A.
+- **Claude:** builds the new features below, fixes bugs from your error messages, updates the deck v2 from your real screenshots and numbers.
+
+---
+
+## TODAY (19 Nov): the most important day
+| Time | Priyam | Prerana |
 |---|---|---|
-| Now | Prerana | **Fill the RSVP form** (team leader only). Use exactly the registration details: team name, names, emails, phone numbers. |
-| Before 4:30 PM | Priyam | Get a Gemini API key, run the app locally (`app/SETUP.md`), test with a real fan. Note what breaks. |
-| Before 4:30 PM | Prerana | Set up the Google Cloud project; check which billing/credits you can use for Cloud Run. |
-| **4:30 PM** | Both | **Join the virtual prep session** (participant dashboard → Interaction). Ask the questions below. |
-| Evening | Both | Decide Path A or B (`GOOGLE_TOOLS.md`) based on the answers. Practise the pitch twice. Pack the bag. |
+| 10:30–11:00 | Gemini API key (aistudio.google.com/apikey). Run the app locally (`app/SETUP.md`). | **Fill the RSVP form** (exact registration details). |
+| 11:00–1:00 | Test with a real fan: does it talk, see, lock, diagnose, mark, report? Send Claude every error. | Google Cloud project + credits/billing. Run `./deploy.sh` with Priyam. Get the **https link**. |
+| 1:00–3:30 | Open the project in **Antigravity**, test the AI Studio Stream prompt; take screenshots of both. Do 10 test repairs (fan slow, fan not starting, AC low cooling, MCB tripping) and log them in `TEST_LOG.md`. | **Field validation (highest impact):** visit 2–3 repair shops or service centres nearby. Let technicians try FixSaathi for 5 minutes. Ask the 5 questions below. With permission, record a 15-second video quote. Ask one owner for a **letter of interest** (template below). |
+| 4:30–5:30 | **Both: join the Google virtual prep session.** Ask about submission format, pitch length and Google AI Pro timing. | |
+| 6:00–8:00 | Fix today's issues; final deploy; record the **60 s backup video** of a real run. | Send Claude the real numbers, quotes and screenshots → Claude builds **deck v2**. Call Jitendra: share the link, ask for one sentence of feedback. |
+| 8:00–9:30 | Both: pitch rehearsal ×3 with a timer. Pack the bag. Sleep by 11. | |
 
-**Ask in the prep session (or a mentor at 9 AM tomorrow):**
-1. Can we bring code we started before the event, or must the product be built on Day 2?
-2. On Day 1 "problem selection": can we keep our own Open Innovation idea (FixSaathi), or must we pick from given problem statements?
-3. Must the product be built in AI Studio or Antigravity specifically, and deployed on Google Cloud?
-4. What exactly do we submit on Day 2 (link, repo, video, deck)? Any time limit for the jury pitch?
-5. When should we redeem Google AI Pro so the 12-hour build window covers Day 2?
+**5 questions for technicians:**
+1. How often do you get a fault you're not sure about? What do you do then?
+2. After using FixSaathi: was the guidance correct? Would you use it on a real job?
+3. Would your company pay ₹299–499 a month for this? Would you pay ₹99 yourself?
+4. What was missing or wrong?
+5. Can we quote you (name or first name only)?
 
-**Bring:** 2 phones + chargers + power bank, laptops + chargers, wired earphones (for noise), a mobile hotspot (venue Wi-Fi fails), a small fan or fan capacitor if allowed, college IDs, a printed one-page summary.
+**Letter of interest (one paragraph; letterhead or WhatsApp is fine):**
+> "[Service centre name], Bengaluru, is interested in piloting FixSaathi with our technicians for [4] weeks to measure first-time-fix rate and repeat visits. This is not a purchase commitment." Signed: name, role, phone, date.
 
-## Day 1 (20 Nov): ideate and design
-| Time | Focus |
+---
+
+## DAY 1 (20 Nov): ideate and design
+| Time | Task |
 |---|---|
-| 9:00 | Kick-off. Confirm the rules with organisers (questions above). |
-| Tools session | Do the hands-on with AI Studio / Antigravity; set up the project in the tool you'll use (Path A or B). |
-| Problem selection | Lock FixSaathi (if allowed). Sharpen the scope: **fan + AC + MCB**, safety lock, report, dashboard. |
-| Mentor rounds | Show the plan and ask: "What would make this a winner for the jury?" Note the feedback. |
-| Evening | If building is allowed today: get the core loop (camera + voice + safety lock) working and deployed. Test on venue internet and the hotspot. |
+| 8:00–9:00 | Arrive and set up. Test the deployed link on venue Wi-Fi **and** the hotspot. |
+| 9:00 | Kick-off. Confirm the submission format and the jury pitch length. |
+| Tools session | Use AI Studio / Antigravity hands-on; take photos and screenshots for the "Google AI depth" slide. |
+| Problem selection | Lock FixSaathi (Open Innovation). Scope: fan + AC + MCB faults. |
+| **Mentor rounds** | Show the live demo (30 s), then ask: *"What would stop the jury from picking us?"* Write down every answer and fix the top 2. Note the mentor's name to mention ("we improved X after mentor feedback"). |
+| Evening | Improve from mentor feedback. More test repairs. Re-deploy. Pitch ×3. |
 
-## Day 2 (21 Nov): build and showcase
-| Time | Focus |
+## DAY 2 (21 Nov): build and showcase
+| Time | Task |
 |---|---|
-| Morning | Build or finish: diagnosis, part marking, report, dashboard. Deploy to Cloud Run. Run 5+ real test repairs. |
-| Before submission | Freeze features. Record a 60 s real backup video. Update the deck with real screenshots and your real test count. Submit early. |
-| Jury | Follow `PITCH_AND_DEMO.md`. Priyam runs the demo, Prerana speaks. |
+| Morning | **Feature freeze by 12:00.** Only bug fixes after that. |
+| Midday | 5 final test runs on the stage phone. Update test numbers in the deck. Submit early (link, repo, deck, video). |
+| Before jury | Demo checklist (`PITCH_AND_DEMO.md`). Hotspot on, phone at full brightness, backup video ready. |
+| Jury | 3-minute pitch with the live demo, then Q&A (`JUDGE_QA.md`). |
 
-## Only if time is left (in this order)
-1. Kannada or Tamil voice option (one line in `prompts.js`).
-2. Escalation call button on the dashboard.
-3. Nano Banana visual step card for one repair.
-4. Offline Gemma checklist (keep it for the roadmap slide otherwise).
+---
 
-## Rules for the team
-- Never demo rehearsal mode as real AI. If the live AI fails on stage, play the recorded real video and say so.
-- Every number in the pitch must be real (from your test runs) or sourced (ICRA, CEEW, MNRE).
-- One feature working perfectly beats five half-working.
+## What Claude builds next (today, while you test)
+1. **Cost and speed meter:** real tokens and cost per repair on the dashboard, so "what does it cost?" gets a measured answer.
+2. **Technician feedback:** "Was the guidance correct?" 👍/👎 at the end of each job, giving a real accuracy % for the pitch.
+3. **Nano Banana step card:** a generated visual instruction card for a step (you claimed Nano Banana in the submission, so make it real).
+4. **Kannada voice option**, for the Bengaluru jury.
+5. **Deck v2** for the jury, once you send real screenshots, numbers and quotes.
+
+Gemma offline mode stays **roadmap**. Say so honestly if asked.
+
+## Success checklist before the jury
+- [ ] Deployed https link works on both phones and the venue network
+- [ ] 15+ real test repairs logged, with accuracy and cost numbers
+- [ ] 2+ Bengaluru technicians tried it; 1+ video quote
+- [ ] 1 letter of interest from a service centre (stretch goal)
+- [ ] Jitendra's feedback on the live app
+- [ ] Deck v2 with real screenshots, numbers and quotes
+- [ ] 60 s real backup video
+- [ ] Pitch rehearsed 6+ times, under 3:00
+
+## Risks and backups
+| Risk | Backup |
+|---|---|
+| Venue internet fails | Phone hotspot; test it on Day 1 morning |
+| Gemini Live slow or down | Backup video of a real run; the server auto-tries fallback models |
+| Too noisy for voice | Wired earphones; the text box works the same |
+| The model answers wrong on stage | Demo the fault you've tested most (fan slow → capacitor); never improvise a new fault on stage |
+| Out of API quota | A second API key from the other teammate's account, ready in `.env` |
+| Laptop dies | The dashboard also opens on the second phone |
+
+## Never do
+- Show rehearsal mode as real AI.
+- Quote numbers you didn't measure, or claim features that aren't built.
+- Add new features on Day 2 afternoon.
