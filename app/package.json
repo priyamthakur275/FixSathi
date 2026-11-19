@@ -1,0 +1,22 @@
+{
+  "name": "fixsaathi",
+  "version": "1.0.0",
+  "description": "FixSaathi: real-time AI repair copilot for field technicians (Gemini Live)",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "local": "node --env-file=.env src/server.js",
+    "rehearsal": "REHEARSAL=1 node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@google/genai": "^3.6.1",
+    "express": "^5.3.0",
+    "firebase-admin": "^14.5.1",
+    "ws": "^8.18.0"
+  }
+}
