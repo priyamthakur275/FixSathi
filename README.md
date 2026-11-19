@@ -8,7 +8,7 @@ Team **Tensor Trailblazers** (Prerana P Jois, Priyam Thakur). Shortlisted for th
 | Folder | What it is |
 |---|---|
 | [`app/`](app/) | **Working MVP**: technician app, manager dashboard, Node server on Cloud Run. Start with [`app/SETUP.md`](app/SETUP.md). |
-| [`round2/`](round2/) | City Buildathon kit: [2-day plan](round2/PLAN.md), [pitch + live demo script](round2/PITCH_AND_DEMO.md), [judge Q&A](round2/JUDGE_QA.md) |
+| [`round2/`](round2/) | City Buildathon kit: [Google tools guide](round2/GOOGLE_TOOLS.md), [2-day plan](round2/PLAN.md), [pitch + live demo script](round2/PITCH_AND_DEMO.md), [judge Q&A](round2/JUDGE_QA.md) |
 | `deck/` | Idea-stage pitch deck (PDF) and the appliance photos used in Gemini tests |
 | `prototype/` | Earlier clickable prototype (scripted) |
 | `docs/` | Submitted form answers, Gemini test PDFs, app screenshots |
