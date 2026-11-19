@@ -2,6 +2,7 @@
 import crypto from 'node:crypto';
 import { diagnose, locatePart, writeReport } from './agents.js';
 import { store } from './store.js';
+import { newMetrics, addLiveUsage, addLatency } from './metrics.js';
 
 const S = 'STRING', O = 'OBJECT', B = 'BOOLEAN', A = 'ARRAY', I = 'INTEGER';
 
@@ -104,12 +105,24 @@ export class RepairSession {
       report: null,
       photos: {},
       transcript: [],
+      metrics: newMetrics(),
+      feedback: null,
     };
     this.latestFrame = null;
     this.savePending = null;
   }
 
   get technician() { return this.job.technician; }
+  get metrics() { return this.job.metrics; }
+
+  liveUsage(u) { addLiveUsage(this.job.metrics, u); }
+
+  // Response time: end of the technician's speech -> first audio of FixSaathi's reply.
+  heardTechnician() { this.lastHeardAt = Date.now(); this.awaitingReply = true; }
+  replyAudio() {
+    if (this.awaitingReply && this.lastHeardAt) addLatency(this.job.metrics, Date.now() - this.lastHeardAt);
+    this.awaitingReply = false;
+  }
 
   addFrame(b64) {
     this.latestFrame = b64;
@@ -164,7 +177,7 @@ export class RepairSession {
       }
       case 'get_diagnosis': {
         this.emit({ type: 'thinking', what: 'Diagnosis agent is analysing…' });
-        const d = await diagnose(this.ai, args, this.latestFrame);
+        const d = await diagnose(this.ai, args, this.latestFrame, job.metrics);
         job.diagnosis = { ...args, ...d, at: new Date().toISOString() };
         if (!job.complaint) job.complaint = args.symptom;
         this.emit({ type: 'diagnosis', diagnosis: job.diagnosis });
@@ -172,7 +185,7 @@ export class RepairSession {
       }
       case 'locate_part': {
         this.emit({ type: 'thinking', what: `Locating ${args.part}…` });
-        const r = await locatePart(this.ai, args.part, this.latestFrame);
+        const r = await locatePart(this.ai, args.part, this.latestFrame, job.metrics);
         if (r.found) {
           const mark = { part: args.part, label: r.label, box_2d: r.box_2d, frame: this.latestFrame };
           job.marks.push({ part: args.part, label: r.label, box_2d: r.box_2d });

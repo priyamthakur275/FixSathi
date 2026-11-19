@@ -8,7 +8,8 @@
   <style>
     header { display: flex; align-items: center; gap: 14px; padding: 14px 24px; background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 3; }
     .wrap { max-width: 1240px; margin: 0 auto; padding: 18px 24px 40px; display: grid; gap: 16px; }
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+    .kpi .s { font-size: 12px; color: var(--ink-2); margin-top: 2px; }
     .kpi .v { font-size: 30px; font-weight: 700; margin-top: 2px; }
     .kpi .l { font-size: 13px; color: var(--ink-2); font-weight: 600; }
     .grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; align-items: start; }
@@ -31,6 +32,7 @@
     .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); display: inline-block; animation: pulse 1.4s infinite; }
     @keyframes pulse { 50% { opacity: .3; } }
     .empty { padding: 30px; text-align: center; color: var(--ink-2); }
+    @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2, 1fr); } .detail { position: static; } }
   </style>
 </head>
@@ -49,6 +51,8 @@
       <div class="card kpi"><div class="l">First-time-fix rate</div><div class="v" id="kFtf">–</div></div>
       <div class="card kpi"><div class="l">Safety checks confirmed</div><div class="v" id="kSafe">–</div></div>
       <div class="card kpi"><div class="l">Live now / escalated</div><div class="v"><span id="kLive">0</span> <span class="muted" style="font-size:20px">/</span> <span id="kEsc">0</span></div></div>
+      <div class="card kpi"><div class="l">Technician-rated correct</div><div class="v" id="kAcc">–</div><div class="s" id="kAccN"></div></div>
+      <div class="card kpi"><div class="l">Avg AI cost / repair</div><div class="v" id="kCost">–</div><div class="s" id="kLat"></div></div>
     </div>
 
     <div class="grid">
@@ -100,6 +104,13 @@
       $('kSafe').textContent = started.length ? Math.round((100 * started.filter((j) => j.safety?.confirmed).length) / started.length) + '%' : '–';
       $('kLive').textContent = list.filter((j) => j.status === 'in_progress').length;
       $('kEsc').textContent = list.filter((j) => j.status === 'escalated').length;
+      const rated = list.filter((j) => j.feedback);
+      $('kAcc').textContent = rated.length ? Math.round((100 * rated.filter((j) => j.feedback.correct).length) / rated.length) + '%' : '–';
+      $('kAccN').textContent = rated.length ? `${rated.length} rated job${rated.length > 1 ? 's' : ''}` : 'no ratings yet';
+      const costed = done.filter((j) => j.metrics?.costInr > 0);
+      $('kCost').textContent = costed.length ? '₹' + (costed.reduce((a, j) => a + j.metrics.costInr, 0) / costed.length).toFixed(2) : '–';
+      const lat = list.filter((j) => j.metrics?.avgLatencyMs);
+      $('kLat').textContent = lat.length ? `avg reply ${(lat.reduce((a, j) => a + j.metrics.avgLatencyMs, 0) / lat.length / 1000).toFixed(1)} s` : '';
     }
 
     async function openJob(id) {
@@ -128,6 +139,14 @@
             <b>For customer</b><span>${esc(r.customer_summary || '–')}</span>
           </div>
         </div>
+        <div class="card"><b>Measured usage</b><div class="kv small" style="margin-top:8px">
+          <b>AI cost</b><span>${j.metrics ? `₹${j.metrics.costInr} ($${j.metrics.costUsd})` : '–'}</span>
+          <b>Avg reply time</b><span>${j.metrics?.avgLatencyMs ? (j.metrics.avgLatencyMs / 1000).toFixed(1) + ' s' : '–'}</span>
+          <b>Live tokens</b><span>${j.metrics ? `audio in ${j.metrics.live.audioIn}, video in ${j.metrics.live.videoIn}, text in ${j.metrics.live.textIn}, audio out ${j.metrics.live.audioOut}` : '–'}</span>
+          <b>Agent calls</b><span>${j.metrics ? `${j.metrics.agent.calls} (${j.metrics.agent.in} in / ${j.metrics.agent.out} out tokens)` : '–'}</span>
+          <b>Step cards</b><span>${j.metrics?.image?.cards ?? 0}</span>
+          <b>Technician rating</b><span>${j.feedback ? (j.feedback.correct ? '👍 Correct' : '👎 Not correct') + (j.feedback.comment ? ' · ' + esc(j.feedback.comment) : '') : 'Not rated'}</span>
+        </div></div>
         <div class="card"><b>Photos</b><div class="photos" style="margin-top:8px">
           <figure><img alt="Before" ${j.photos?.before ? `src="data:image/jpeg;base64,${j.photos.before}"` : ''}/><figcaption>Before</figcaption></figure>
           <figure><img alt="After" ${j.photos?.after ? `src="data:image/jpeg;base64,${j.photos.after}"` : ''}/><figcaption>After</figcaption></figure>

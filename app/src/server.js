@@ -10,6 +10,10 @@ import { liveSystemInstruction } from './prompts.js';
 import { RepairSession, toolDeclarations } from './session.js';
 import { store, events, summary } from './store.js';
 import { rehearsalAI } from './rehearsal.js';
+import { stepCard } from './agents.js';
+import { PRICES, USD_INR } from './metrics.js';
+
+const active = new Map(); // jobId -> RepairSession (live now)
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const rehearsal = process.env.REHEARSAL === '1';
@@ -37,6 +41,34 @@ app.get('/api/jobs/:id', async (req, res) => {
   const job = await store.get(req.params.id);
   job ? res.json(job) : res.status(404).json({ error: 'Not found' });
 });
+// Technician feedback at the end of a job: was the guidance correct?
+app.post('/api/jobs/:id/feedback', async (req, res) => {
+  const live = active.get(req.params.id);
+  const job = live ? live.job : await store.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Not found' });
+  job.feedback = { correct: Boolean(req.body?.correct), comment: String(req.body?.comment || '').slice(0, 500), at: new Date().toISOString() };
+  await store.save(job);
+  res.json({ ok: true });
+});
+
+// Nano Banana visual step card.
+app.post('/api/step-card', async (req, res) => {
+  if (!ai || rehearsal) return res.status(503).json({ error: 'Step cards need a Gemini API key (not available in rehearsal mode).' });
+  const { jobId, instruction, frame } = req.body || {};
+  if (!instruction) return res.status(400).json({ error: 'instruction required' });
+  const s = jobId ? active.get(jobId) : null;
+  try {
+    const card = await stepCard(ai, { instruction, appliance: s?.job.diagnosis?.appliance, frameB64: frame || s?.latestFrame }, s?.job.metrics);
+    s?.persist();
+    res.json(card);
+  } catch (err) {
+    console.error('step card failed', err.message);
+    res.status(502).json({ error: 'Could not create the step card: ' + err.message });
+  }
+});
+
+app.get('/api/pricing', (_req, res) => res.json({ prices_usd_per_million_tokens: PRICES, usd_inr: USD_INR }));
+
 // Live feed for the manager dashboard (Server-Sent Events).
 app.get('/api/events', (req, res) => {
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
@@ -98,7 +130,7 @@ wss.on('connection', async (ws, req) => {
     technician: url.searchParams.get('tech') || 'Technician',
     customer: url.searchParams.get('customer') || '',
     complaint: url.searchParams.get('complaint') || '',
-    language: url.searchParams.get('lang') === 'english' ? 'english' : 'hinglish',
+    language: ['english', 'kannada', 'tamil'].includes(url.searchParams.get('lang')) ? url.searchParams.get('lang') : 'hinglish',
     emit: send,
   });
 
@@ -111,10 +143,12 @@ wss.on('connection', async (ws, req) => {
     onopen: () => {},
     onmessage: async (msg) => {
       const sc = msg.serverContent;
+      if (msg.usageMetadata) session.liveUsage(msg.usageMetadata);
       if (sc?.modelTurn?.parts) {
-        for (const p of sc.modelTurn.parts) if (p.inlineData?.data) send({ type: 'audio', data: p.inlineData.data });
+        for (const p of sc.modelTurn.parts) if (p.inlineData?.data) { session.replyAudio(); send({ type: 'audio', data: p.inlineData.data }); }
       }
       if (sc?.inputTranscription?.text) {
+        session.heardTechnician();
         session.addTranscript('technician', sc.inputTranscription.text);
         send({ type: 'transcript', role: 'technician', text: sc.inputTranscription.text });
       }
@@ -158,6 +192,7 @@ wss.on('connection', async (ws, req) => {
   try {
     const r = await connectLive(session, callbacks);
     live = r.live;
+    active.set(session.job.id, session);
     send({ type: 'ready', jobId: session.job.id, model: r.model });
     session.persist();
     // Kick off the conversation so FixSaathi greets first.
@@ -173,7 +208,7 @@ wss.on('connection', async (ws, req) => {
     try {
       if (m.type === 'audio') live?.sendRealtimeInput({ audio: { data: m.data, mimeType: 'audio/pcm;rate=16000' } });
       else if (m.type === 'frame') { session.addFrame(m.data); live?.sendRealtimeInput({ video: { data: m.data, mimeType: 'image/jpeg' } }); }
-      else if (m.type === 'text' && m.text) { session.addTranscript('technician', m.text); live?.sendRealtimeInput({ text: m.text }); }
+      else if (m.type === 'text' && m.text) { session.addTranscript('technician', m.text); session.heardTechnician(); live?.sendRealtimeInput({ text: m.text }); }
       else if (m.type === 'end') {
         if (!session.job.report) await session.complete({ outcome: m.outcome || 'fixed', fault_found: m.fault || 'See transcript', notes: 'Ended from app' });
       }
@@ -184,6 +219,7 @@ wss.on('connection', async (ws, req) => {
 
   ws.on('close', () => {
     clientOpen = false;
+    setTimeout(() => active.delete(session.job.id), 10 * 60 * 1000); // keep for late feedback/step cards
     try { live?.close(); } catch {}
     if (!session.job.report) {
       session.job.status = session.job.status === 'escalated' ? 'escalated' : 'interrupted';

@@ -60,18 +60,20 @@
 
 ---
 
-## What Claude builds next (today, while you test)
-1. **Cost and speed meter:** real tokens and cost per repair on the dashboard, so "what does it cost?" gets a measured answer.
-2. **Technician feedback:** "Was the guidance correct?" 👍/👎 at the end of each job, giving a real accuracy % for the pitch.
-3. **Nano Banana step card:** a generated visual instruction card for a step (you claimed Nano Banana in the submission, so make it real).
-4. **Kannada voice option**, for the Bengaluru jury.
-5. **Deck v2** for the jury, once you send real screenshots, numbers and quotes.
+## Built by Claude today (in the repo)
+1. ✅ **Cost and speed meter:** measured AI cost per repair (₹) and reply time on the dashboard.
+2. ✅ **Technician feedback:** 👍/👎 "Was the guidance correct?" after each job → accuracy % on the dashboard.
+3. ✅ **Nano Banana step card:** 🖼️ Picture button on each step generates a visual instruction card from the real camera frame.
+4. ✅ **Kannada and Tamil voice options.**
+5. ⏳ **Deck v2** for the jury: send Claude real screenshots, numbers and quotes tonight.
+
+**Test these too today:** one step card, one Kannada session, and check the cost shows on the dashboard after a real job.
 
 Gemma offline mode stays **roadmap**. Say so honestly if asked.
 
 ## Success checklist before the jury
 - [ ] Deployed https link works on both phones and the venue network
-- [ ] 15+ real test repairs logged, with accuracy and cost numbers
+- [ ] 15+ real test repairs logged; dashboard shows accuracy %, cost per repair and reply time
 - [ ] 2+ Bengaluru technicians tried it; 1+ video quote
 - [ ] 1 letter of interest from a service centre (stretch goal)
 - [ ] Jitendra's feedback on the live app
