@@ -1,0 +1,119 @@
+{
+  "_about": "Starter fault knowledge base for the FixSaathi MVP. General field-repair knowledge plus notes from Jitendra (AC and appliance technician, Mumbai). Every guided repair adds verified entries over time.",
+  "safety_rules": [
+    "Switch off the appliance AND the MCB / main for that circuit before opening any cover.",
+    "In old homes the wiring may be reversed (switch on neutral), so the line can stay live even when the switch is off. Always confirm with a line tester before touching wires. (Jitendra)",
+    "Discharge capacitors (fan, AC compressor/fan, washing machine motor) before touching their terminals.",
+    "Use insulated tools, dry hands and dry footwear. Never work standing on a wet floor.",
+    "For ACs: never open the refrigerant circuit without gauges and recovery equipment; gas work only by a certified technician.",
+    "If there is burning smell, melted insulation or water near live parts, isolate power and escalate."
+  ],
+  "appliances": {
+    "ceiling_fan": {
+      "aliases": ["fan", "pankha", "ceiling fan"],
+      "faults": [
+        {
+          "symptom": "fan runs slow / speed low / humming",
+          "causes": [
+            {"cause": "Weak or failed capacitor (usually 2.25-3.15 uF)", "likelihood": "high", "check": "Visually check for bulging or leakage; measure with a capacitance meter or swap with a known-good capacitor of the same rating."},
+            {"cause": "Faulty regulator", "likelihood": "medium", "check": "Bypass the regulator (connect fan directly) and see if speed becomes normal."},
+            {"cause": "Dry or worn bearings", "likelihood": "medium", "check": "With power off, spin the blades by hand; rough or tight rotation means bearing issue."},
+            {"cause": "Low supply voltage", "likelihood": "low", "check": "Measure voltage at the ceiling rose."}
+          ]
+        },
+        {
+          "symptom": "fan not running at all",
+          "causes": [
+            {"cause": "No supply at the fan: loose connection, failed switch or regulator", "likelihood": "high", "check": "Use a line tester at the canopy connector and at the switch board."},
+            {"cause": "Open capacitor", "likelihood": "high", "check": "If fan hums but does not start, or starts when pushed by hand, the capacitor is likely dead."},
+            {"cause": "Burnt winding", "likelihood": "low", "check": "Check winding continuity with a multimeter; burnt smell confirms."}
+          ]
+        },
+        {
+          "symptom": "fan wobbling / noise",
+          "causes": [
+            {"cause": "Loose canopy or down-rod bolt", "likelihood": "high", "check": "Tighten canopy screws and down-rod bolt, check split pin."},
+            {"cause": "Bent or unbalanced blade", "likelihood": "medium", "check": "Measure blade tip heights; replace a bent blade."}
+          ]
+        }
+      ]
+    },
+    "split_ac": {
+      "aliases": ["ac", "split ac", "air conditioner", "window ac"],
+      "faults": [
+        {
+          "symptom": "cooling low / not cooling",
+          "causes": [
+            {"cause": "Dirty air filter or indoor coil", "likelihood": "high", "check": "Open the front panel; inspect and clean the filters; check coil for dust."},
+            {"cause": "Outdoor unit fan not running or condenser coil blocked", "likelihood": "high", "check": "Check whether the outdoor fan spins when the compressor runs; look for blocked or dirty fins."},
+            {"cause": "Weak capacitor on the outdoor unit (compressor or fan)", "likelihood": "medium", "check": "Look for a bulging capacitor; measure capacitance."},
+            {"cause": "Low refrigerant (gas leak)", "likelihood": "medium", "check": "Oil marks at flare joints, frost on the service valve. Pressure check by a certified technician only."},
+            {"cause": "Wrong mode or set temperature", "likelihood": "low", "check": "Confirm Cool mode, 24 C, fan speed auto."}
+          ]
+        },
+        {
+          "symptom": "water dripping from indoor unit",
+          "causes": [
+            {"cause": "Blocked drain pipe", "likelihood": "high", "check": "Pour water in the drain tray and see if it flows out; clear the pipe."},
+            {"cause": "Unit not level", "likelihood": "medium", "check": "Check with a spirit level; drain side must be slightly lower."}
+          ]
+        },
+        {
+          "symptom": "ac not turning on",
+          "causes": [
+            {"cause": "No supply / tripped MCB / loose plug", "likelihood": "high", "check": "Check the MCB and socket with a tester."},
+            {"cause": "Remote batteries or receiver", "likelihood": "medium", "check": "Use the manual button on the indoor unit."},
+            {"cause": "PCB or fuse failure", "likelihood": "low", "check": "Check the PCB fuse; look for burnt marks. Escalate if PCB replacement is needed."}
+          ]
+        }
+      ]
+    },
+    "mcb_tripping": {
+      "aliases": ["mcb", "trip", "tripping", "breaker", "rccb", "elcb"],
+      "faults": [
+        {
+          "symptom": "mcb trips repeatedly",
+          "causes": [
+            {"cause": "Overload: too many appliances on one circuit", "likelihood": "high", "check": "Note which appliances run when it trips; compare load with MCB rating."},
+            {"cause": "Short circuit in an appliance or wiring", "likelihood": "high", "check": "Switch off all loads, reset, then switch on one load at a time to find the culprit."},
+            {"cause": "Earth leakage (if RCCB trips)", "likelihood": "medium", "check": "Check appliances with metal bodies and wet areas (geyser, washing machine)."},
+            {"cause": "Weak or faulty MCB", "likelihood": "low", "check": "If it trips with very low load, replace the MCB of the same rating."}
+          ]
+        }
+      ]
+    },
+    "washing_machine": {
+      "aliases": ["washing machine", "washer", "top load", "front load"],
+      "faults": [
+        {
+          "symptom": "not draining / water stays",
+          "causes": [
+            {"cause": "Blocked drain filter or pipe", "likelihood": "high", "check": "Front load: open the drain filter at the bottom front with a cloth and tray. Top load: check the drain hose for kinks or lint."},
+            {"cause": "Drain pump failure", "likelihood": "medium", "check": "Listen for the pump hum during drain; check for a foreign object at the impeller."}
+          ]
+        },
+        {
+          "symptom": "not spinning / heavy vibration",
+          "causes": [
+            {"cause": "Unbalanced load", "likelihood": "high", "check": "Redistribute clothes and run spin again."},
+            {"cause": "Transit bolts not removed (new front load)", "likelihood": "medium", "check": "Check the back panel for transit bolts."},
+            {"cause": "Worn belt or motor issue", "likelihood": "low", "check": "Check belt tension (top load); escalate for motor or PCB."}
+          ]
+        }
+      ]
+    },
+    "refrigerator": {
+      "aliases": ["fridge", "refrigerator"],
+      "faults": [
+        {
+          "symptom": "not cooling",
+          "causes": [
+            {"cause": "Dirty condenser coil or poor ventilation", "likelihood": "high", "check": "Check the back or bottom coil for dust; keep 10 cm space behind the fridge."},
+            {"cause": "Door gasket not sealing", "likelihood": "medium", "check": "Close the door on a paper strip; if it slides out easily, the gasket is weak."},
+            {"cause": "Relay/OLP or compressor issue", "likelihood": "medium", "check": "Compressor clicks on and off without running suggests relay/OLP. Escalate for compressor or gas."}
+          ]
+        }
+      ]
+    }
+  }
+}

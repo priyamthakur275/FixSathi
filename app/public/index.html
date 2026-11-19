@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a73e8" />
+  <title>FixSaathi · Technician</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { max-width: 560px; margin: 0 auto; min-height: 100dvh; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+    main { padding: 12px 14px 120px; display: grid; gap: 12px; }
+    .stage { position: relative; border-radius: var(--radius); overflow: hidden; background: #111; aspect-ratio: 3/4; max-height: 52dvh; width: 100%; }
+    .stage video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .stage .overlay { position: absolute; inset: 0; pointer-events: none; }
+    .stage .top { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; gap: 8px; }
+    .stage .caption { position: absolute; left: 10px; right: 10px; bottom: 10px; background: rgba(0,0,0,.62); color: #fff; border-radius: 12px; padding: 9px 12px; font-size: 14px; min-height: 20px; }
+    .stage .caption:empty { display: none; }
+    .lock { font-size: 13px; }
+    .level { width: 60px; height: 6px; background: rgba(255,255,255,.3); border-radius: 3px; overflow: hidden; align-self: center; }
+    .level i { display: block; height: 100%; width: 0; background: #34a853; transition: width .08s; }
+    .steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .steps li { display: flex; gap: 10px; align-items: flex-start; }
+    .steps .n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+    .steps li.done .n { background: var(--green); }
+    .cause { display: flex; gap: 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid #f1f3f4; }
+    .cause:first-of-type { border-top: 0; }
+    .mark-wrap { position: relative; border-radius: 10px; overflow: hidden; }
+    .mark-wrap img { width: 100%; display: block; }
+    .mark-wrap .box { position: absolute; border: 3px solid #fbbc04; border-radius: 6px; box-shadow: 0 0 0 9999px rgba(0,0,0,.35); }
+    .mark-wrap .tag { position: absolute; background: #fbbc04; color: #000; font-weight: 700; font-size: 12px; padding: 2px 7px; border-radius: 6px; transform: translateY(-100%); }
+    .log { max-height: 220px; overflow: auto; display: grid; gap: 6px; font-size: 14px; }
+    .log .t { padding: 7px 10px; border-radius: 10px; max-width: 88%; }
+    .log .technician { background: var(--blue-50); justify-self: end; }
+    .log .fixsaathi { background: #f1f3f4; }
+    .dock { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 560px; background: #fff; border-top: 1px solid var(--line); padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); display: grid; gap: 8px; z-index: 6; }
+    .mic { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--blue); color: #fff; font-size: 20px; cursor: pointer; flex: none; }
+    .mic.off { background: var(--red); }
+    .blocked { animation: shake .4s; }
+    @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+    .toast { position: fixed; left: 50%; top: 70px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 20; max-width: 90%; }
+    dialog { border: 0; border-radius: 18px; padding: 0; width: min(520px, 94vw); box-shadow: 0 10px 40px rgba(0,0,0,.25); }
+    dialog::backdrop { background: rgba(0,0,0,.4); }
+    .report { padding: 18px; display: grid; gap: 10px; }
+    .kv { display: grid; grid-template-columns: 120px 1fr; gap: 4px 10px; font-size: 14px; }
+    .kv b { color: var(--ink-2); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="logo">F</div>FixSaathi</div>
+    <div class="row small"><span id="jobId" class="muted"></span><a class="chip blue" href="/dashboard" target="_blank">Manager ↗</a></div>
+  </header>
+
+  <!-- Setup -->
+  <main id="setup">
+    <div class="card">
+      <h2 style="font-size:20px">Start a guided repair</h2>
+      <p class="muted small" style="margin:6px 0 0">Point your camera at the machine and talk. FixSaathi will guide you step by step, safety first, and send the report to your manager.</p>
+      <label for="tech">Your name</label>
+      <input id="tech" placeholder="e.g. Ravi Kumar" autocomplete="name" />
+      <label for="customer">Customer / site (optional)</label>
+      <input id="customer" placeholder="e.g. Flat 302, Jayanagar" />
+      <label for="complaint">Complaint (optional, you can also just say it)</label>
+      <input id="complaint" placeholder="e.g. Pankha slow chal raha hai" />
+      <label for="lang">Language</label>
+      <select id="lang"><option value="hinglish">Hinglish (Hindi + English)</option><option value="english">English</option></select>
+      <div id="codeWrap" class="hidden"><label for="code">Access code</label><input id="code" placeholder="Team access code" /></div>
+      <button id="startBtn" class="btn" style="width:100%;margin-top:16px">Start live guidance</button>
+      <p class="muted small" style="margin:10px 0 0">Needs camera and microphone. Use headphones in noisy places.</p>
+      <p id="health" class="small" style="margin:6px 0 0"></p>
+    </div>
+  </main>
+
+  <!-- Live -->
+  <main id="liveView" class="hidden">
+    <div class="stage">
+      <video id="video" playsinline muted autoplay></video>
+      <canvas id="overlay" class="overlay"></canvas>
+      <div class="top">
+        <span id="lockChip" class="chip red lock">🔒 Repair steps locked: confirm power off</span>
+        <span class="level" title="Mic level"><i id="level"></i></span>
+      </div>
+      <div id="caption" class="caption"></div>
+    </div>
+
+    <div id="thinking" class="chip amber hidden"></div>
+
+    <div id="markCard" class="card hidden">
+      <div class="row" style="margin-bottom:8px"><b class="grow">📍 Part marked</b><span id="markLabel" class="chip blue"></span></div>
+      <div class="mark-wrap"><img id="markImg" alt="Marked part" /><div id="markBox" class="box"></div><div id="markTag" class="tag"></div></div>
+    </div>
+
+    <div id="diagCard" class="card hidden">
+      <div class="row" style="margin-bottom:6px"><b class="grow">🧠 Likely causes</b><span id="diagSrc" class="chip grey small">Diagnosis agent</span></div>
+      <div id="causes"></div>
+      <p id="nextCheck" class="small" style="margin:8px 0 0"></p>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:8px"><b class="grow">🛠️ Steps</b><span id="stepCount" class="chip grey">0</span></div>
+      <ol id="steps" class="steps"><li class="muted small" id="noSteps">Steps will appear here as FixSaathi guides you.</li></ol>
+    </div>
+
+    <div class="card">
+      <b>💬 Conversation</b>
+      <div id="log" class="log" style="margin-top:8px"></div>
+    </div>
+  </main>
+
+  <div id="dock" class="dock hidden">
+    <div class="row">
+      <button id="micBtn" class="mic" title="Mute / unmute">🎙️</button>
+      <input id="textIn" class="grow" placeholder="Type if it's noisy… (Enter to send)" />
+      <button id="flipBtn" class="btn ghost" title="Switch camera">↺</button>
+    </div>
+    <div class="row">
+      <span id="conn" class="chip grey small">Connecting…</span>
+      <span class="grow"></span>
+      <button id="endBtn" class="btn green">Finish job</button>
+    </div>
+  </div>
+
+  <dialog id="reportDlg">
+    <div class="report">
+      <div class="row"><h3 class="grow">✅ Service report sent</h3><span id="rOutcome" class="chip green"></span></div>
+      <div id="rBody" class="kv"></div>
+      <p class="muted small" style="margin:0">Saved to the manager dashboard.</p>
+      <div class="row"><a class="btn ghost" href="/dashboard" target="_blank">Open dashboard</a><span class="grow"></span><button class="btn" onclick="location.reload()">New job</button></div>
+    </div>
+  </dialog>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
