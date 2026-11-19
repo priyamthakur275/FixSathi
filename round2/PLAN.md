@@ -65,7 +65,9 @@
 2. ✅ **Technician feedback:** 👍/👎 "Was the guidance correct?" after each job → accuracy % on the dashboard.
 3. ✅ **Nano Banana step card:** 🖼️ Picture button on each step generates a visual instruction card from the real camera frame.
 4. ✅ **Kannada and Tamil voice options.**
-5. ⏳ **Deck v2** for the jury: send Claude real screenshots, numbers and quotes tonight.
+5. ✅ **Field-visit kit** (`round2/FixSaathi_Field_Visit_Kit.pdf`): trial script, interview sheet, letter of interest. Print 3 copies.
+6. ✅ **One-page summary** (`round2/FixSaathi_One_Pager.pdf`): for mentors and the jury. Print 5 copies.
+7. ⏳ **Jury deck v2** (`deck/v2/`): draft ready; red [FILL] items and screenshots get replaced tonight with your real results.
 
 **Test these too today:** one step card, one Kannada session, and check the cost shows on the dashboard after a real job.
 
