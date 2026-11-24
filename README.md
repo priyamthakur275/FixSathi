@@ -15,6 +15,11 @@
 
 </div>
 
+<p align="center">
+<a href="docs/demo/fixsaathi-demo.mp4"><img src="docs/demo/demo.gif" width="860" alt="FixSaathi walkthrough: the server withholds power-sensitive steps until the technician records two safety statements, then releases them and writes the report"></a>
+<br><sub><a href="docs/demo/fixsaathi-demo.mp4"><b>Watch the 85-second walkthrough (MP4)</b></a></sub>
+</p>
+
 <table>
 <tr>
 <td width="68%"><img src="docs/screenshots/safety-lock.png" alt="Repair workspace: the safety panel keeps power-sensitive steps locked until the technician records two statements"></td>
@@ -25,7 +30,7 @@
 </tr>
 </table>
 
-<sub>Screenshots from a local run. The chat and workspace show one of the app's built-in demo scenarios, which are labelled on screen as scripted sample content; the safety lock, the withheld step and the retrieved records are the real server code.</sub>
+<sub>Walkthrough and screenshots are from a local run. The chat and workspace show one of the app's built-in demo scenarios, which are labelled on screen as scripted sample content; the safety lock, the withheld step and the retrieved records are the real server code.</sub>
 
 ## The problem
 
