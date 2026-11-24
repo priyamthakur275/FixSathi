@@ -9,7 +9,8 @@
 ![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-385_passing-2ea44f)
+[![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-385-2ea44f)
 ![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 
 </div>
@@ -83,7 +84,7 @@ flowchart TD
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser.
 - **Tests:** 385 automated tests: 331 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 54 frontend tests (Vitest, Testing Library). Plus the offline evaluation above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
-- **Deployment:** one Render Blueprint ([`render.yaml`](render.yaml)): static site, API and PostgreSQL. Secrets live only in Render's environment; a scheduled GitHub Action keeps the free-plan API awake.
+- **Deployment:** one Render Blueprint ([`render.yaml`](render.yaml)): static site, API and PostgreSQL. Secrets live only in Render's environment; a scheduled GitHub Action keeps the free-plan API awake, and CI runs every test and the evaluation on each push.
 
 ```
 frontend/   React app
