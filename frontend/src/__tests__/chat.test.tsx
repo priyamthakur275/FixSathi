@@ -277,6 +277,19 @@ describe('text vs voice replies', () => {
     await screen.findByText(`Reply to ${words}`)
   }
 
+  it('a chat opened by its address (refresh or bookmark) shows its saved messages once sign-in finishes', async () => {
+    const { default: ChatPage } = await import('../pages/ChatPage')
+    store['fixsaathi.refresh'] = 'saved-refresh-token'
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ access_token: 'a', refresh_token: 'r2', expires_in: 900 }), { status: 200, headers: { 'content-type': 'application/json' } })))
+    vi.spyOn(services.authService, 'currentUser').mockResolvedValue({ id: 'u1', full_name: 'Ravi', email: 'r@x.in', role: 'technician', preferred_language: 'English' } as never)
+    vi.spyOn(services.sessionService, 'mine').mockResolvedValue(page([]))
+    vi.spyOn(services.sessionService, 'get').mockResolvedValue({ id: 's7', title: 'AC not cooling', status: 'active' } as never)
+    vi.spyOn(services.chatService, 'history').mockResolvedValue({ items: [msg('u1', 'user', 'AC not cooling', 'text'), msg('a1', 'assistant', 'Check the filter first.', 'text')], total: 2, limit: 200, offset: 0 } as never)
+    const Gate = () => (useAuth().loading ? null : <ChatPage />)
+    render(<AuthProvider><PrefsProvider><AppProvider><MemoryRouter initialEntries={['/chat/s7']}><Routes><Route path="/chat/:id" element={<Gate />} /></Routes></MemoryRouter></AppProvider></PrefsProvider></AuthProvider>)
+    expect(await screen.findByText('Check the filter first.')).toBeTruthy()
+  })
+
   it('an AI answer can be marked helpful or not, with a note on what was wrong', async () => {
     const u = userEvent.setup()
     await chatPage()

@@ -148,8 +148,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // A different account signing in on this device must never see the previous account's open chat.
+  // Only a change away from a signed-in account clears the chat (sign-out, or another account). The first sign-in check on
+  // page load must not: the chat page has already started opening the conversation in the address bar, and clearing it then
+  // threw the loaded messages away, so a refreshed or bookmarked chat stayed on its loading placeholder.
   const userId = useMaybeAuth()?.user?.id ?? null
-  useEffect(() => { reset() }, [userId, reset])
+  const lastUser = useRef<string | null>(null)
+  useEffect(() => {
+    if (lastUser.current && lastUser.current !== userId) reset()
+    lastUser.current = userId
+  }, [userId, reset])
 
   const value = useMemo<Ctx>(() => ({ collapsed, toggleCollapsed: () => setCollapsed(c => !c), sessionId, session, messages, thinking, progress, draft, clearDraft, error, openError,
     freshReply, sessionsVersion, refreshSessions, send, openSession, newSession, setSessionTitle }),
