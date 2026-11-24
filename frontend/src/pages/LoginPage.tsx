@@ -38,20 +38,40 @@ export default function LoginPage() {
   const label = 'mb-1.5 block text-xs font-medium text-ink-2'
   return (
     <div className="grid min-h-dvh bg-bg lg:grid-cols-[1.05fr_1fr]">
-      <aside className="relative hidden overflow-hidden border-r border-line bg-bg-2 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="relative flex items-center gap-3"><Emblem height={44} /><Wordmark height={20} /></div>
+      <aside className="fs-diagnostic-grid relative hidden overflow-hidden border-r border-line bg-bg-2 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3"><Emblem height={44} /><Wordmark height={20} /></div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-teal">
+            <span className="h-1.5 w-1.5 rounded-full bg-teal" aria-hidden />
+            FIELD COPILOT v1.0
+          </span>
+        </div>
         <div className="relative max-w-lg">
           <p className="section-label mb-4 text-teal">AI repair copilot for field technicians</p>
-          <h2 className="text-4xl font-semibold leading-[1.15] tracking-tight xl:text-[44px]">A senior technician in <span className="fs-grad-text">every technician's pocket.</span></h2>
+          <h2 className="text-4xl font-semibold leading-[1.15] tracking-tight xl:text-[44px]">A senior technician in <span className="fs-grad-text">every technician&apos;s pocket.</span></h2>
           <ul className="mt-10 space-y-5">
             {FEATURES.map(x => { const I = x.icon; return (
               <li key={x.title} className="flex gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-line-2 bg-surface-2/70"><I size={20} className="text-teal" /></span>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-line-2 bg-surface-2/80"><I size={20} className="text-teal" /></span>
                 <span><span className="block font-semibold">{x.title}</span><span className="mt-0.5 block text-sm leading-relaxed text-ink-2">{x.body}</span></span>
               </li>) })}
           </ul>
+          <dl className="mt-10 grid grid-cols-3 gap-3 border-t border-line pt-6">
+            <div>
+              <dt className="text-[11px] text-ink-3">Held-out Hit@3</dt>
+              <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">96.7%</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-ink-3">Safety lock</dt>
+              <dd className="mt-1 text-lg font-semibold tabular-nums text-teal">12 / 12</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-ink-3">Verified records</dt>
+              <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">377</dd>
+            </div>
+          </dl>
         </div>
-        <p className="relative text-xs text-ink-3">Powered by Google Gemini · Team Tensor Trailblazers</p>
+        <p className="relative text-xs text-ink-3">Powered by Google Gemini · EN · HI · KN · Team Tensor Trailblazers</p>
       </aside>
 
       <main className="flex items-center justify-center px-5 py-10">
