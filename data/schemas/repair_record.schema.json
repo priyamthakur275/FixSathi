@@ -1,0 +1,336 @@
+{
+ "$defs": {
+  "Part": {
+   "properties": {
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "part_number": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Part Number"
+    }
+   },
+   "required": [
+    "name"
+   ],
+   "title": "Part",
+   "type": "object"
+  }
+ },
+ "properties": {
+  "record_id": {
+   "maxLength": 120,
+   "minLength": 3,
+   "title": "Record Id",
+   "type": "string"
+  },
+  "appliance_category": {
+   "title": "Appliance Category",
+   "type": "string"
+  },
+  "appliance_brand": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Appliance Brand"
+  },
+  "appliance_model": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Appliance Model"
+  },
+  "model_year": {
+   "anyOf": [
+    {
+     "maximum": 2100,
+     "minimum": 1950,
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Model Year"
+  },
+  "market": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Market"
+  },
+  "error_code": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Error Code"
+  },
+  "error_code_original": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Error Code Original"
+  },
+  "reported_symptoms": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Reported Symptoms",
+   "type": "array"
+  },
+  "observed_conditions": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Observed Conditions",
+   "type": "array"
+  },
+  "possible_faults": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Possible Faults",
+   "type": "array"
+  },
+  "suspected_components": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Suspected Components",
+   "type": "array"
+  },
+  "diagnostic_questions": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Diagnostic Questions",
+   "type": "array"
+  },
+  "diagnostic_procedure": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Diagnostic Procedure",
+   "type": "array"
+  },
+  "recommended_repair": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Recommended Repair"
+  },
+  "repair_steps": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Repair Steps",
+   "type": "array"
+  },
+  "required_tools": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Required Tools",
+   "type": "array"
+  },
+  "required_parts": {
+   "items": {
+    "$ref": "#/$defs/Part"
+   },
+   "title": "Required Parts",
+   "type": "array"
+  },
+  "safety_requirements": {
+   "description": "As stated by the source only",
+   "items": {
+    "type": "string"
+   },
+   "title": "Safety Requirements",
+   "type": "array"
+  },
+  "fixsaathi_safety_policy": {
+   "description": "Added by FixSaathi policy, kept separate from source text",
+   "items": {
+    "type": "string"
+   },
+   "title": "Fixsaathi Safety Policy",
+   "type": "array"
+  },
+  "requires_power_off": {
+   "default": false,
+   "title": "Requires Power Off",
+   "type": "boolean"
+  },
+  "severity": {
+   "anyOf": [
+    {
+     "enum": [
+      "informational",
+      "degraded",
+      "stop_failure",
+      "hazardous"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Severity"
+  },
+  "repair_difficulty": {
+   "anyOf": [
+    {
+     "enum": [
+      "diy",
+      "intermediate",
+      "professional"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Repair Difficulty"
+  },
+  "estimated_repair_duration_minutes": {
+   "anyOf": [
+    {
+     "maximum": 10000,
+     "minimum": 1,
+     "type": "integer"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Estimated Repair Duration Minutes"
+  },
+  "repair_outcome": {
+   "anyOf": [
+    {
+     "enum": [
+      "fixed",
+      "repairable",
+      "end_of_life",
+      "unknown"
+     ],
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Repair Outcome"
+  },
+  "source_name": {
+   "minLength": 2,
+   "title": "Source Name",
+   "type": "string"
+  },
+  "source_url": {
+   "anyOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ],
+   "default": null,
+   "title": "Source Url"
+  },
+  "source_license": {
+   "minLength": 2,
+   "title": "Source License",
+   "type": "string"
+  },
+  "source_record_id": {
+   "minLength": 1,
+   "title": "Source Record Id",
+   "type": "string"
+  },
+  "verification_status": {
+   "enum": [
+    "verified_source",
+    "technician_reviewed",
+    "unverified",
+    "synthetic_demo"
+   ],
+   "title": "Verification Status",
+   "type": "string"
+  },
+  "last_updated": {
+   "format": "date",
+   "title": "Last Updated",
+   "type": "string"
+  },
+  "provenance": {
+   "additionalProperties": true,
+   "title": "Provenance",
+   "type": "object"
+  }
+ },
+ "required": [
+  "record_id",
+  "appliance_category",
+  "source_name",
+  "source_license",
+  "source_record_id",
+  "verification_status",
+  "last_updated"
+ ],
+ "title": "RepairRecord",
+ "type": "object"
+}

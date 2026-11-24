@@ -1,0 +1,65 @@
+{
+ "records_valid": 377,
+ "by_source": {
+  "FixSaathi curated guidance": 12,
+  "ApplianceDB (free developer sample)": 280,
+  "LG Electronics: [LG Air Conditioner] Guide to Error Codes": 12,
+  "LG Electronics India: LG air conditioner: LED blinking or CH 00 shown": 1,
+  "LG Electronics: How to troubleshoot sensor and outdoor-unit error codes on your LG air conditioner": 2,
+  "Daikin Airconditioning India: Daikin India troubleshooting: Split and Multi-Split": 5,
+  "Samsung: How to fix a Samsung AC that is not cooling": 4,
+  "Samsung India: How to prevent water leakage from your air conditioner (indoor unit droplets)": 1,
+  "Samsung: Why is my Samsung AC leaking water indoors?": 1,
+  "Samsung India: How to resolve no power and no cooling issues on a Samsung refrigerator": 1,
+  "Samsung India: How to troubleshoot low cooling on a Samsung direct cool refrigerator": 3,
+  "LG Electronics: How to Troubleshoot Unusual Noises From Your LG Refrigerator": 5,
+  "Crompton Greaves Consumer Electricals: Ceiling Fan Stopped Working? Here's How to Troubleshoot & Fix It": 10,
+  "Orient Electric: How to address the most common ceiling fan problems": 6,
+  "Samsung: Samsung Microwave oven troubleshooting": 8,
+  "Samsung: What to do before requesting service on a broken microwave": 5,
+  "Samsung: Why is my Samsung microwave not heating or working?": 3,
+  "Eureka Forbes (manual hosted by Croma): Aquaguard Royale RO+UV+MTDS Water Purifier User Manual (Eureka Forbes)": 6,
+  "Eureka Forbes (manual hosted by manualmachine.com): Aquaguard Total Classic range User Manual (Eureka Forbes)": 2,
+  "KENT RO Systems (manual hosted by manuals.plus): KENT Sapphire RO Water Purifier User Manual": 5,
+  "KENT RO Systems (manual hosted by manuals.plus): KENT Sterling Plus RO Water Purifier User Manual": 5
+ },
+ "by_category": {
+  "ceiling_fan": 19,
+  "split_ac": 28,
+  "washing_machine": 253,
+  "refrigerator": 41,
+  "mcb_electrical": 1,
+  "rooftop_solar": 1,
+  "microwave_oven": 16,
+  "water_purifier": 18
+ },
+ "by_verification_status": {
+  "unverified": 188,
+  "verified_source": 189
+ },
+ "records_rejected": 0,
+ "rejected_reasons": {},
+ "skipped_by_source": {
+  "fixsaathi_curated": {
+   "count": 0,
+   "reasons": {}
+  },
+  "appliancedb": {
+   "count": 158,
+   "reasons": {
+    "out_of_scope:dishwasher": 73,
+    "out_of_scope:oven_range": 45,
+    "out_of_scope:dryer": 40
+   }
+  },
+  "manufacturer_docs": {
+   "count": 0,
+   "reasons": {}
+  }
+ },
+ "synthetic_demo": {
+  "valid": 4,
+  "rejected": 0,
+  "note": "Kept separate. Not ingested unless --include-synthetic."
+ }
+}
