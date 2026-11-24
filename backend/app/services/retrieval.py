@@ -1,5 +1,5 @@
 """Similar-repair retrieval. Embeddings mode uses Gemini embeddings stored in repair_embeddings and cosine similarity in Python.
-Keyword mode always works. The response states which mode was used. ScaNN / pgvector are NOT used here (see docs/ALLOYDB.md)."""
+Keyword mode always works. The response states which mode was used. ScaNN / pgvector are NOT used here (see docs/RAG_PIPELINE.md)."""
 import logging
 from sqlalchemy import select
 from sqlalchemy.orm import Session

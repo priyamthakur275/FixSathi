@@ -293,6 +293,11 @@ describe('text vs voice replies', () => {
     await u.click(screen.getByRole('button', { name: 'Helpful' }))
     expect(rate).toHaveBeenLastCalledWith('s1', 'a9', true, undefined)
     expect(screen.getByRole('button', { name: 'Helpful' }).getAttribute('aria-pressed')).toBe('true')
+    // a failed save is not reported as saved, and the thumb goes back
+    rate.mockRejectedValueOnce(new Error('network'))
+    await u.click(screen.getByRole('button', { name: 'Not helpful' }))
+    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Not helpful' }).getAttribute('aria-pressed')).toBe('false')
   })
 
   it('typed messages are answered in text only, even with the speaker on', async () => {

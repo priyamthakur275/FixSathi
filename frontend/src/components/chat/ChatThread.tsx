@@ -46,11 +46,13 @@ function RateAnswer({ m }: { m: ChatMessage }) {
   const [note, setNote] = useState('')
   const [asking, setAsking] = useState(false)
   const [sent, setSent] = useState(false)
+  const [failed, setFailed] = useState(false)
   if (!sessionId) return null
+  /** Optimistic: the thumb lights up at once and goes back if the server did not save it. Returns whether it was saved. */
   const save = async (helpful: boolean | null, comment?: string) => {
     const before = value
-    setValue(helpful ?? undefined)
-    try { await sessionService.rateAnswer(sessionId, m.id, helpful, comment) } catch { setValue(before) }
+    setValue(helpful ?? undefined); setFailed(false)
+    try { await sessionService.rateAnswer(sessionId, m.id, helpful, comment); return true } catch { setValue(before); setFailed(true); return false }
   }
   const pick = (helpful: boolean) => {
     if (value === helpful) { setAsking(false); void save(null); return }
@@ -61,9 +63,10 @@ function RateAnswer({ m }: { m: ChatMessage }) {
     <>
       <button onClick={() => pick(true)} aria-pressed={value === true} aria-label={t('chat.helpful')} title={t('chat.helpful')} className={`${tool} ${value === true ? on : ''}`}><ThumbsUp size={13} className={value === true ? 'text-ok' : ''} /></button>
       <button onClick={() => pick(false)} aria-pressed={value === false} aria-label={t('chat.notHelpful')} title={t('chat.notHelpful')} className={`${tool} ${value === false ? on : ''}`}><ThumbsDown size={13} className={value === false ? 'text-crit' : ''} /></button>
-      {sent && <span className="ml-1 text-ok">{t('chat.thanks')}</span>}
+      {sent && !failed && <span className="ml-1 text-ok">{t('chat.thanks')}</span>}
+      {failed && <span role="alert" className="ml-1 text-crit">{t('chat.rateFailed')}</span>}
       {asking && (
-        <form className="mt-1.5 flex w-full max-w-md items-center gap-2" onSubmit={e => { e.preventDefault(); setAsking(false); setSent(true); void save(false, note.trim()) }}>
+        <form className="mt-1.5 flex w-full max-w-md items-center gap-2" onSubmit={e => { e.preventDefault(); setAsking(false); void save(false, note.trim()).then(ok => setSent(ok)) }}>
           <input value={note} onChange={e => setNote(e.target.value)} maxLength={500} autoFocus placeholder={t('chat.whatWrong')} aria-label={t('chat.whatWrong')}
             className="min-w-0 flex-1 rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] text-ink outline-none focus:border-accent" />
           <button type="submit" className="btn btn-sm">{t('chat.send')}</button>

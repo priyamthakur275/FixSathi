@@ -30,7 +30,7 @@ async def lifespan(_: FastAPI):
 def create_app() -> FastAPI:
     s = get_settings()
     app = FastAPI(title='FixSaathi API', version='1.0.0', lifespan=lifespan, docs_url='/docs', redoc_url='/redoc')
-    app.add_middleware(CORSMiddleware, allow_origins=s.cors_list, allow_credentials=False, allow_methods=['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    app.add_middleware(CORSMiddleware, allow_origins=s.cors_list, allow_credentials=False, allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
                        allow_headers=['Authorization', 'Content-Type', 'X-Request-ID'], expose_headers=['X-Request-ID', 'X-Voice', 'X-Voice-Provider', 'X-Voice-Model', 'X-Voice-Id'])  # X-Voice: which voice spoke (personal or a Gemini voice)
     app.add_middleware(RequestIdMiddleware)
     install_handlers(app)

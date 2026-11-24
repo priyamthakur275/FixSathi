@@ -57,3 +57,12 @@ def test_dashboard_counts_answer_feedback(client, tech, session_id, fake):
         client.put(f'/api/v1/sessions/{session_id}/messages/{mid}/feedback', json={'helpful': ok}, headers=tech['h'])
     o = client.get('/api/v1/dashboard/overview', headers=manager['h']).json()
     assert o['answers_rated'] == 3 and o['answers_helpful'] == 2 and o['answer_helpful_rate'] == 0.667
+
+
+def test_browser_preflight_allows_put(client):
+    """The web app runs on another origin, so the browser asks first; PUT must be allowed or the rating never arrives."""
+    from app.config import get_settings
+    origin = get_settings().cors_list[0]
+    r = client.options('/api/v1/sessions/x/messages/y/feedback', headers={'Origin': origin, 'Access-Control-Request-Method': 'PUT',
+                                                                          'Access-Control-Request-Headers': 'authorization,content-type'})
+    assert r.status_code == 200 and 'PUT' in r.headers['access-control-allow-methods']

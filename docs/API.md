@@ -11,6 +11,7 @@ Base: `/api/v1`. Errors always look like `{"error": {"code", "message", "details
 | AppContext.send (first message) | `POST /sessions` | repair_sessions |
 | Composer / CameraModal → photo | `POST /sessions/{id}/images` (multipart) | media + file in storage |
 | AppContext.send | `POST /sessions/{id}/messages` (a request for a report/PDF is answered by the server, not Gemini: `meta.action = pdf_report`) | conversations (user + AI reply) |
+| Chat → thumbs up / down on an AI answer | `PUT /sessions/{id}/messages/{message_id}/feedback` with `{helpful, comment?}` (`helpful: null` clears it; owner only) | conversations.metadata.feedback |
 | ChatPage `/chat/:id` (open existing) | `GET /sessions/{id}`, `GET /sessions/{id}/messages` | |
 | Sidebar chat history and search | `GET /sessions?mine=true&q=` (searches titles, issue and message text; hidden chats excluded) | |
 | Sidebar → Rename | `PATCH /sessions/{id}` with `{title}` (allowed on closed sessions too) | repair_sessions.title |

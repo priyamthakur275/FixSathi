@@ -10,6 +10,6 @@ uvicorn app.main:app --reload --port 8000   # /docs, /health, /ready
 pytest -q                                   # needs DATABASE_URL pointing at an empty test DB
 ```
 
-Layout: `app/api/v1` routers · `app/services` business logic, access policy and **safety** · `app/agents` prompts and output schemas · `app/integrations/gemini` the single Gemini client and Live relay connector · `app/integrations/storage` local file storage · `app/db` models and session · `alembic/` migrations · `tests/` (52 tests, Gemini mocked) · `scripts/` user and role admin, knowledge indexing.
+Layout: `app/api/v1` routers · `app/services` business logic, access policy and **safety** · `app/agents` prompts and output schemas · `app/integrations/gemini` the single Gemini client and Live relay connector · `app/integrations/storage` local file storage · `app/db` models and session · `alembic/` migrations · `tests/` (340 tests on real PostgreSQL, Gemini replaced by a deterministic fake) · `scripts/` dataset pipeline, knowledge indexing, user admin and `evaluate.py` (offline retrieval and safety evaluation).
 
-Docs: ../docs/API.md, ../docs/LIVE_PROTOCOL.md, ../docs/ALLOYDB.md, ../docs/DEPLOY_CLOUD_RUN.md (also included in the backend zip under docs/).
+Docs: [API](../docs/API.md) · [Live voice protocol](../docs/LIVE_PROTOCOL.md) · [Retrieval](../docs/RAG_PIPELINE.md) · [Security](../docs/SECURITY.md) · [Evaluation](../docs/EVALUATION.md)
