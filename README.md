@@ -59,19 +59,17 @@ These numbers cover retrieval (keyword and error-code channels, reproducible wit
 ## How it works
 
 ```mermaid
-flowchart LR
-    T["Technician<br/>(text, voice, photo)"] --> W["React web app"]
+flowchart TD
+    T["Technician: text, voice or photo"] --> W["React web app"]
     W -->|HTTPS + JWT| A["FastAPI"]
-    A --> R["Retrieval<br/>error codes · full-text · embeddings"]
-    R --> DB[("PostgreSQL<br/>377 repair records,<br/>sessions, safety log")]
+    A --> R["Retrieval: error codes, full-text, embeddings"]
+    R <--> DB[("PostgreSQL: 377 repair records, sessions, safety log")]
     R -->|top records only| G["Google Gemini"]
-    G --> S{"Safety screen<br/>(server rule)"}
+    G --> S{"Server safety screen"}
     S -->|isolation not recorded| L["Power steps withheld"]
-    S -->|statements recorded| O["Full answer + citations"]
+    S -->|both statements recorded| O["Full answer with citations"]
     L --> W
     O --> W
-    A --> V["Gemini Live relay<br/>(WebSocket)"]
-    V --> S
 ```
 
 1. **Retrieve.** The appliance comes from the session or is detected from the technician's words. Brand and error codes are extracted ("CH 38", "CH38" and the alias "F4" all reach LG's record). Records are ranked within that appliance: exact error-code matches first, then PostgreSQL full-text search and Gemini embeddings, whose scores are fused so a record found both ways ranks highest.
