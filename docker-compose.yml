@@ -1,0 +1,57 @@
+# Own project name, so this stack never reuses the containers or volumes of another FixSaathi copy on the same machine.
+name: fixsaathi-submission
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fixsaathi
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fixsaathi}
+      POSTGRES_DB: fixsaathi
+    volumes: [pgdata:/var/lib/postgresql/data]
+    # Host ports come from the root .env (see .env.example), so they can avoid other local Postgres servers.
+    ports: ["127.0.0.1:${DB_HOST_PORT:-5432}:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fixsaathi"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    # Secrets live in backend/.env only; the root .env holds compose settings (ports, database password).
+    env_file:
+      - path: ./backend/.env
+        required: false
+      - path: ./.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://fixsaathi:${POSTGRES_PASSWORD:-fixsaathi}@db:5432/fixsaathi
+      CORS_ORIGINS: http://localhost:${FRONTEND_HOST_PORT:-5173}
+      PORT: "8000"
+      FIXSAATHI_DATA_DIR: /data
+    # migrations, then idempotent load of the processed repair records (skips if the file is missing), then the API
+    command: sh -c "alembic upgrade head && python scripts/ingest_knowledge.py --if-present && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - uploads:/app/uploads
+      - ./data:/data
+    restart: unless-stopped
+    ports: ["${BACKEND_HOST_PORT:-8000}:8000"]
+    depends_on:
+      db: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/ready')"]
+      interval: 10s
+      retries: 6
+
+  frontend:
+    build:
+      context: ./frontend
+      args: { VITE_API_BASE_URL: "http://localhost:${BACKEND_HOST_PORT:-8000}" }
+    ports: ["${FRONTEND_HOST_PORT:-5173}:80"]
+    depends_on:
+      backend: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  uploads:
