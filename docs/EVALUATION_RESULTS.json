@@ -1,0 +1,471 @@
+{
+ "date": "2026-11-24",
+ "retrieval_channels": "error code + PostgreSQL full-text",
+ "note": "development = the sets the Hindi search terms and the take-out rule were fixed against; held_out = written after those fixes and not used to change any code.",
+ "development": {
+  "retrieval": {
+   "appliance_selected": {
+    "overall": {
+     "cases": 60,
+     "hit@1": 0.75,
+     "hit@3": 0.917,
+     "hit@6": 0.95,
+     "mrr": 0.828
+    },
+    "by_language": {
+     "en": {
+      "cases": 51,
+      "hit@1": 0.765,
+      "hit@3": 0.922,
+      "hit@6": 0.961,
+      "mrr": 0.841
+     },
+     "hi": {
+      "cases": 2,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "hinglish": {
+      "cases": 7,
+      "hit@1": 0.571,
+      "hit@3": 0.857,
+      "hit@6": 0.857,
+      "mrr": 0.69
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 10,
+      "hit@1": 0.6,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.783
+     },
+     "microwave_oven": {
+      "cases": 6,
+      "hit@1": 0.5,
+      "hit@3": 0.667,
+      "hit@6": 0.667,
+      "mrr": 0.583
+     },
+     "refrigerator": {
+      "cases": 12,
+      "hit@1": 0.917,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.944
+     },
+     "split_ac": {
+      "cases": 12,
+      "hit@1": 0.917,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.958
+     },
+     "washing_machine": {
+      "cases": 14,
+      "hit@1": 0.714,
+      "hit@3": 0.857,
+      "hit@6": 0.929,
+      "mrr": 0.788
+     },
+     "water_purifier": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.833,
+      "hit@6": 1.0,
+      "mrr": 0.75
+     }
+    },
+    "misses_top3": [
+     {
+      "id": "r35",
+      "query": "Washing machine not draining, water stays in the drum after the wash",
+      "rank": 5,
+      "top3": [
+       "appliancedb:56",
+       "appliancedb:2",
+       "appliancedb:8"
+      ]
+     },
+     {
+      "id": "r36",
+      "query": "washing machine se paani bahar nahi nikal raha",
+      "rank": null,
+      "top3": [
+       "appliancedb:2",
+       "appliancedb:56",
+       "appliancedb:8"
+      ]
+     },
+     {
+      "id": "r52",
+      "query": "microwave switches itself off before the timer finishes",
+      "rank": null,
+      "top3": [
+       "mfr:samsung-mw-not-cooking-breaker",
+       "mfr:samsung-mw-no-display",
+       "mfr:samsung-mw-demo-mode"
+      ]
+     },
+     {
+      "id": "r53",
+      "query": "microwave plate not rotating properly and makes noise",
+      "rank": null,
+      "top3": []
+     },
+     {
+      "id": "r58",
+      "query": "Kent RO keeps beeping",
+      "rank": 6,
+      "top3": [
+       "mfr:kent-sapphire-leak",
+       "mfr:kent-sapphire-low-pressure",
+       "mfr:kent-sapphire-no-flow"
+      ]
+     }
+    ]
+   },
+   "appliance_detected": {
+    "overall": {
+     "cases": 60,
+     "hit@1": 0.75,
+     "hit@3": 0.917,
+     "hit@6": 0.95,
+     "mrr": 0.828
+    },
+    "by_language": {
+     "en": {
+      "cases": 51,
+      "hit@1": 0.765,
+      "hit@3": 0.922,
+      "hit@6": 0.961,
+      "mrr": 0.841
+     },
+     "hi": {
+      "cases": 2,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "hinglish": {
+      "cases": 7,
+      "hit@1": 0.571,
+      "hit@3": 0.857,
+      "hit@6": 0.857,
+      "mrr": 0.69
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 10,
+      "hit@1": 0.6,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.783
+     },
+     "microwave_oven": {
+      "cases": 6,
+      "hit@1": 0.5,
+      "hit@3": 0.667,
+      "hit@6": 0.667,
+      "mrr": 0.583
+     },
+     "refrigerator": {
+      "cases": 12,
+      "hit@1": 0.917,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.944
+     },
+     "split_ac": {
+      "cases": 12,
+      "hit@1": 0.917,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.958
+     },
+     "washing_machine": {
+      "cases": 14,
+      "hit@1": 0.714,
+      "hit@3": 0.857,
+      "hit@6": 0.929,
+      "mrr": 0.788
+     },
+     "water_purifier": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.833,
+      "hit@6": 1.0,
+      "mrr": 0.75
+     }
+    },
+    "misses_top3": [
+     {
+      "id": "r35",
+      "query": "Washing machine not draining, water stays in the drum after the wash",
+      "rank": 5,
+      "top3": [
+       "appliancedb:56",
+       "appliancedb:2",
+       "appliancedb:8"
+      ]
+     },
+     {
+      "id": "r36",
+      "query": "washing machine se paani bahar nahi nikal raha",
+      "rank": null,
+      "top3": [
+       "appliancedb:2",
+       "appliancedb:56",
+       "appliancedb:8"
+      ]
+     },
+     {
+      "id": "r52",
+      "query": "microwave switches itself off before the timer finishes",
+      "rank": null,
+      "top3": [
+       "mfr:samsung-mw-not-cooking-breaker",
+       "mfr:samsung-mw-no-display",
+       "mfr:samsung-mw-demo-mode"
+      ]
+     },
+     {
+      "id": "r53",
+      "query": "microwave plate not rotating properly and makes noise",
+      "rank": null,
+      "top3": []
+     },
+     {
+      "id": "r58",
+      "query": "Kent RO keeps beeping",
+      "rank": 6,
+      "top3": [
+       "mfr:kent-sapphire-leak",
+       "mfr:kent-sapphire-low-pressure",
+       "mfr:kent-sapphire-no-flow"
+      ]
+     }
+    ]
+   },
+   "appliance_detection_accuracy": 1.0,
+   "appliance_detection_misses": []
+  },
+  "safety_filter": {
+   "cases": 50,
+   "unsafe_withheld": "25/25",
+   "recall_unsafe": 1.0,
+   "safe_shown": "25/25",
+   "false_positive_rate": 0.0,
+   "errors": []
+  }
+ },
+ "held_out": {
+  "retrieval": {
+   "appliance_selected": {
+    "overall": {
+     "cases": 30,
+     "hit@1": 0.833,
+     "hit@3": 0.967,
+     "hit@6": 1.0,
+     "mrr": 0.901
+    },
+    "by_language": {
+     "en": {
+      "cases": 19,
+      "hit@1": 0.842,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.921
+     },
+     "hi": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.833,
+      "hit@6": 1.0,
+      "mrr": 0.756
+     },
+     "hinglish": {
+      "cases": 5,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 5,
+      "hit@1": 0.8,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.867
+     },
+     "microwave_oven": {
+      "cases": 4,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "refrigerator": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.917
+     },
+     "split_ac": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.917
+     },
+     "washing_machine": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.833,
+      "hit@6": 1.0,
+      "mrr": 0.783
+     },
+     "water_purifier": {
+      "cases": 3,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "misses_top3": [
+     {
+      "id": "h18",
+      "query": "वॉशिंग मशीन से पानी नहीं निकल रहा",
+      "rank": 5,
+      "top3": [
+       "appliancedb:2",
+       "appliancedb:56",
+       "appliancedb:8"
+      ]
+     }
+    ]
+   },
+   "appliance_detected": {
+    "overall": {
+     "cases": 30,
+     "hit@1": 0.833,
+     "hit@3": 0.967,
+     "hit@6": 1.0,
+     "mrr": 0.901
+    },
+    "by_language": {
+     "en": {
+      "cases": 19,
+      "hit@1": 0.842,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.921
+     },
+     "hi": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.833,
+      "hit@6": 1.0,
+      "mrr": 0.756
+     },
+     "hinglish": {
+      "cases": 5,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 5,
+      "hit@1": 0.8,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.867
+     },
+     "microwave_oven": {
+      "cases": 4,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "refrigerator": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.917
+     },
+     "split_ac": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.917
+     },
+     "washing_machine": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.833,
+      "hit@6": 1.0,
+      "mrr": 0.783
+     },
+     "water_purifier": {
+      "cases": 3,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "misses_top3": [
+     {
+      "id": "h18",
+      "query": "वॉशिंग मशीन से पानी नहीं निकल रहा",
+      "rank": 5,
+      "top3": [
+       "appliancedb:2",
+       "appliancedb:56",
+       "appliancedb:8"
+      ]
+     }
+    ]
+   },
+   "appliance_detection_accuracy": 0.967,
+   "appliance_detection_misses": [
+    {
+     "id": "h28",
+     "query": "RO se paani bahut kam aa raha hai",
+     "expected": "water_purifier",
+     "got": "unknown"
+    }
+   ]
+  },
+  "safety_filter": {
+   "cases": 24,
+   "unsafe_withheld": "12/12",
+   "recall_unsafe": 1.0,
+   "safe_shown": "11/12",
+   "false_positive_rate": 0.083,
+   "errors": [
+    {
+     "id": "hs08",
+     "text": "Make sure the inlet tap is fully open.",
+     "expected": "safe_to_show",
+     "withheld": true
+    }
+   ]
+  }
+ }
+}

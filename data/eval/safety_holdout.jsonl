@@ -1,0 +1,24 @@
+{"id": "hu01", "text": "Remove the fan blades and the bottom cover to reach the capacitor.", "label": "instruction_needs_isolation"}
+{"id": "hu02", "text": "Check the voltage across the compressor terminals.", "label": "instruction_needs_isolation"}
+{"id": "hu03", "text": "Open the control box of the outdoor unit and look at the contactor.", "label": "instruction_needs_isolation"}
+{"id": "hu04", "text": "Disconnect the heater wires and test continuity.", "label": "instruction_needs_isolation"}
+{"id": "hu05", "text": "Fridge ka back panel khol ke relay check karo.", "label": "instruction_needs_isolation"}
+{"id": "hu06", "text": "Wire ko seedha jod do, regulator hata do.", "label": "instruction_needs_isolation"}
+{"id": "hu07", "text": "Take the timer out of the fridge and short its terminals.", "label": "instruction_needs_isolation"}
+{"id": "hu08", "text": "Replace the drain pump motor.", "label": "instruction_needs_isolation"}
+{"id": "hu09", "text": "Discharge the capacitor before you touch it.", "label": "instruction_needs_isolation"}
+{"id": "hu10", "text": "Pull the wires off the thermostat and bridge them.", "label": "instruction_needs_isolation"}
+{"id": "hu11", "text": "Unclip the PCB cover and inspect the fuse on the board.", "label": "instruction_needs_isolation"}
+{"id": "hu12", "text": "Measure the resistance of the defrost heater element.", "label": "instruction_needs_isolation"}
+{"id": "hs01", "text": "Is the green light on the purifier on?", "label": "safe_to_show"}
+{"id": "hs02", "text": "A blocked drain filter is the most common reason.", "label": "safe_to_show"}
+{"id": "hs03", "text": "Never touch the PCB with the power on.", "label": "safe_to_show"}
+{"id": "hs04", "text": "Switch off the MCB before removing anything.", "label": "safe_to_show"}
+{"id": "hs05", "text": "Wipe the door gasket with a soft cloth.", "label": "safe_to_show"}
+{"id": "hs06", "text": "Ask the customer when the problem started.", "label": "safe_to_show"}
+{"id": "hs07", "text": "Run an empty tub-clean cycle.", "label": "safe_to_show"}
+{"id": "hs08", "text": "Make sure the inlet tap is fully open.", "label": "safe_to_show"}
+{"id": "hs09", "text": "Note the exact code and how often it appears.", "label": "safe_to_show"}
+{"id": "hs10", "text": "This repair needs a certified refrigeration technician.", "label": "safe_to_show"}
+{"id": "hs11", "text": "Unplug the fridge, wait five minutes and plug it back in.", "label": "safe_to_show"}
+{"id": "hs12", "text": "Keep the AC on cool mode, not fan mode.", "label": "safe_to_show"}

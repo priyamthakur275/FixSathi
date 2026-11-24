@@ -1,0 +1,330 @@
+{
+ "version": 1,
+ "note": "Generic, safety-first guidance. No manufacturer-specific specifications.",
+ "entries": [
+  {
+   "key": "fan_slow_hum",
+   "appliance_type": "ceiling_fan",
+   "fault_category": "Electrical",
+   "symptoms": [
+    "fan runs slow",
+    "humming",
+    "needs a push to start"
+   ],
+   "possible_causes": [
+    "Weak or failed run capacitor",
+    "Worn bearings",
+    "Faulty regulator"
+   ],
+   "troubleshooting_steps": [
+    "Ask whether speed changes across regulator positions",
+    "With power off and verified, check whether the blades turn freely by hand",
+    "Compare capacitor rating on the label with a known-good replacement",
+    "Replace the capacitor only with the same rating"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Burnt smell or melted insulation",
+    "Wiring damage in the canopy"
+   ]
+  },
+  {
+   "key": "fan_no_start",
+   "appliance_type": "ceiling_fan",
+   "fault_category": "Electrical",
+   "symptoms": [
+    "fan does not start",
+    "no sound"
+   ],
+   "possible_causes": [
+    "No supply at the fan",
+    "Open winding",
+    "Loose terminal in canopy",
+    "Faulty switch or regulator"
+   ],
+   "troubleshooting_steps": [
+    "Check whether other loads on the same circuit work",
+    "Set the regulator to full speed and check whether the fan hums or responds at all (observation only)",
+    "With power isolated and verified, inspect canopy terminals for looseness"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Repeated MCB trips",
+    "Signs of burning"
+   ]
+  },
+  {
+   "key": "fan_wobble_noise",
+   "appliance_type": "ceiling_fan",
+   "fault_category": "Mechanical",
+   "symptoms": [
+    "wobble",
+    "noise",
+    "grinding"
+   ],
+   "possible_causes": [
+    "Unbalanced or bent blades",
+    "Loose blade screws",
+    "Worn bearings"
+   ],
+   "troubleshooting_steps": [
+    "Observe wobble at each speed",
+    "With power isolated, tighten blade and canopy screws",
+    "Check blade alignment"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Mounting hook or ceiling damage"
+   ]
+  },
+  {
+   "key": "ac_low_cooling",
+   "appliance_type": "split_ac",
+   "fault_category": "Cooling",
+   "symptoms": [
+    "not cooling",
+    "weak cooling",
+    "running but warm air"
+   ],
+   "possible_causes": [
+    "Dirty air filter or coil",
+    "Outdoor fan not running",
+    "Low refrigerant (needs senior)",
+    "Wrong mode or set temperature"
+   ],
+   "troubleshooting_steps": [
+    "Confirm mode and set temperature",
+    "Check indoor airflow strength",
+    "Inspect and clean the indoor filter",
+    "Check whether the outdoor fan and compressor run"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB and verify with your own tester before opening covers.",
+    "Do not handle refrigerant without certification."
+   ],
+   "escalation_conditions": [
+    "Refrigerant leak suspected",
+    "Ice on pipes",
+    "Compressor not starting"
+   ]
+  },
+  {
+   "key": "ac_water_leak",
+   "appliance_type": "split_ac",
+   "fault_category": "Mechanical",
+   "symptoms": [
+    "water dripping from indoor unit"
+   ],
+   "possible_causes": [
+    "Blocked drain pipe",
+    "Indoor unit not level",
+    "Dirty coil causing overflow"
+   ],
+   "troubleshooting_steps": [
+    "Check the drain outlet outside",
+    "Check indoor unit level",
+    "Clear the drain line"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Water near electrical parts"
+   ]
+  },
+  {
+   "key": "wm_spin_noise",
+   "appliance_type": "washing_machine",
+   "fault_category": "Mechanical",
+   "symptoms": [
+    "loud noise during spin",
+    "vibration",
+    "walking"
+   ],
+   "possible_causes": [
+    "Unbalanced load",
+    "Transit bolts not removed (new install)",
+    "Worn shock absorbers or suspension",
+    "Worn drum bearing"
+   ],
+   "troubleshooting_steps": [
+    "Redistribute the load and run a spin",
+    "Check that the machine is level",
+    "With power isolated, inspect suspension and dampers",
+    "Turn the drum by hand and listen for bearing noise"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Drum bearing replacement needed"
+   ]
+  },
+  {
+   "key": "wm_no_drain",
+   "appliance_type": "washing_machine",
+   "fault_category": "Mechanical",
+   "symptoms": [
+    "not draining",
+    "water remains"
+   ],
+   "possible_causes": [
+    "Blocked drain filter",
+    "Kinked drain hose",
+    "Drain pump fault"
+   ],
+   "troubleshooting_steps": [
+    "Check the drain hose for kinks",
+    "With power isolated, drain residual water and clean the pump filter"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Pump motor electrical fault"
+   ]
+  },
+  {
+   "key": "wm_door_lock",
+   "appliance_type": "washing_machine",
+   "fault_category": "Electrical",
+   "symptoms": [
+    "will not start",
+    "door lock error"
+   ],
+   "possible_causes": [
+    "Door not fully closed",
+    "Door lock fault",
+    "Control board fault (needs senior)"
+   ],
+   "troubleshooting_steps": [
+    "Close the door firmly and retry",
+    "Check the door seal for obstruction"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Control board fault"
+   ]
+  },
+  {
+   "key": "fridge_not_cooling",
+   "appliance_type": "refrigerator",
+   "fault_category": "Cooling",
+   "symptoms": [
+    "main compartment warm",
+    "freezer cold but fridge warm"
+   ],
+   "possible_causes": [
+    "Defrost system fault (heater, timer or sensor)",
+    "Evaporator fan not running",
+    "Door seal leak",
+    "Thermostat setting"
+   ],
+   "troubleshooting_steps": [
+    "Check thermostat setting",
+    "Check whether the evaporator fan runs with the door switch pressed",
+    "Look for heavy frost on the evaporator cover",
+    "Check the door gasket"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Sealed system or gas fault suspected",
+    "Compressor not running"
+   ]
+  },
+  {
+   "key": "fridge_noise",
+   "appliance_type": "refrigerator",
+   "fault_category": "Mechanical",
+   "symptoms": [
+    "clicking",
+    "buzzing",
+    "rattling"
+   ],
+   "possible_causes": [
+    "Condenser fan obstruction",
+    "Loose panel",
+    "Compressor relay clicking"
+   ],
+   "troubleshooting_steps": [
+    "Check the back for loose items and dust",
+    "Listen for where the noise comes from"
+   ],
+   "safety_requirements": [
+    "Switch off at the MCB or isolator and verify with your own tester before opening anything.",
+    "Discharge capacitors before handling."
+   ],
+   "escalation_conditions": [
+    "Compressor relay repeatedly clicking with no cooling"
+   ]
+  },
+  {
+   "key": "mcb_trip",
+   "appliance_type": "mcb_electrical",
+   "fault_category": "Electrical",
+   "symptoms": [
+    "MCB trips repeatedly",
+    "power cuts when appliance starts"
+   ],
+   "possible_causes": [
+    "Overload on the circuit",
+    "Short circuit in an appliance or wiring",
+    "Earth leakage (RCCB)"
+   ],
+   "troubleshooting_steps": [
+    "Note which loads were on when it tripped",
+    "Disconnect loads and reset; add loads one by one",
+    "Check for burnt smell or heat at the board"
+   ],
+   "safety_requirements": [
+    "Isolate upstream before touching the distribution board and verify with your own tester."
+   ],
+   "escalation_conditions": [
+    "Board heating or burning smell",
+    "Trips with no load connected"
+   ]
+  },
+  {
+   "key": "solar_low_output",
+   "appliance_type": "rooftop_solar",
+   "fault_category": "Electrical",
+   "symptoms": [
+    "low generation",
+    "inverter error"
+   ],
+   "possible_causes": [
+    "Dirty panels or shading",
+    "Loose DC connector",
+    "Inverter fault"
+   ],
+   "troubleshooting_steps": [
+    "Check inverter display error code",
+    "Inspect panels for dust and shading from the ground or safe access"
+   ],
+   "safety_requirements": [
+    "DC side can remain live in daylight. Do not open DC connectors; escalate to a qualified solar technician."
+   ],
+   "escalation_conditions": [
+    "Any DC wiring, connector or inverter internal work"
+   ]
+  }
+ ]
+}

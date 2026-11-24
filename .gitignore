@@ -1,0 +1,17 @@
+# secrets
+.env
+*.env
+!.env.example
+# dependencies and builds
+node_modules/
+.venv/
+dist/
+__pycache__/
+*.pyc
+.pytest_cache/
+# runtime data
+uploads/
+backend/uploads/
+.DS_Store
+# local run logs and pids
+.run/
