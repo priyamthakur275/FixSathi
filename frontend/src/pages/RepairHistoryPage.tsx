@@ -15,7 +15,7 @@ export default function RepairHistoryPage({ mine = false }: { mine?: boolean }) 
   const tab = ({ isActive }: { isActive: boolean }) => `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-surface-3 text-ink shadow-[inset_0_0_0_1px_var(--color-line-2)]' : 'text-ink-2 hover:text-ink'}`
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
-      <PageHeader eyebrow="Workspace" title={mine ? 'My Repairs' : 'Repair History'} subtitle={mine ? 'Repairs that are still open or escalated.' : 'Repair sessions you are allowed to see.'}
+      <PageHeader eyebrow="Workspace" title={mine ? 'My repairs' : 'Repair history'} subtitle={mine ? 'Repairs that are still open or escalated.' : 'Repair sessions you are allowed to see.'}
         right={<div className="flex rounded-xl border border-line bg-surface/60 p-1"><NavLink to="/history" className={tab}>All</NavLink><NavLink to="/repairs" className={tab}>Open</NavLink></div>} />
       {data && data.items.length > 0 && (
         <div className="relative mb-4 max-w-sm">
@@ -31,12 +31,12 @@ export default function RepairHistoryPage({ mine = false }: { mine?: boolean }) 
       {rows.length > 0 && (<>
         <div className="card hidden overflow-hidden md:block">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-line bg-surface-2/40 text-[11px] uppercase tracking-wider text-ink-3"><tr>{['Appliance', 'Session', 'Started', 'Technician', 'Issue', 'Status', ''].map(h => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
+            <thead className="border-b border-line bg-surface-2/40 text-xs text-ink-3"><tr>{['Appliance', 'Session', 'Started', 'Technician', 'Issue', 'Status', ''].map(h => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr></thead>
             <tbody>
               {rows.map(r => (
                 <tr key={r.id} className="border-b border-line/60 transition-colors last:border-0 hover:bg-surface-2/40">
                   <td className="px-4 py-3.5 font-medium">{r.appliance_label}</td>
-                  <td className="px-4 py-3.5 font-mono text-xs text-ink-2"><Link className="hover:text-teal" to={`/session/${r.id}`}>{r.reference}</Link></td>
+                  <td className="px-4 py-3.5 num text-xs text-ink-2"><Link className="hover:text-teal" to={`/session/${r.id}`}>{r.reference}</Link></td>
                   <td className="px-4 py-3.5 text-ink-2">{new Date(r.started_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3.5 text-ink-2">{r.technician_name}</td>
                   <td className="max-w-[280px] truncate px-4 py-3.5 text-ink-2" title={r.title}>{r.title}</td>

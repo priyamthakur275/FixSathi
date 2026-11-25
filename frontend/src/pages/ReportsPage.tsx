@@ -9,7 +9,7 @@ export function ReportsList() {
   const { data, loading, error, retry } = useAsync(() => historyService.reports(), [])
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
-      <PageHeader eyebrow="Workspace" title="Service Reports" subtitle="Generated from finished sessions, using only recorded data." />
+      <PageHeader eyebrow="Workspace" title="Service reports" subtitle="Generated from finished sessions, using only recorded data." />
       {loading && <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-20" />)}</div>}
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && data.items.length === 0 && <EmptyState icon={<FileText size={22} />} title="No reports yet" hint="Finish a repair session to create its service report." />}
