@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     live_max_audio_chunk_bytes: int = 64_000
     live_idle_timeout_seconds: int = 300
     auth_rate_limit_per_minute: int = 10
+    # Per technician account, for calls that spend the Gemini / ElevenLabs key (chat, diagnosis, steps, photos, voice). 0 = no limit.
+    ai_requests_per_minute: int = 20
+    ai_requests_per_day: int = 400
 
     @field_validator('gemini_api_key', 'gemini_live_model', 'gemini_agent_model', 'gemini_embed_model', 'nano_banana_model', 'gemini_tts_model',
                      'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_model_kannada', mode='before')

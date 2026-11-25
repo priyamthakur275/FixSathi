@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type ClipboardEvent, type DragEvent, type 
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowUp, Camera, Check, FileText, ImagePlus, Loader2, Mic, Paperclip, Plus, Square, Volume2, VolumeX, X } from 'lucide-react'
 import { CameraModal } from '../camera/CameraModal'
-import { LiveWaveform, useSpeaking, useSpeechPhase, useVoiceError } from '../voice/Waveform'
+import { LiveWaveform } from '../voice/Waveform'
+import { useSpeaking, useSpeechPhase, useVoiceError } from '../../hooks/useSpeech'
 import { FILE_RULES, fileService, fmtSize } from '../../services'
 import { speech } from '../../services/speech'
 import { useApp } from '../../context/AppContext'
@@ -75,12 +76,14 @@ export function Composer({ onSend, disabled, autoFocus, compact }: Props) {
   }, [text])
 
   // A message that failed to upload or send comes back here, so nothing typed or attached is lost.
+  // The text and files are restored while rendering (no extra render pass); clearing the draft and focusing are effects.
+  const [restored, setRestored] = useState<typeof draft>(null)
+  if (draft && draft !== restored) { setRestored(draft); setText(draft.text); setFiles(draft.attachments) }
   useEffect(() => {
     if (!draft) return
-    setText(draft.text); setFiles(draft.attachments); clearDraft(); area.current?.focus()
+    clearDraft(); area.current?.focus()
   }, [draft, clearDraft])
-
-  useEffect(() => { if (dict.error) setVoiceErr(dict.error) }, [dict.error])
+  const shownVoiceErr = voiceErr ?? dict.error
 
   // Close the attach menu on outside click or Escape; move focus into it when it opens.
   useEffect(() => {
@@ -177,7 +180,7 @@ export function Composer({ onSend, disabled, autoFocus, compact }: Props) {
                   <LiveWaveform level={dict.level} className="min-w-0 flex-1 justify-end" />
                 </span>
                 <button type="button" onClick={() => void finishVoice()} disabled={dict.state !== 'listening'} aria-label={t('voice.done')}
-                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-accent px-4 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50">
+                  className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[var(--color-accent-fill)] px-4 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-50">
                   {dict.state === 'finishing' ? <Loader2 size={15} className="animate-spin" /> : <Check size={16} strokeWidth={2.6} />}{t('voice.done')}
                 </button>
               </div>
@@ -219,7 +222,7 @@ export function Composer({ onSend, disabled, autoFocus, compact }: Props) {
         </form>
       </div>
       {vErr && <p role="alert" className="mt-2 flex items-start justify-between gap-3 rounded-xl border border-crit/40 bg-crit/10 px-3 py-2 text-sm text-crit"><span><b>Your cloned voice did not play.</b> No other voice was used. {vErr.provider ?? 'elevenlabs'} · voice {vErr.voiceId ?? '?'} · HTTP {vErr.http ?? '?'} · {vErr.code}: {vErr.message}</span><button type="button" onClick={() => speech.clearError()} aria-label="Dismiss" className="shrink-0 text-ink-3 hover:text-ink"><X size={14} /></button></p>}
-      {voiceErr && <p role="alert" className="mt-2 flex items-start justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">{t(`voice.err.${voiceErr}` as Key)}<button type="button" onClick={() => { setVoiceErr(null); dict.clearError() }} aria-label="Dismiss" className="shrink-0 text-ink-3 hover:text-ink"><X size={14} /></button></p>}
+      {shownVoiceErr && <p role="alert" className="mt-2 flex items-start justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">{t(`voice.err.${shownVoiceErr}` as Key)}<button type="button" onClick={() => { setVoiceErr(null); dict.clearError() }} aria-label="Dismiss" className="shrink-0 text-ink-3 hover:text-ink"><X size={14} /></button></p>}
       {errors.length > 0 && <div role="alert" className="mt-2 space-y-1 rounded-xl border border-crit/40 bg-crit/10 px-3 py-2 text-sm text-crit">{errors.map(e => <p key={e}>{e}</p>)}<button type="button" onClick={() => setErrors([])} className="text-xs text-ink-2 underline">Dismiss</button></div>}
       <CameraModal open={camera} onClose={() => setCamera(false)} onUse={a => add([a])} />
     </>

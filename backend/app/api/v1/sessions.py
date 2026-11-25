@@ -4,6 +4,8 @@ from fastapi.responses import Response
 from sqlalchemy import exists, func, or_, select
 from sqlalchemy.orm import Session
 from ...core.exceptions import AppError, NotFound
+from ...core.quota import check_ai_quota
+from ...demo.client import is_demo
 from ...db.base import utcnow
 from ...db.models import Conversation, Media, RepairSession, User
 from ...db.session import get_db
@@ -152,6 +154,8 @@ async def post_message(session_id: uuid.UUID, body: MessageIn, u: User = Depends
         return ChatResult(user_message=MessageOut.model_validate(um), assistant_message=MessageOut.model_validate(am), ai_status='ok')
     db.commit()  # persist the technician's message even if the AI call fails
     try:
+        if not is_demo(s):
+            check_ai_quota(u.id)
         am = await ai.chat_reply(db, s, u, body.text.strip(), body.media_ids, exclude_id=um.id, channel=body.channel)
         return ChatResult(user_message=MessageOut.model_validate(um), assistant_message=MessageOut.model_validate(am), ai_status='ok')
     except AppError as e:
@@ -190,6 +194,8 @@ async def message_speech(session_id: uuid.UUID, message_id: uuid.UUID, voice: st
     m = db.scalar(select(Conversation).where(Conversation.id == message_id, Conversation.session_id == s.id, Conversation.role == 'assistant'))
     if m is None:
         raise NotFound('Message not found.')
+    if voice != 'device':
+        check_ai_quota(u.id)
     data, media_type, v = await voice_svc.speak(m, voice, strict=strict)
     return Response(data, media_type=media_type, headers={'Cache-Control': 'private, max-age=86400', 'X-Voice': v, 'X-Voice-Provider': voice_svc.provider_of(v)})
 
@@ -221,6 +227,7 @@ async def test_personal_voice(u: User = Depends(current_user)):
     from ...config import get_settings
     if not elevenlabs.configured():
         raise AppError('ElevenLabs is not configured on the server (ELEVENLABS_API_KEY / ELEVENLABS_VOICE_ID).', code='MODEL_NOT_CONFIGURED', status=503)
+    check_ai_quota(u.id)
     elevenlabs._BLOCKED_UNTIL['t'] = 0  # an explicit test always asks ElevenLabs again
     try:
         audio = await elevenlabs.synthesize(VOICE_TEST_TEXT, 'english')

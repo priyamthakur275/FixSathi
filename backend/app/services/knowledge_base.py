@@ -4,9 +4,9 @@ retrieve(): structured filters (category, brand, model, error code) → PostgreS
 optional Gemini-embedding re-ranking. Synthetic demo records are excluded unless include_synthetic=True.
 Every hit carries its record_id, source, licence and verification status so answers can cite it.
 """
-import logging, re
+import logging, math, re
 from dataclasses import dataclass, field
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text, true
 from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..core.exceptions import AppError
@@ -25,24 +25,66 @@ VERIFICATION_WEIGHT = {'technician_reviewed': 1.25, 'verified_source': 1.15, 'un
 # Score fusion. An exact error-code match dominates; keyword rank is scaled to 0-1 by the best keyword hit of this query;
 # embedding similarity above EMB_MIN_SIM is scaled to 0-1. A record matched by several channels adds them up.
 CODE_SCORE, ALIAS_SCORE, KW_WEIGHT, EMB_WEIGHT, EMB_MIN_SIM = 10.0, 9.0, 3.0, 3.0, 0.5
+CODE_RECORD_NO_CODE = 0.9
+# Everyday English words for the same thing, mapped to the words the records use. Search terms only; nothing is added to records.
+SYNONYMS = {'plate': 'turntable', 'tray': 'turntable', 'rotate': 'turntable', 'rotates': 'turntable', 'rotating': 'turntable',
+            'switches': 'turns', 'switched': 'turns', 'timer': 'time', 'odour': 'smell', 'odor': 'smell', 'stink': 'smell',
+            'stinks': 'smell', 'cold': 'cooling', 'chilling': 'cooling', 'tripping': 'trips', 'buzzing': 'humming', 'alarm': 'beeping'}
 # Common Hinglish words technicians type, mapped to the English words the records use. Search terms only; nothing is added to records.
 HINGLISH = {'pankha': 'fan', 'pankhe': 'fan', 'thanda': 'cool', 'thandi': 'cool', 'garam': 'hot', 'awaaz': 'noise',
             'awaz': 'noise', 'aawaz': 'noise', 'paani': 'water', 'pani': 'water', 'ghoom': 'spin', 'ghum': 'spin', 'ghumta': 'spin',
             'dhuan': 'smoke', 'dhuaan': 'smoke', 'badbu': 'smell', 'tapak': 'leak', 'tapakna': 'leak', 'bijli': 'power', 'jhatka': 'shock',
-            'hil': 'vibration', 'hilta': 'vibration', 'barf': 'ice', 'dheema': 'slow', 'dheere': 'slow', 'dhire': 'slow',
+            'hil': 'vibration wobbling shaking', 'hilta': 'vibration wobbling shaking', 'barf': 'ice', 'dheema': 'slow', 'dheere': 'slow', 'dhire': 'slow',
             'nikal': 'drain', 'nikalta': 'drain', 'beep': 'beeping', 'chingari': 'spark', 'jal': 'burning', 'jala': 'burning'}
 # The same for Hindi typed in Devanagari (voice input in Hindi arrives this way). Without it a Hindi message finds no records
 # by keyword at all; the embedding channel, when configured, also understands Hindi.
 DEVANAGARI = {'पंखा': 'fan', 'पंखे': 'fan', 'ठंडा': 'cool', 'ठंडी': 'cool', 'ठंडक': 'cooling', 'कूलिंग': 'cooling', 'गरम': 'hot',
               'गर्म': 'hot', 'आवाज़': 'noise', 'आवाज': 'noise', 'शोर': 'noise', 'पानी': 'water', 'घूम': 'spin', 'घूमता': 'spin',
               'धुआं': 'smoke', 'धुआँ': 'smoke', 'बदबू': 'smell', 'टपक': 'leak', 'लीक': 'leak', 'बिजली': 'power', 'झटका': 'shock',
-              'बर्फ': 'ice', 'धीमा': 'slow', 'धीरे': 'slow', 'हिल': 'vibration', 'निकल': 'drain', 'बीप': 'beeping', 'चिंगारी': 'spark',
+              'बर्फ': 'ice', 'धीमा': 'slow', 'धीरे': 'slow', 'हिल': 'vibration wobbling shaking', 'निकल': 'drain', 'बीप': 'beeping', 'चिंगारी': 'spark',
               'बंद': 'stops', 'चालू': 'start', 'स्वाद': 'taste', 'दरवाजा': 'door', 'दरवाज़ा': 'door', 'लाइट': 'light',
               'एसी': 'ac', 'फ्रिज': 'fridge', 'फ्रीज': 'fridge', 'मशीन': 'machine', 'माइक्रोवेव': 'microwave', 'प्यूरीफायर': 'purifier'}
 DEV_WORD = re.compile(r'[\u0900-\u097F]+')
 
 
-def _fuse(chan: dict[str, dict], category: str | None, brand: str | None) -> list['Hit']:
+def _lexemes(expr):
+    return func.coalesce(func.array_to_string(func.tsvector_to_array(expr), ' '), '')
+
+
+def _keyword_scores(db: Session, pool, tsq: str, limit: int = 60) -> list[tuple['RepairRecordRow', float]]:
+    """Keyword channel, scored like a small BM25F: each query word counts by how rare it is among this appliance's records
+    (inverse document frequency) and by where it appears in the record: in the reported symptoms or error code it counts
+    fully, in the possible faults or components 0.6, elsewhere (procedures, repair text) 0.25. So "Kent RO keeps beeping"
+    ranks the record whose symptom is beeping above the many records that merely say "RO purifier", and a symptom query
+    with no code ranks the record about that symptom above long error-code records that mention the word in passing.
+    PostgreSQL does the stemming and the candidate search (GIN index); the arithmetic is done here on at most `limit` rows."""
+    q_lex = [x for x in (db.scalar(select(func.array_to_string(func.tsvector_to_array(func.to_tsvector('english', tsq.replace('|', ' '))), ' '))) or '').split() if x]
+    if not q_lex:
+        return []
+    ids = pool.with_only_columns(RepairRecordRow.id).subquery()
+    n_docs = db.scalar(select(func.count()).select_from(ids)) or 1
+    lex = func.unnest(func.tsvector_to_array(func.to_tsvector('english', RepairRecordRow.search_text))).table_valued('lexeme').render_derived().lateral()
+    df = dict(db.execute(select(lex.c.lexeme, func.count()).select_from(RepairRecordRow).join(lex, true())
+                         .where(RepairRecordRow.id.in_(select(ids.c.id)), lex.c.lexeme.in_(q_lex)).group_by(lex.c.lexeme)).all())
+    idf = {t: math.log(1 + (n_docs - df.get(t, 0) + 0.5) / (df.get(t, 0) + 0.5)) for t in q_lex}
+    d = RepairRecordRow.data
+    head = func.to_tsvector('english', func.coalesce(d['reported_symptoms'], text("'[]'::jsonb"))).op('||')(
+        func.to_tsvector('english', func.coalesce(RepairRecordRow.error_code, '')))
+    mid = func.to_tsvector('english', func.coalesce(d['possible_faults'], text("'[]'::jsonb"))).op('||')(
+        func.to_tsvector('english', func.coalesce(d['suspected_components'], text("'[]'::jsonb"))))
+    rows = db.execute(pool.add_columns(_lexemes(head), _lexemes(mid), _lexemes(func.to_tsvector('english', RepairRecordRow.search_text)))
+                      .where(func.to_tsvector('english', RepairRecordRow.search_text).op('@@')(func.to_tsquery('english', tsq)))).all()
+    out = []
+    for row, h, m, body in rows:
+        h, m, body = set(h.split()), set(m.split()), set(body.split())
+        score = sum(idf[t] * (1.0 if t in h else 0.6 if t in m else 0.25 if t in body else 0.0) for t in q_lex)
+        if score > 0:
+            out.append((row, score))
+    out.sort(key=lambda x: -x[1])
+    return out[:limit]
+
+
+def _fuse(chan: dict[str, dict], category: str | None, brand: str | None, codes_asked: bool = True) -> list['Hit']:
     max_kw = max((c['kw'] for c in chan.values()), default=0.0) or 1.0
     out = []
     for rid, c in chan.items():
@@ -53,6 +95,8 @@ def _fuse(chan: dict[str, dict], category: str | None, brand: str | None) -> lis
         score *= VERIFICATION_WEIGHT.get(row.verification_status, 1.0) * (0.6 if rel else 1.0)
         if brand and row.appliance_brand and row.appliance_brand.lower() == brand.lower():
             score *= 1.3
+        if not codes_asked and row.error_code:  # no code on the display: a record about the symptom beats one about a code
+            score *= CODE_RECORD_NO_CODE
         out.append(Hit(rid, row.appliance_category, rel, score, match, row.data))
     return out
 
@@ -102,14 +146,15 @@ def _tsquery(q: str) -> str | None:
     toks = []
     for t in WORD.findall(q.lower()):
         if t in HINGLISH:
-            toks.append(HINGLISH[t])
+            toks.extend(HINGLISH[t].split())
+        if t in SYNONYMS:
+            toks.extend(SYNONYMS[t].split())
         if t not in STOP:
             toks.append(t)
     for t in DEV_WORD.findall(q):
         en = DEVANAGARI.get(t) or next((v for k, v in DEVANAGARI.items() if t.startswith(k)), None)
-        if en and en not in STOP:
-            toks.append(en)
-    return ' | '.join(dict.fromkeys(toks[:24])) or None
+        toks.extend(w for w in (en or '').split() if w not in STOP)
+    return ' | '.join(dict.fromkeys(toks[:32])) or None
 
 
 def known_brands(db: Session) -> list[str]:
@@ -169,11 +214,8 @@ async def retrieve(db: Session, query: str, category: str | None = None, brand: 
     code_missing = [c for c in code_missing if not any(c.endswith(f) or f.endswith(c) for f in code_found)]  # 'ERIF' alias of found 'IF'
     tsq = _tsquery(query)
     if tsq:
-        rank = func.ts_rank(func.to_tsvector('english', RepairRecordRow.search_text), func.to_tsquery('english', tsq))
-        rows = db.execute(base().add_columns(rank).where(func.to_tsvector('english', RepairRecordRow.search_text).op('@@')(func.to_tsquery('english', tsq)))
-                          .order_by(rank.desc()).limit(40)).all()
-        for row, r in rows:
-            add(row, 'kw', float(r))
+        for row, score in _keyword_scores(db, base(), tsq):
+            add(row, 'kw', score)
 
     mode, reason = 'keyword', None
     st = get_settings()
@@ -203,7 +245,7 @@ async def retrieve(db: Session, query: str, category: str | None = None, brand: 
     else:
         reason = 'Embeddings not configured or VECTOR_SEARCH_MODE=keyword.'
 
-    ranked = sorted(_fuse(chan, category, brand), key=lambda h: -h.score)[:k]
+    ranked = sorted(_fuse(chan, category, brand, codes_asked=bool(codes)), key=lambda h: (-h.score, h.record_id))[:k]
     for h in ranked:
         if h.record['verification_status'] == 'synthetic_demo':
             h.flags.append('SYNTHETIC_DEMO')

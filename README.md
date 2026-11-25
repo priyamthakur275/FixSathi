@@ -10,7 +10,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-385-2ea44f)
+![Tests](https://img.shields.io/badge/tests-407-2ea44f)
 ![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -52,12 +52,13 @@ FixSaathi gives that technician a copilot on their phone: describe the fault by 
 
 ## Results
 
-Measured offline by [`backend/scripts/evaluate.py`](backend/scripts/evaluate.py) on hand-labelled fault descriptions written in the way technicians type them. The held-out set was written after all retrieval fixes and was not used to tune anything. Details, method and every miss: [docs/EVALUATION.md](docs/EVALUATION.md).
+Measured offline by [`backend/scripts/evaluate.py`](backend/scripts/evaluate.py) on hand-labelled fault descriptions written in the way technicians type them. Held-out v2 was written before the current ranking was run on it and was not used to tune anything. Details, method, every miss and which sets were used to change code: [docs/EVALUATION.md](docs/EVALUATION.md).
 
-| Held-out set | Result |
+| Held-out sets | Result |
 |---|---|
-| Correct repair record in the top 3 (30 queries; English, Hinglish, Hindi) | **96.7%** (Hit@1 83.3%, MRR 0.90) |
-| Appliance detected correctly from free text | **96.7%** |
+| Correct repair record ranked first (held-out v2, 36 queries; English, Hinglish, Hindi) | **94.4%**, up from 88.9% with the previous ranking (MRR 0.914 → 0.958) |
+| Correct repair record in the top 3 (held-out v2 / held-out, 36 + 30 queries) | **94.4% / 100%** |
+| Appliance detected correctly from free text (held-out / v2) | **96.7% / 97.2%** |
 | Unsafe instructions withheld by the safety filter | **11 / 12** when first measured; 12 / 12 after the fix it led to |
 | Safe text left readable | **11 / 12** |
 
@@ -79,16 +80,16 @@ flowchart TD
     O --> W
 ```
 
-1. **Retrieve.** The appliance comes from the session or is detected from the technician's words. Brand and error codes are extracted ("CH 38", "CH38" and the alias "F4" all reach LG's record). Records are ranked within that appliance: exact error-code matches first, then PostgreSQL full-text search and Gemini embeddings, whose scores are fused so a record found both ways ranks highest.
+1. **Retrieve.** The appliance comes from the session or is detected from the technician's words. Brand and error codes are extracted ("CH 38", "CH38" and the alias "F4" all reach LG's record). Records are ranked within that appliance: exact error-code matches first, then a field-weighted keyword score (a word in the record's reported symptom counts more than one in its procedure, and rare words count more than common ones) and Gemini embeddings, fused so a record found both ways ranks highest.
 2. **Generate.** Gemini gets only the top records as tagged evidence, never the whole knowledge base (about 1,400 input tokens per reply).
 3. **Screen.** `app/core/power_rules.py` is the single definition of "power-sensitive", shared by repair steps, chat, Live voice and the dataset importer, including Hindi verbs (*khol*, *nikal*, *badal*). `SafetyService.guard` is the only code path that can permit a power-sensitive action, and the AI has no tool that can record a safety statement. Every blocked attempt is logged.
 4. **Fail safely.** Every Gemini failure is classified (bad key, quota, timeout, blocked...) and shown with a fix; the technician's message is saved either way. Rate limits fall back to the next model. Live audio that cannot be screened is not played.
 
 ## Engineering
 
-- **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, uploads checked by content and re-encoded without location data.
-- **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser.
-- **Tests:** 385 automated tests: 331 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 54 frontend tests (Vitest, Testing Library). Plus the offline evaluation above.
+- **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
+- **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
+- **Tests:** 407 automated tests: 344 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 63 frontend tests (Vitest, Testing Library). Plus the offline evaluation above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
 - **Deployment:** one Render Blueprint ([`render.yaml`](render.yaml)): static site, API and PostgreSQL. Secrets live only in Render's environment; a scheduled GitHub Action keeps the free-plan API awake, and CI runs every test and the evaluation on each push.
 

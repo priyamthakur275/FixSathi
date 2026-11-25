@@ -9,6 +9,7 @@ import type { Language } from './types'
 const en = {
   'nav.newChat': 'New chat', 'nav.home': 'Home', 'nav.search': 'Search chats', 'nav.settings': 'Settings', 'nav.signOut': 'Sign out',
   'nav.manager': 'Manager dashboard', 'nav.senior': 'Senior support', 'nav.reports': 'Service reports', 'nav.menu': 'Open menu', 'nav.close': 'Close menu',
+  'nav.repairs': 'My repairs', 'nav.teamRepairs': 'Team repairs', 'nav.demo': 'Demo scenarios', 'nav.workspace': 'Workspace',
   'nav.collapse': 'Collapse sidebar', 'nav.expand': 'Expand sidebar', 'nav.chats': 'Chats', 'nav.account': 'Account menu',
   'group.today': 'Today', 'group.yesterday': 'Yesterday', 'group.week': 'Previous 7 days', 'group.older': 'Older',
   'chat.options': 'Chat options', 'chat.rename': 'Rename', 'chat.delete': 'Delete', 'chat.deleteTitle': 'Delete chat?',
@@ -50,6 +51,7 @@ export type Key = keyof typeof en
 
 const hi: Partial<Record<Key, string>> = {
   'nav.newChat': 'नई चैट', 'nav.home': 'होम', 'nav.search': 'चैट खोजें', 'nav.settings': 'सेटिंग्स', 'nav.signOut': 'साइन आउट',
+  'nav.repairs': 'मेरी रिपेयर', 'nav.teamRepairs': 'टीम की रिपेयर', 'nav.demo': 'डेमो', 'nav.workspace': 'वर्कस्पेस',
   'nav.manager': 'मैनेजर डैशबोर्ड', 'nav.senior': 'सीनियर सहायता', 'nav.reports': 'सर्विस रिपोर्ट', 'nav.menu': 'मेन्यू खोलें', 'nav.close': 'मेन्यू बंद करें', 'nav.chats': 'चैट',
   'group.today': 'आज', 'group.yesterday': 'कल', 'group.week': 'पिछले 7 दिन', 'group.older': 'पुरानी',
   'chat.options': 'चैट विकल्प', 'chat.rename': 'नाम बदलें', 'chat.delete': 'हटाएँ', 'chat.deleteTitle': 'चैट हटाएँ?',
@@ -90,6 +92,7 @@ const hi: Partial<Record<Key, string>> = {
 
 const kn: Partial<Record<Key, string>> = {
   'nav.newChat': 'ಹೊಸ ಚಾಟ್', 'nav.home': 'ಮುಖಪುಟ', 'nav.search': 'ಚಾಟ್‌ಗಳನ್ನು ಹುಡುಕಿ', 'nav.settings': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು', 'nav.signOut': 'ಸೈನ್ ಔಟ್',
+  'nav.repairs': 'ನನ್ನ ರಿಪೇರಿಗಳು', 'nav.teamRepairs': 'ತಂಡದ ರಿಪೇರಿಗಳು', 'nav.demo': 'ಡೆಮೊ', 'nav.workspace': 'ಕಾರ್ಯಕ್ಷೇತ್ರ',
   'nav.manager': 'ವ್ಯವಸ್ಥಾಪಕ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್', 'nav.senior': 'ಹಿರಿಯ ತಂತ್ರಜ್ಞರ ಸಹಾಯ', 'nav.reports': 'ಸೇವಾ ವರದಿಗಳು', 'nav.menu': 'ಮೆನು ತೆರೆಯಿರಿ', 'nav.close': 'ಮೆನು ಮುಚ್ಚಿ', 'nav.chats': 'ಚಾಟ್‌ಗಳು',
   'group.today': 'ಇಂದು', 'group.yesterday': 'ನಿನ್ನೆ', 'group.week': 'ಹಿಂದಿನ 7 ದಿನಗಳು', 'group.older': 'ಹಳೆಯವು',
   'chat.options': 'ಚಾಟ್ ಆಯ್ಕೆಗಳು', 'chat.rename': 'ಹೆಸರು ಬದಲಿಸಿ', 'chat.delete': 'ಅಳಿಸಿ', 'chat.deleteTitle': 'ಚಾಟ್ ಅಳಿಸಬೇಕೆ?',
@@ -130,6 +133,7 @@ const kn: Partial<Record<Key, string>> = {
 
 const ta: Partial<Record<Key, string>> = {
   'nav.newChat': 'புதிய உரையாடல்', 'nav.home': 'முகப்பு', 'nav.search': 'உரையாடல்களைத் தேடு', 'nav.settings': 'அமைப்புகள்', 'nav.signOut': 'வெளியேறு',
+  'nav.repairs': 'என் பழுதுபார்ப்புகள்', 'nav.teamRepairs': 'குழு பழுதுபார்ப்புகள்', 'nav.demo': 'டெமோ', 'nav.workspace': 'பணியிடம்',
   'nav.manager': 'மேலாளர் டாஷ்போர்டு', 'nav.senior': 'மூத்த தொழில்நுட்ப உதவி', 'nav.reports': 'சேவை அறிக்கைகள்', 'nav.menu': 'மெனுவைத் திற', 'nav.close': 'மெனுவை மூடு', 'nav.chats': 'உரையாடல்கள்',
   'group.today': 'இன்று', 'group.yesterday': 'நேற்று', 'group.week': 'கடந்த 7 நாட்கள்', 'group.older': 'பழையவை',
   'chat.options': 'உரையாடல் விருப்பங்கள்', 'chat.rename': 'பெயர் மாற்று', 'chat.delete': 'நீக்கு', 'chat.deleteTitle': 'உரையாடலை நீக்கவா?',
