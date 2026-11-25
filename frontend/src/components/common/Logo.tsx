@@ -2,7 +2,7 @@ interface Props { className?: string; height?: number }
 
 /** Original supplied emblem. Aspect ratio preserved (height drives width). */
 export function Emblem({ height = 40, className = '' }: Props) {
-  return <img src="/assets/emblem.png" alt="FixSaathi emblem" style={{ height, width: 'auto' }} className={`select-none ${className}`} draggable={false} />
+  return <img src="/assets/emblem.webp" alt="FixSaathi emblem" style={{ height, width: 'auto' }} className={`select-none ${className}`} draggable={false} />
 }
 
 /** The wordmark as live text in the brand colours, so it stays readable on both the dark and the light theme
