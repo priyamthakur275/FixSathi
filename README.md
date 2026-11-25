@@ -10,7 +10,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-415-2ea44f)
+![Tests](https://img.shields.io/badge/tests-436-2ea44f)
 ![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -18,7 +18,7 @@
 
 <p align="center">
 <a href="docs/demo/fixsaathi-demo.mp4"><img src="docs/demo/demo.gif" width="860" alt="FixSaathi walkthrough: the server withholds power-sensitive steps until the technician records two safety statements, then releases them and writes the report"></a>
-<br><sub><a href="docs/demo/fixsaathi-demo.mp4"><b>Watch the 85-second walkthrough (MP4)</b></a></sub>
+<br><sub><a href="docs/demo/fixsaathi-demo.mp4"><b>Watch the 53-second walkthrough (MP4)</b></a></sub>
 </p>
 
 <table>
@@ -49,7 +49,8 @@ FixSaathi gives that technician a copilot on their phone: describe the fault by 
 | **Photos and documents** | Attach appliance photos, a camera capture, PDFs or Word files. The server checks every file's real type and strips location data from photos. |
 | **Fault finder** | Type an error code or a symptom ("LG CH38", "fan hums but does not spin") and get the matching records at once, straight from the knowledge base: no AI call, no quota, works without a Gemini key. Checks that need the power isolated are sent locked, as in a session. |
 | **Send to customer** | A finished report becomes a short plain-text summary of the visit (problem, work done, result, isolation recorded) to send on WhatsApp or copy. |
-| **Answer feedback** | Thumbs up or down on each AI answer, with a note on what was wrong. The manager dashboard shows the share of answers technicians found helpful. |
+| **Answer feedback** | Thumbs up or down on each AI answer, with a note on what was wrong. When a job is closed the technician rates the guidance and says whether the AI's likely cause was right. The manager dashboard shows the share of answers technicians found helpful. |
+| **Answer-quality check** | 30 technician questions asked to the deployed app and graded by fixed rules: right points covered, records cited, no invented error codes, no live-work step readable while the power is locked. See [Results](#results). |
 | **Reports and dashboard** | A service report and PDF built only from what was recorded in the session; a manager view with sessions, first-time-fix rate, escalations and ratings. |
 
 ## Results
@@ -64,7 +65,18 @@ Measured offline by [`backend/scripts/evaluate.py`](backend/scripts/evaluate.py)
 | Unsafe instructions withheld by the safety filter | **11 / 12** when first measured; 12 / 12 after the fix it led to |
 | Safe text left readable | **11 / 12** |
 
-These numbers cover retrieval (keyword and error-code channels, reproducible without an API key) and the safety rule. They do not grade the wording of Gemini's answers, and the queries were written by the team, not collected from technicians.
+These numbers cover retrieval (keyword and error-code channels, reproducible without an API key) and the safety rule.
+
+**Answers on the live app** ([`eval_answers.py`](backend/scripts/eval_answers.py), 30 questions in English, Hinglish and Hindi, every session left un-isolated):
+
+| Check | Result |
+|---|---|
+| Answers passing every check | **28 / 30** (27 / 30 on the first run) |
+| Live-work steps readable while the power is locked | **0 / 30** (1 / 30 on the first run: a Hindi reply, which led to Devanagari safety rules) |
+| Meanings invented for unknown error codes | **0** |
+| Cites a repair record where one exists | 22 / 24 |
+
+The queries were written by the team, not collected from technicians. Method, both runs and every miss: [docs/EVALUATION.md](docs/EVALUATION.md#answer-quality-gemini-answers-live-app).
 
 ## How it works
 
@@ -91,7 +103,7 @@ flowchart TD
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 415 automated tests: 349 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 66 frontend tests (Vitest, Testing Library). Plus the offline evaluation above.
+- **Tests:** 436 automated tests: 367 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 69 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
 - **Deployment:** one Docker service on Render serves the website and the API from the same address, plus PostgreSQL ([`render.yaml`](render.yaml)); no URL is written into the config, so it deploys to any account. Secrets live only in Render's environment, and CI runs every test and the evaluation on each push.
 
