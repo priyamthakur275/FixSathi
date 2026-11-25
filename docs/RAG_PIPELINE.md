@@ -12,7 +12,12 @@ Technician input → appliance category (session, or detected from text by `norm
    - when a brand is detected, only that brand's or brand-less records;
    - synthetic records excluded.
 2. **Exact error-code match** (strongest signal, weight 10). Alternative codes a source lists (LG `CH38 / F4`) match too, as whole tokens only (weight 9), so `E1` never matches `E10`. Spaced codes (`CH 38`) are read as one code. Another brand's code never answers (the brand filter applies). Codes with no record are reported as `error_codes_unknown`.
-3. **PostgreSQL full-text** (`to_tsvector('simple')` with a GIN index, OR-query, `ts_rank`).
+3. **Keyword channel, field-weighted** (`_keyword_scores`). PostgreSQL finds the candidates (English stemming, GIN index on `to_tsvector('english', search_text)`, OR-query of the technician's words plus Hinglish, Devanagari and everyday-English synonyms such as *plate → turntable*). Each candidate is then scored like a small BM25F:
+   - every query word counts by its **inverse document frequency** among this appliance's records, so "Kent RO keeps beeping" is decided by *beeping*, not by *RO*, which every Kent record contains;
+   - by **where** it appears: in the reported symptoms or error code it counts fully, in the possible faults or components 0.6, anywhere else (procedures, repair text) 0.25. So "not draining" ranks the record whose symptom *is* not draining above long error-code records that mention *drain* in their procedure;
+   - when the technician gave **no error code**, a record about a code is weighted 0.9, so a symptom record wins a tie with a code record.
+
+   Before this, `ts_rank` scored by raw term frequency over the whole record text; see `EVALUATION.md` for the effect.
 4. **Embeddings** (optional): cosine similarity over `repair_embeddings` vectors from the same model and dimension, which gives `mode: hybrid`. Without them, retrieval falls back to keyword only, and the response says why.
 5. **Weighting:** technician_reviewed 1.25, verified_source 1.15, unverified 1.0, plus a brand-match boost.
 6. **Coverage:** `grounded` | `partial` | `none`.
@@ -36,6 +41,5 @@ Technician input → appliance category (session, or detected from text by `norm
 
 ## Not done
 - No ScaNN or pgvector (not available in the local Postgres).
-- No ranking evaluation set, so no retrieval accuracy figures exist. Tests check category isolation and that the expected record is returned for one realistic query per appliance.
-- Embedding re-ranking exists in code but production runs keyword-only (`VECTOR_SEARCH_MODE=keyword`).
+- The offline evaluation (`EVALUATION.md`) measures the keyword and error-code channels only; the embedding channel needs an API key and is not in those numbers.
 - Real Gemini calls are untested from this environment.

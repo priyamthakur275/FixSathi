@@ -14,6 +14,14 @@ from .knowledge import cosine, tokens
 logger = logging.getLogger('retrieval')
 
 
+def record_title(r: dict) -> str:
+    """'LG split ac: code CH38' or 'Kent water purifier: purifier beeping continuously'. The category alone ('ceiling fan',
+    five times over) told the technician nothing about which record was which."""
+    head = f"{r.get('appliance_brand') or ''} {r['appliance_category'].replace('_', ' ')}".strip()
+    what = f"code {r['error_code']}" if r.get('error_code') else next(iter(r.get('reported_symptoms') or []), '') or next(iter(r.get('possible_faults') or []), '')
+    return f'{head}: {what}' if what else head
+
+
 def _session_text(s: RepairSession, r: ServiceReport | None) -> str:
     d = (r.report_data if r else {}) or {}
     dg = d.get('diagnosis') or {}; res = d.get('resolution') or {}
@@ -85,7 +93,7 @@ async def search(db: Session, user: User, query: str, appliance: str | None, exc
                         'score': round(score, 3), 'snippet': text[:220], 'why': 'Similar past repair in your permitted history'})
     for h in kres['hits']:
         r = h.record
-        title = (f"{r.get('appliance_brand') or ''} {r['appliance_category'].replace('_', ' ')}" + (f" code {r['error_code']}" if r.get('error_code') else '')).strip()
+        title = record_title(r)
         out.append({'source_type': 'knowledge', 'source_id': h.record_id, 'reference': h.record_id, 'title': title, 'appliance_type': r['appliance_category'],
                     'score': round(h.score, 3), 'snippet': '; '.join((r.get('possible_faults') or r.get('reported_symptoms') or [])[:2])[:220],
                     'why': f"{r['source_name']} ({r['verification_status']}{', related category' if h.related else ''})",

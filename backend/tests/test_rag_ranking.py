@@ -67,3 +67,56 @@ def test_devanagari_hindi_reaches_english_records(client):
     assert 'cool' in kb._tsquery('एसी ठंडा नहीं कर रहा है')
     r = _retrieve('एसी ठंडा नहीं कर रहा है')
     assert 't:ac' in [h.record_id for h in r['hits']]
+
+
+def test_symptom_record_beats_long_code_records_that_mention_the_word(client):
+    """Field weighting: a record whose reported symptom IS the problem outranks error-code records whose procedure text
+    happens to contain the same words many times."""
+    long_proc = ['Check the drain hose', 'Clean the drain pump filter', 'Make sure the drain hose is not blocked', 'Drain the water first']
+    for i in range(4):
+        _ingest(rec(record_id=f't:code{i}', appliance_category='washing_machine', error_code=f'Z{i}', reported_symptoms=[f'Error code Z{i} shown on the display'],
+                    diagnostic_procedure=long_proc))
+    _ingest(rec(record_id='t:nodrain', appliance_category='washing_machine', reported_symptoms=['not draining', 'water remains'],
+                possible_faults=['Blocked drain filter']))
+    ids = [h.record_id for h in _retrieve('washing machine not draining, water stays in the drum', category='washing_machine')['hits']]
+    assert 't:nodrain' in ids and all(ids.index('t:nodrain') < ids.index(f't:code{i}') for i in range(4) if f't:code{i}' in ids)
+
+
+def test_rare_query_words_count_more_than_common_ones(client):
+    """'Kent RO keeps beeping': every Kent record says 'RO purifier'; only one is about beeping, and it must rank first."""
+    for i, sym in enumerate(['water leaking from RO purifier', 'low water pressure from RO purifier', 'no water from RO purifier']):
+        _ingest(rec(record_id=f't:ro{i}', appliance_category='water_purifier', appliance_brand='Kent', reported_symptoms=[sym]))
+    _ingest(rec(record_id='t:beep', appliance_category='water_purifier', appliance_brand='Kent', reported_symptoms=['purifier beeping continuously']))
+    r = _retrieve('Kent RO keeps beeping', category='water_purifier')
+    assert r['hits'][0].record_id == 't:beep'
+
+
+def test_everyday_synonyms_reach_record_words(client):
+    _ingest(rec(record_id='t:tt', appliance_category='microwave_oven', reported_symptoms=['turntable noisy or sticking']))
+    assert 'turntable' in kb._tsquery('microwave plate not rotating')
+    assert 't:tt' in [h.record_id for h in _retrieve('microwave plate not rotating properly', category='microwave_oven')['hits']]
+
+
+def test_without_a_code_a_symptom_record_wins_a_tie_with_a_code_record(client):
+    _ingest(rec(record_id='t:sym', appliance_category='split_ac', reported_symptoms=['AC not cooling']))
+    _ingest(rec(record_id='t:ch', appliance_category='split_ac', error_code='CH99', reported_symptoms=['CH99 shown', 'AC not cooling']))
+    ids = [h.record_id for h in _retrieve('AC not cooling', category='split_ac')['hits']]
+    assert ids.index('t:sym') < ids.index('t:ch')
+    ids = [h.record_id for h in _retrieve('AC not cooling, CH99 on the display', category='split_ac')['hits']]
+    assert ids[0] == 't:ch'  # the code, when given, still decides
+
+
+def test_similar_repair_titles_say_what_the_record_is_about():
+    from app.services.retrieval import record_title
+    assert record_title({'appliance_category': 'split_ac', 'appliance_brand': 'LG', 'error_code': 'CH38', 'reported_symptoms': ['CH38 shown']}) == 'LG split ac: code CH38'
+    assert record_title({'appliance_category': 'ceiling_fan', 'reported_symptoms': ['fan wobbling or shaking']}) == 'ceiling fan: fan wobbling or shaking'
+    assert record_title({'appliance_category': 'ceiling_fan', 'possible_faults': ['Weak capacitor']}) == 'ceiling fan: Weak capacitor'
+    assert record_title({'appliance_category': 'ceiling_fan'}) == 'ceiling fan'
+
+
+def test_hinglish_and_hindi_shaking_reach_wobble_records(client):
+    """'pankha hil raha hai': the records say wobbling or shaking, never 'vibration'."""
+    _ingest(rec(record_id='t:wob', appliance_category='ceiling_fan', reported_symptoms=['fan wobbling or shaking']),
+            rec(record_id='t:dead', appliance_category='ceiling_fan', reported_symptoms=['fan completely dead']))
+    for q in ('pankha hil raha hai bahut zyada', 'पंखा बहुत हिल रहा है'):
+        assert _retrieve(q, category='ceiling_fan')['hits'][0].record_id == 't:wob', q
