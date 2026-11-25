@@ -91,7 +91,7 @@ flowchart TD
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
 - **Tests:** 407 automated tests: 344 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 63 frontend tests (Vitest, Testing Library). Plus the offline evaluation above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
-- **Deployment:** one Render Blueprint ([`render.yaml`](render.yaml)): static site, API and PostgreSQL. Secrets live only in Render's environment; a scheduled GitHub Action keeps the free-plan API awake, and CI runs every test and the evaluation on each push.
+- **Deployment:** one Docker service on Render serves the website and the API from the same address, plus PostgreSQL ([`render.yaml`](render.yaml)); no URL is written into the config, so it deploys to any account. Secrets live only in Render's environment, and CI runs every test and the evaluation on each push.
 
 ```
 frontend/   React app
@@ -99,6 +99,12 @@ backend/    FastAPI app: api/ routes · services/ (retrieval, AI, safety, report
 data/       377 processed repair records, raw sources, schema, evaluation sets (data/eval)
 docs/       architecture, API, safety and security, retrieval, voice, datasets, evaluation
 ```
+
+## Deploy your own copy
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/priyamthakur275/FixSathi)
+
+Sign in to Render, paste a Gemini API key when asked (or leave it empty to try the labelled demo scenarios), and apply. Render creates the database and one web service; the first build takes about ten minutes, and the app is at the service's `onrender.com` address.
 
 ## Run it locally
 

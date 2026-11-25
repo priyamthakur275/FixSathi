@@ -19,4 +19,5 @@ COPY --from=web /web/dist /app/web
 RUN useradd -m app && mkdir -p /app/uploads && chown -R app /app
 USER app
 EXPOSE 10000
-CMD ["sh", "-c", "alembic upgrade head && python scripts/ingest_knowledge.py --if-present && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT} --proxy-headers --forwarded-allow-ips='*'"]
+# Migrations, the repair records, the embedding index in the background (when a Gemini key is set), then the server on $PORT.
+CMD ["sh", "scripts/render_start.sh"]
