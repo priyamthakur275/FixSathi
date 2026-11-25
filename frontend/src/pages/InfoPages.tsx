@@ -11,7 +11,7 @@ export function SavedDiagnoses() {
   const { data, loading, error, retry } = useAsync(() => historyService.diagnoses(), [])
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-      <PageHeader eyebrow="Workspace" title="Saved Diagnoses" subtitle="AI diagnoses from your repair sessions." />
+      <PageHeader eyebrow="Workspace" title="Saved diagnoses" subtitle="AI diagnoses from your repair sessions." />
       {loading && <Skeleton className="h-40" />}
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && data.length === 0 && <EmptyState icon={<Bookmark size={22} />} title="No diagnoses yet" hint="Run a diagnosis inside a repair session." />}
@@ -30,7 +30,7 @@ export function SeniorSupport() {
   const update = async (id: string, status: string) => { await historyService.updateEscalation(id, status); setV(x => x + 1) }
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
-      <PageHeader eyebrow="Team" title="Senior Technician Support" subtitle={isManager ? 'Escalations from your team.' : 'Your requests for senior help.'} />
+      <PageHeader eyebrow="Team" title="Senior technician support" subtitle={isManager ? 'Escalations from your team.' : 'Your requests for senior help.'} />
       {loading && <Skeleton className="h-40" />}
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && data.length === 0 && <EmptyState icon={<HandHelping size={22} />} title="No escalations" hint="Ask a senior technician from inside a repair session." />}
@@ -62,7 +62,7 @@ export function HelpPage() {
   ]
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 md:px-8">
-      <PageHeader eyebrow="Support" title="Help and Support" subtitle="How FixSaathi works, what it can and cannot do, and how your data is handled." />
+      <PageHeader eyebrow="Support" title="Help and support" subtitle="How FixSaathi works, what it can and cannot do, and how your data is handled." />
       <div className="space-y-2">{faq.map(([q, a]) => <details key={q} className="card group px-5 py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium marker:hidden">{q}<span className="text-ink-3 transition-transform group-open:rotate-45" aria-hidden>+</span></summary><p className="mt-2 text-sm leading-relaxed text-ink-2">{a}</p></details>)}</div>
       <button onClick={() => { newSession(); nav('/chat') }} className="btn btn-brand mt-6"><MessageSquareText size={16} />Ask the assistant</button>
     </div>
@@ -70,5 +70,5 @@ export function HelpPage() {
 }
 
 export function NotFound() {
-  return <div className="flex flex-col items-center py-24 text-center"><p className="text-6xl font-semibold fs-grad-text">404</p><p className="mt-3 text-xl font-semibold">Page not found</p><p className="mt-1 text-sm text-ink-2">The page you opened doesn't exist or has moved.</p><Link to="/" className="btn btn-brand mt-6">Go home</Link></div>
+  return <div className="flex flex-col items-center py-24 text-center"><p className="num font-display text-7xl text-ink-3">404</p><p className="mt-3 text-xl font-semibold">Page not found</p><p className="mt-1 text-sm text-ink-2">The page you opened doesn't exist or has moved.</p><Link to="/" className="btn btn-brand mt-6">Go home</Link></div>
 }

@@ -57,7 +57,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-8 md:px-8 md:py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">{t('settings.title')}</h1>
+      <h1 className="font-display text-[26px] leading-tight md:text-[34px]">{t('settings.title')}</h1>
 
       <div className="mt-4">
         <Section title={t('settings.language')} hint={t('settings.languageHint')} right={busy ? <Loader2 size={15} className="animate-spin text-ink-3" /> : saved ? <span className="inline-flex items-center gap-1 text-xs text-ok"><Check size={13} />{t('settings.saved')}</span> : null}>

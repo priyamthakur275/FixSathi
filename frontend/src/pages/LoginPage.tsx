@@ -1,16 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { BookOpenCheck, Camera, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { Emblem, Wordmark } from '../components/common/Logo'
+import { LockDemo } from '../components/repair/LockDemo'
 import { useAuth } from '../context/AuthContext'
 import type { ApiError } from '../services/api'
 
-const FEATURES = [
-  { icon: BookOpenCheck, title: 'Grounded diagnosis', body: 'Ranked causes backed by sourced repair records, never invented error codes.' },
-  { icon: ShieldCheck, title: 'Safety the AI cannot skip', body: 'Power steps stay locked on the server until you record power-off and tester checks.' },
-  { icon: Camera, title: 'Photo, voice and Hinglish', body: 'Show the appliance, speak the symptom, get one clear step at a time.' },
-]
 
 export default function LoginPage() {
   const { login, register } = useAuth()
@@ -38,51 +34,30 @@ export default function LoginPage() {
   const label = 'mb-1.5 block text-xs font-medium text-ink-2'
   return (
     <div className="grid min-h-dvh bg-bg lg:grid-cols-[1.05fr_1fr]">
-      <aside className="fs-diagnostic-grid relative hidden overflow-hidden border-r border-line bg-bg-2 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="relative flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3"><Emblem height={44} /><Wordmark height={20} /></div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-teal/30 bg-teal/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-teal">
-            <span className="h-1.5 w-1.5 rounded-full bg-teal" aria-hidden />
-            FIELD COPILOT v1.0
-          </span>
-        </div>
-        <div className="relative max-w-lg">
-          <p className="section-label mb-4 text-teal">AI repair copilot for field technicians</p>
-          <h2 className="text-4xl font-semibold leading-[1.15] tracking-tight xl:text-[44px]">A senior technician in <span className="fs-grad-text">every technician&apos;s pocket.</span></h2>
-          <ul className="mt-10 space-y-5">
-            {FEATURES.map(x => { const I = x.icon; return (
-              <li key={x.title} className="flex gap-4">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-line-2 bg-surface-2/80"><I size={20} className="text-teal" /></span>
-                <span><span className="block font-semibold">{x.title}</span><span className="mt-0.5 block text-sm leading-relaxed text-ink-2">{x.body}</span></span>
-              </li>) })}
-          </ul>
+      <aside className="fs-plate relative hidden overflow-hidden border-r border-line bg-bg-2 lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-14">
+        <div className="relative flex items-center gap-3"><Emblem height={40} /><Wordmark height={19} /></div>
+        <div className="relative max-w-[34rem]">
+          <h2 className="font-display text-[36px] leading-[1.08] xl:text-[42px]">The repair copilot that won&apos;t let you open a live appliance.</h2>
+          <p className="mt-5 max-w-md text-[15px] leading-relaxed text-ink-2">Diagnosis grounded in sourced repair records, voice in English, Hindi and Kannada, and power steps the server keeps locked until you have isolated the supply.</p>
+          <div className="mt-8"><LockDemo /></div>
           {/* Figures from docs/EVALUATION.md (held-out v2 Hit@1; held-out safety set). 189 of the 377 records come from manufacturer
               documentation; the rest are labelled unverified, so they are "sourced", not "verified". */}
-          <dl className="mt-10 grid grid-cols-3 gap-3 border-t border-line pt-6">
-            <div>
-              <dt className="text-[11px] text-ink-3">Right record first (held-out)</dt>
-              <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">94.4%</dd>
-            </div>
-            <div>
-              <dt className="text-[11px] text-ink-3">Unsafe steps withheld</dt>
-              <dd className="mt-1 text-lg font-semibold tabular-nums text-teal">12 / 12</dd>
-            </div>
-            <div>
-              <dt className="text-[11px] text-ink-3">Sourced repair records</dt>
-              <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">377</dd>
-            </div>
+          <dl className="mt-8 grid grid-cols-3 gap-4">
+            <div><dt className="text-xs text-ink-3">Right record ranked first</dt><dd className="num font-display mt-1 text-[22px]">94.4%</dd></div>
+            <div><dt className="text-xs text-ink-3">Unsafe steps withheld</dt><dd className="num font-display mt-1 text-[22px]">12 of 12</dd></div>
+            <div><dt className="text-xs text-ink-3">Sourced repair records</dt><dd className="num font-display mt-1 text-[22px]">377</dd></div>
           </dl>
         </div>
-        <p className="relative text-xs text-ink-3">Powered by Google Gemini · EN · HI · KN · Team Tensor Trailblazers</p>
+        <p className="relative text-xs text-ink-3">Built on Google Gemini by Team Tensor Trailblazers, BMS College of Engineering</p>
       </aside>
 
       <main className="flex items-center justify-center px-5 py-10">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-[400px]">
-          <div className="mb-8 flex flex-col items-center gap-3 lg:hidden"><Emblem height={64} /><Wordmark height={24} /><p className="text-sm text-ink-2">AI Repair Copilot</p></div>
-          <div className="card card-pad !p-7">
+          <div className="mb-8 flex flex-col items-center gap-3 lg:hidden"><Emblem height={64} /><Wordmark height={24} /><p className="text-sm text-ink-2">AI repair copilot for field technicians</p></div>
+          <div className="card card-pad !p-7 shadow-[var(--shadow-lift)]">
             <form onSubmit={submit} className="space-y-4">
               <div>
-                <h1 className="text-2xl font-semibold">{mode === 'login' ? 'Sign in' : 'Create your account'}</h1>
+                <h1 className="font-display text-[26px]">{mode === 'login' ? 'Sign in' : 'Create your account'}</h1>
                 <p className="mt-1 text-sm text-ink-2">{mode === 'login' ? 'Welcome back. Pick up where you left off.' : 'Free to try. Your sessions and reports stay in your account.'}</p>
               </div>
               {mode === 'register' && <>

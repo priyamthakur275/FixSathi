@@ -21,8 +21,7 @@ export default function DemoPage() {
   }
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
-      <p className="section-label !text-warn">Demo mode</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight md:text-[32px]">Demo scenarios</h1>
+      <h1 className="font-display text-[26px] leading-tight md:text-[34px]">Demo scenarios</h1>
       <p className="mt-2 max-w-2xl text-ink-2">Walk through a complete repair even when live AI is unavailable. Replies, diagnosis and steps in these sessions are <b className="text-ink">scripted sample content written by our team, not live AI</b>, and every screen says so.</p>
       <div className="mt-5 flex max-w-2xl items-start gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3.5 text-sm text-ink-2">
         <ShieldCheck size={18} className="mt-0.5 shrink-0 text-teal" />
@@ -34,7 +33,7 @@ export default function DemoPage() {
         {data?.items.map(sc => { const I = ICON[sc.appliance] ?? PlayCircle
           return (
             <div key={sc.id} className="card card-hover card-pad flex flex-col">
-              <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal/15 text-teal"><I size={22} /></span><h2 className="font-semibold">{sc.title}</h2></div>
+              <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-surface-2 text-accent"><I size={22} /></span><h2 className="font-display text-[16px] leading-snug">{sc.title}</h2></div>
               <p className="mt-3 flex-1 text-sm text-ink-2">{sc.issue}</p>
               <p className="mt-2 text-xs text-ink-3">{sc.has_photo ? 'Includes a real photo of the fault.' : 'Text only, no photo.'}</p>
               <button onClick={() => void start(sc.id)} disabled={!!busy} className="btn btn-primary mt-5 py-2.5">
