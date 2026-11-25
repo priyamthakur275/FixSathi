@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FileText, HandHelping, Home, LayoutDashboard, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Pencil, PlayCircle, Search, Settings, SquarePen, Trash2, Wrench, X } from 'lucide-react'
+import { Command, FileText, HandHelping, Home, LayoutDashboard, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Pencil, PlayCircle, Search, Settings, SquarePen, Trash2, Wrench, X } from 'lucide-react'
 import { Emblem, Wordmark } from '../common/Logo'
 import { ConfirmDialog, useDismiss } from '../common/Dialog'
 import { useApp } from '../../context/AppContext'
 import { useAuth } from '../../context/AuthContext'
 import { sessionService } from '../../services'
 import { speech } from '../../services/speech'
+import { isMac, openPalette } from '../../utils/palette'
 import { useT, type Key } from '../../i18n'
 import type { RepairSession } from '../../types'
 
@@ -144,6 +145,10 @@ function WorkspaceLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavig
     : `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-surface hover:text-ink ${isActive ? 'bg-surface-2 text-ink' : 'text-ink-2'}`
   return (
     <nav aria-label={t('nav.workspace')} className={`mt-3 space-y-0.5 border-t border-line pt-3 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+      <button type="button" onClick={() => { onNavigate?.(); openPalette() }} title="Go to (Ctrl K)" aria-label={collapsed ? 'Go to' : undefined}
+        className={collapsed ? 'icon-btn' : 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] text-ink-2 transition-colors hover:bg-surface hover:text-ink'}>
+        <Command size={17} />{!collapsed && <><span className="flex-1 text-left">Go to</span><span className="kbd hidden md:inline-flex">{isMac() ? '⌘' : 'Ctrl'} K</span></>}
+      </button>
       {links.map(({ to, label, Icon }) => (
         <NavLink key={to} to={to} onClick={() => { speech.stop(); onNavigate?.() }} title={label} aria-label={collapsed ? label : undefined} className={cls}>
           <Icon size={17} />{!collapsed && label}

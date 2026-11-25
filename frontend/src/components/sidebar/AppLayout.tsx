@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { Menu, SquarePen } from 'lucide-react'
 import { DesktopSidebar, MobileDrawer } from './Sidebar'
+import { CommandPalette } from '../common/CommandPalette'
 import { Emblem, Wordmark } from '../common/Logo'
 import { useApp } from '../../context/AppContext'
 import { speech } from '../../services/speech'
@@ -16,6 +17,7 @@ export function AppLayout() {
     <div className="flex h-dvh-safe w-full overflow-hidden bg-bg">
       <DesktopSidebar />
       <MobileDrawer open={open} onClose={() => setOpen(false)} />
+      <CommandPalette />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <header className="glass z-20 flex items-center justify-between border-b border-line px-2 py-2 md:hidden" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top))' }}>
           <button aria-label={t('nav.menu')} onClick={() => setOpen(true)} className="icon-btn"><Menu size={20} /></button>
