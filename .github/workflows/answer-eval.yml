@@ -9,6 +9,9 @@ on:
         description: Server to test
         default: https://fixsaathi-vu9s.onrender.com
 
+permissions:
+  contents: write
+
 jobs:
   answers:
     runs-on: ubuntu-latest
@@ -27,3 +30,13 @@ jobs:
         with:
           name: answer-eval
           path: answer-eval.json
+      - name: Keep the result on the answer-eval-results branch
+        if: always()
+        run: |
+          f="answer-eval-$(date -u +%Y-%m-%dT%H%M).json"
+          cp answer-eval.json "/tmp/$f" 2>/dev/null || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin answer-eval-results && git checkout answer-eval-results || git checkout --orphan answer-eval-results
+          git rm -rfq . 2>/dev/null || true
+          mkdir -p runs && cp "/tmp/$f" runs/ && git add runs && git commit -qm "Answer quality: $f" && git push -q origin answer-eval-results
