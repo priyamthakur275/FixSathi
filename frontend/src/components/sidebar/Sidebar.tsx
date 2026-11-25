@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Command, FileText, HandHelping, Home, LayoutDashboard, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Pencil, PlayCircle, Search, Settings, SquarePen, Trash2, Wrench, X } from 'lucide-react'
+import { Command, FileSearch, FileText, HandHelping, Home, LayoutDashboard, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Pencil, PlayCircle, Search, Settings, SquarePen, Trash2, Wrench, X } from 'lucide-react'
 import { Emblem, Wordmark } from '../common/Logo'
 import { ConfirmDialog, useDismiss } from '../common/Dialog'
 import { useApp } from '../../context/AppContext'
@@ -136,6 +136,7 @@ function WorkspaceLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavig
   const isManager = user.role === 'manager' || user.role === 'admin'
   const links = [
     ...(isManager ? [{ to: '/manager', label: t('nav.manager'), Icon: LayoutDashboard }] : []),
+    { to: '/lookup', label: t('nav.lookup'), Icon: FileSearch },
     { to: isManager ? '/history' : '/repairs', label: isManager ? t('nav.teamRepairs') : t('nav.repairs'), Icon: Wrench },
     { to: '/reports', label: t('nav.reports'), Icon: FileText },
     { to: '/demo', label: t('nav.demo'), Icon: PlayCircle },

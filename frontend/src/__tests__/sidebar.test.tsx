@@ -27,7 +27,7 @@ describe('workspace links', () => {
   it('a technician sees their repairs, reports and the demos, and no dashboard', async () => {
     const nav = await show('technician')
     const links = within(nav).getAllByRole('link').map(a => [a.textContent, a.getAttribute('href')])
-    expect(links).toEqual([['My repairs', '/repairs'], ['Service reports', '/reports'], ['Demo scenarios', '/demo']])
+    expect(links).toEqual([['Fault finder', '/lookup'], ['My repairs', '/repairs'], ['Service reports', '/reports'], ['Demo scenarios', '/demo']])
   })
 
   it('a manager also sees the team dashboard and the team history', async () => {

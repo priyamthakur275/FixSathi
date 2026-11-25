@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { FileText, HandHelping, HelpCircle, Home, LayoutDashboard, MessageSquare, Moon, PlayCircle, Search, Settings, SquarePen, Sun, Wrench } from 'lucide-react'
+import { FileSearch, FileText, HandHelping, HelpCircle, Home, LayoutDashboard, MessageSquare, Moon, PlayCircle, Search, Settings, SquarePen, Sun, Wrench } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useApp } from '../../context/AppContext'
 import { usePrefs } from '../../context/PrefsContext'
@@ -51,6 +51,7 @@ export function CommandPalette() {
       { id: 'home', group: 'Go to', label: t('nav.home'), icon: <Home size={16} />, run: () => { speech.stop(); newSession(); nav('/') } },
       ...(manager ? [{ id: 'dash', group: 'Go to', label: t('nav.manager'), icon: <LayoutDashboard size={16} />, run: go('/manager') },
         { id: 'senior', group: 'Go to', label: t('nav.senior'), icon: <HandHelping size={16} />, run: go('/senior') }] : []),
+      { id: 'lookup', group: 'Go to', label: t('nav.lookup'), icon: <FileSearch size={16} />, run: go('/lookup') },
       { id: 'repairs', group: 'Go to', label: manager ? t('nav.teamRepairs') : t('nav.repairs'), icon: <Wrench size={16} />, run: go(manager ? '/history' : '/repairs') },
       { id: 'reports', group: 'Go to', label: t('nav.reports'), icon: <FileText size={16} />, run: go('/reports') },
       { id: 'demo', group: 'Go to', label: t('nav.demo'), icon: <PlayCircle size={16} />, run: go('/demo') },

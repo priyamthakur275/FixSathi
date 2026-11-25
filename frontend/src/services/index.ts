@@ -139,6 +139,18 @@ export const dashboardService = {
   },
 }
 
+export interface LookupStep { text: string | null; locked: boolean }
+export interface LookupResult {
+  record_id: string; title: string; appliance_type: string; appliance_label: string; brand: string | null; model: string | null; error_code: string | null
+  symptoms: string[]; possible_faults: string[]; components: string[]; steps: LookupStep[]; locked_steps: number; safety: string[]; severity: string | null
+  match: 'error_code' | 'keyword' | 'embedding' | 'filter'; related_category: boolean; source_name: string; source_url: string | null; license: string; verification_status: string
+}
+export interface LookupResponse { query: string; appliance_type: string | null; brand: string | null; error_codes_found: string[]; error_codes_unknown: string[]; coverage: string; results: LookupResult[] }
+/** Fault finder: error codes and symptoms looked up in the sourced records, without the AI. */
+export const lookupService = {
+  search: (q: string, appliance?: string | null) => api<LookupResponse>(`/api/v1/lookup?q=${encodeURIComponent(q)}${appliance ? `&appliance_type=${appliance}` : ''}`),
+}
+
 export interface KnowledgeStats { total: number; by_category: Record<string, number>; by_verification_status: Record<string, number> }
 export interface AiStatus { configured: boolean; models: Record<string, string | null> }
 export const systemService = {
