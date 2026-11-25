@@ -85,7 +85,8 @@ def generic_title(appliance_type: str) -> str:
 def retitle_from(s: RepairSession, text: str) -> bool:
     """A chat opened with small talk ('hey') keeps a placeholder name. The first message that describes a fault names it,
     becomes its issue description, and sets the appliance if none was known. Titles the technician typed are never changed."""
-    if not (s.appliance_details or {}).get('title_auto') or s.title != generic_title(s.appliance_type) or not text.strip():
+    placeholder = {generic_title(s.appliance_type).lower(), 'appliance repair'}  # 'Appliance Repair': the name chats got before this rule
+    if not (s.appliance_details or {}).get('title_auto') or (s.title or '').lower() not in placeholder or not text.strip():
         return False
     app = s.appliance_type if s.appliance_type not in (None, '', 'unknown') else guess_appliance(text)
     title = chat_title(text, app)

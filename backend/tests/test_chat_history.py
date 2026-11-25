@@ -45,6 +45,16 @@ def test_a_chat_opened_with_small_talk_is_named_by_the_first_real_fault(client, 
     assert client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()['title'] == 'LG Split AC Showing CH38'  # named once
 
 
+def test_chats_named_before_this_rule_are_renamed_too(client, tech):
+    from sqlalchemy import text
+    from tests.conftest import engine
+    s = _new(client, tech, 'hey')
+    with engine().begin() as c:
+        c.execute(text("update repair_sessions set title='Appliance Repair' where id=:i"), {'i': s['id']})
+    client.post(f"/api/v1/sessions/{s['id']}/messages", json={'text': 'Washing machine is not draining water'}, headers=tech['h'])
+    assert client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()['title'] == 'Washing Machine Not Draining Water'
+
+
 def test_a_title_the_technician_typed_is_never_replaced(client, tech):
     s = _new(client, tech, 'hey')
     client.patch(f"/api/v1/sessions/{s['id']}", json={'title': 'New chat'}, headers=tech['h'])
