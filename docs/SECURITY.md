@@ -15,12 +15,13 @@ Never paste keys into chats, screenshots or issues.
 - Passwords use Argon2. Access tokens are HS256 JWTs (30 min). Refresh tokens are random, stored only as SHA-256 hashes, rotated on every use, and revocable on logout.
 - Roles: technician, manager, admin. Organisation scoping is applied in `services/access.py` on every query. A forbidden session returns 404.
 - Rate limits on login, register and refresh (per process).
+- Per-account AI quota (`app/core/quota.py`): calls that spend the Gemini or ElevenLabs key (chat replies, diagnosis, steps, component identification, step pictures, spoken replies, Live conversations) are limited to `AI_REQUESTS_PER_MINUTE` (default 20) and `AI_REQUESTS_PER_DAY` (default 400) per technician account. Anyone can register on the public app, so without it one account or script could use up the key for everyone. Over the limit, chat keeps the technician's message and shows why there is no reply; other calls return `429 AI_RATE_LIMITED` with a hint. Scripted demo sessions are not counted.
 - Uploads: decoded with Pillow (the declared MIME type is not trusted), JPEG/PNG/WebP only, 8 MB limit, stored under generated keys with path-traversal protection, and served only after a session-ownership check.
 - SQL: ORM and bound parameters only. The full-text query is built from `[a-z0-9]` tokens.
 - CORS: explicit origin list, no wildcard. The WebSocket checks Origin against the same list.
 - Logs are JSON with request IDs. Fields named password, token, secret, api_key or authorization are redacted. Provider messages are scrubbed of anything key-like.
 
 ## Known gaps
-- The rate limiter is per instance. Use Cloud Armor or Redis for multi-instance limits.
+- The rate limiter and the AI quota are per instance. Use Cloud Armor or Redis for multi-instance limits.
 - Local file storage only. Add Cloud Storage with private buckets for Cloud Run.
 - The refresh token lives in localStorage, which is a trade-off for a single-page app. Move it to an httpOnly cookie if the frontend and API share a domain.

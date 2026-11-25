@@ -52,11 +52,18 @@ class RateLimiter:
     def __init__(self): self.hits: dict[str, deque] = defaultdict(deque)
 
     def check(self, key: str, limit: int, window: float = 60.0) -> None:
+        if self.count(key, window) >= limit:
+            raise RateLimited('Too many attempts. Please wait a minute and try again.')
+        self.add(key)
+
+    def count(self, key: str, window: float) -> int:
         now = time.monotonic(); q = self.hits[key]
         while q and now - q[0] > window: q.popleft()
-        if len(q) >= limit:
-            raise RateLimited('Too many attempts. Please wait a minute and try again.')
-        q.append(now)
+        return len(q)
+
+    def add(self, key: str, n: int = 1) -> None:
+        now = time.monotonic()
+        self.hits[key].extend([now] * n)
 
 
 auth_limiter = RateLimiter()
