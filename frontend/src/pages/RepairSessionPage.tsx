@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Camera, Check, ChevronLeft, Circle, Download, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, ScanSearch, ShieldCheck, Sparkles, Stethoscope, Wand2 } from 'lucide-react'
 import { CameraModal } from '../components/camera/CameraModal'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
+import { RepairProgress } from '../components/repair/RepairProgress'
 import { AuthImage } from '../components/common/AuthImage'
 import { ErrorState, Skeleton, StatusPill } from '../components/common/ui'
 import { SourceList } from '../components/common/SourceList'
@@ -15,8 +16,8 @@ import type { Attachment, ComponentResult, Diagnosis, MediaItem, RepairSession, 
 
 const CLOSED = ['completed', 'cancelled']
 const btn = 'btn'
-const h2 = 'flex items-center gap-2.5 text-[15px] font-semibold'
-const ico = 'flex h-8 w-8 items-center justify-center rounded-xl bg-surface-3 text-teal'
+const h2 = 'flex items-center gap-2.5 text-[15px] font-semibold tracking-tight'
+const ico = 'flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface-2 text-accent'
 
 export default function RepairSessionPage() {
   const { id = '' } = useParams()
@@ -52,6 +53,10 @@ export default function RepairSessionPage() {
     } catch (e) { setLoadErr((e as ApiError).message) }
   }, [id])
   useEffect(() => { void load() }, [load])
+  // Arriving from the chat's power-state chip (#safety): scroll to the panel once it has rendered.
+  const { hash } = useLocation()
+  const ready = !!s && !!safety
+  useEffect(() => { if (ready && hash === '#safety') document.getElementById('safety')?.scrollIntoView({ block: 'start' }) }, [ready, hash])
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key); setMsg(null)
@@ -81,7 +86,7 @@ export default function RepairSessionPage() {
   })
   const visual = (x: RepairStep) => run(`vis-${x.id}`, async () => { const m = await repairService.stepVisual(id, x.id); setMedia(v => v.some(y => y.id === m.id) ? v : [...v, m]); setSteps(st => st.map(y => y.id === x.id ? { ...y, visual_media_id: m.id } : y)) })
   const identify = (m: MediaItem) => run(`id-${m.id}`, async () => setComp(await repairService.identify(id, m.id)))
-  const escalate = () => run('esc', async () => { await repairService.escalate(id, escReason); setShowEsc(false); setEscReason(''); await refreshSession(); setMsg({ kind: 'info', text: 'Senior technician support requested. A manager will see it under Senior Technician Support.' }) })
+  const escalate = () => run('esc', async () => { await repairService.escalate(id, escReason); setShowEsc(false); setEscReason(''); await refreshSession(); setMsg({ kind: 'info', text: 'Senior technician support requested. A manager will see it under Senior support.' }) })
   const report = () => run('report', async () => {
     if (rating) await repairService.feedback(id, rating, null)
     const r = await repairService.report(id, outcome, outcome === 'resolved' ? ftf : null, notes); nav(`/reports/${r.id}`)
@@ -98,24 +103,39 @@ export default function RepairSessionPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8">
       <Link to={`/chat/${id}`} className="mb-5 inline-flex items-center gap-1 text-sm text-ink-2 transition-colors hover:text-ink"><ChevronLeft size={16} />Back to chat</Link>
-      {s.demo && <div role="note" className="mb-4 rounded-2xl border border-warn/50 bg-warn/10 px-4 py-3 text-sm text-warn"><b>Demo scenario.</b> Diagnosis, steps and replies here are scripted sample content, not live AI. The safety lock, logging and report are the real server code.</div>}
-      <header className="card card-pad mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="section-label"><span className="text-teal">{s.appliance_label}</span> · Session {s.reference}</p>
-          <h1 className="mt-1.5 text-xl font-semibold leading-snug md:text-2xl">{s.title}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2"><StatusPill status={s.status} />
-            {safety && open && (
-              // On a phone the safety panel sits below the photos and diagnosis: this shows its state at the top and jumps to it.
-              <a href="#safety" className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium lg:hidden ${safety.unlocked ? 'border-ok/40 text-ok' : 'border-crit/40 text-crit'}`}>
-                {safety.unlocked ? <ShieldCheck size={13} aria-hidden /> : <Lock size={13} aria-hidden />}{safety.unlocked ? 'Power steps unlocked' : 'Power steps locked: record safety'}
-              </a>
-            )}{s.technician_name && !owner && <span className="text-xs text-ink-2">Technician: {s.technician_name}</span>}</div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button className={btn} onClick={() => nav(`/chat/${id}`)}><MessageSquare size={16} />Chat</button>
-          <button className={btn} disabled={busy === 'pdf'} onClick={() => run('pdf', () => sessionService.downloadPdf(id, s.reference))}>{busy === 'pdf' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}PDF</button>
-          {owner && open && s.status !== 'escalated' && <button onClick={() => setShowEsc(v => !v)} className="btn btn-warn"><HandHelping size={16} />Ask a senior technician</button>}
-          {s.report_id && <Link to={`/reports/${s.report_id}`} className={btn}><FileText size={16} />Report</Link>}
+      {s.demo && <div role="note" className="mb-4 rounded-xl border border-warn/35 bg-warn/[0.06] px-4 py-2.5 text-[13px] leading-relaxed text-ink-2"><b className="font-semibold text-warn">Demo scenario.</b> Diagnosis, steps and replies here are scripted sample content, not live AI. The safety lock, logging and report are the real server code.</div>}
+      <header className="card mb-6 overflow-hidden">
+        <div className="card-pad">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="flex flex-wrap items-center gap-2 text-[13px] text-ink-2">
+                <span className="font-semibold text-teal">{s.appliance_label}</span>
+                <span className="num rounded-md border border-line bg-surface-2 px-1.5 py-px text-[11px] text-ink-3" title="Session reference">{s.reference}</span>
+                <StatusPill status={s.status} />
+                {safety && open && (
+                  // On a phone the safety panel sits below the photos and diagnosis: this shows its state at the top and jumps to it.
+                  <a href="#safety" className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium lg:hidden ${safety.unlocked ? 'border-ok/40 text-ok' : 'border-crit/40 text-crit'}`}>
+                    {safety.unlocked ? <ShieldCheck size={13} aria-hidden /> : <Lock size={13} aria-hidden />}{safety.unlocked ? 'Power steps unlocked' : 'Power steps locked: record safety'}
+                  </a>
+                )}
+                {s.technician_name && !owner && <span className="text-xs text-ink-2">Technician: {s.technician_name}</span>}
+              </p>
+              <h1 className="font-display mt-2 text-[22px] leading-snug md:text-[28px]">{s.title}</h1>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className={btn} onClick={() => nav(`/chat/${id}`)}><MessageSquare size={16} />Chat</button>
+              <button className={btn} disabled={busy === 'pdf'} onClick={() => run('pdf', () => sessionService.downloadPdf(id, s.reference))}>{busy === 'pdf' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}PDF</button>
+              {owner && open && s.status !== 'escalated' && <button onClick={() => setShowEsc(v => !v)} className="btn btn-warn"><HandHelping size={16} />Ask a senior technician</button>}
+              {s.report_id && <Link to={`/reports/${s.report_id}`} className={btn}><FileText size={16} />Report</Link>}
+            </div>
+          </div>
+          <RepairProgress isolateIndex={2} stages={[
+            { label: 'Describe', done: !!s.issue_description || photos.length > 0 },
+            { label: 'Diagnose', done: !!diag },
+            { label: 'Isolate', done: !!safety?.unlocked || !!s.report_id },
+            { label: 'Repair', done: steps.length > 0 && done === steps.length },
+            { label: 'Report', done: !!s.report_id },
+          ]} />
         </div>
       </header>
       {showEsc && (
