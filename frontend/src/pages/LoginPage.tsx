@@ -34,7 +34,7 @@ export default function LoginPage() {
   const label = 'mb-1.5 block text-xs font-medium text-ink-2'
   return (
     <div className="grid min-h-dvh bg-bg lg:grid-cols-[1.05fr_1fr]">
-      <aside className="fs-plate relative hidden overflow-hidden border-r border-line bg-bg-2 lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-14">
+      <aside className="fs-plate relative hidden overflow-hidden border-r border-line bg-bg-2 lg:flex lg:flex-col lg:justify-between lg:gap-10 lg:p-12 xl:p-14">
         <div className="relative flex items-center gap-3"><Emblem height={40} /><Wordmark height={19} /></div>
         <div className="relative max-w-[34rem]">
           <h2 className="font-display text-[36px] leading-[1.08] xl:text-[42px]">The repair copilot that won&apos;t let you open a live appliance.</h2>
