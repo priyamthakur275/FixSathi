@@ -92,29 +92,44 @@ def run(base: str, cases: list[dict], pause: float, client=None) -> list[dict]:
     for i, case in enumerate(cases):
         if i:
             time.sleep(pause)
-        row = {'id': case['id'], 'language': case['language'], 'appliance': case['appliance']}
-        try:
-            s = c.post('/api/v1/sessions', json={'appliance_type': case['appliance'], 'issue_description': case['message']}, headers=h)
-            s.raise_for_status()
-            r = c.post(f"/api/v1/sessions/{s.json()['id']}/messages", json={'text': case['message']}, headers=h)
-            r.raise_for_status()
-            body = r.json()
-            msg = body.get('assistant_message')
-            if body.get('ai_status') != 'ok' or not msg:
-                row['error'] = (body.get('ai_error') or {}).get('code') or body.get('ai_status')
-            elif (msg.get('meta') or {}).get('demo'):
-                row['error'] = 'DEMO_ANSWER'  # scripted sample, not the model: grading it would say nothing
-            else:
-                meta = msg.get('meta') or {}
-                row['grade'] = grade(case, msg['message'], meta.get('sources'))
-                row['reply'] = msg['message']
-                row['latency_ms'] = meta.get('latency_ms')
-        except Exception as e:  # one broken case must not lose the rest of the run
-            row['error'] = f'{type(e).__name__}: {e}'[:200]
+        row = {}
+        for attempt in range(3):  # a busy provider or a restarting server is not a wrong answer: wait and ask again
+            if attempt:
+                time.sleep(20 * attempt)
+            row = ask(c, h, case)
+            if row.get('error') not in TRANSIENT and not str(row.get('error', '')).startswith('HTTPStatusError: Server error'):
+                break
         mark = 'ERR ' if 'error' in row else ('PASS' if row['grade']['pass'] else 'FAIL')
-        print(f"{mark} {case['id']} {case['message'][:60]}" + (f"  [{row.get('error')}]" if 'error' in row else ''))
+        print(f"{mark} {case['id']} {case['message'][:60]}" + (f"  [{row.get('error')}]" if 'error' in row else ''), flush=True)
         rows.append(row)
     return rows
+
+
+TRANSIENT = {'PROVIDER_UNAVAILABLE', 'QUOTA_EXCEEDED', 'TIMEOUT', 'AI_TIMEOUT', 'RATE_LIMITED', 'AI_RATE_LIMITED'}
+
+
+def ask(c, h: dict, case: dict) -> dict:
+    """One question in a fresh session; returns the graded row or an error."""
+    row = {'id': case['id'], 'language': case['language'], 'appliance': case['appliance']}
+    try:
+        s = c.post('/api/v1/sessions', json={'appliance_type': case['appliance'], 'issue_description': case['message']}, headers=h)
+        s.raise_for_status()
+        r = c.post(f"/api/v1/sessions/{s.json()['id']}/messages", json={'text': case['message']}, headers=h)
+        r.raise_for_status()
+        body = r.json()
+        msg = body.get('assistant_message')
+        if body.get('ai_status') != 'ok' or not msg:
+            row['error'] = (body.get('ai_error') or {}).get('code') or body.get('ai_status')
+        elif (msg.get('meta') or {}).get('demo'):
+            row['error'] = 'DEMO_ANSWER'  # scripted sample, not the model: grading it would say nothing
+        else:
+            meta = msg.get('meta') or {}
+            row['grade'] = grade(case, msg['message'], meta.get('sources'))
+            row['reply'] = msg['message']
+            row['latency_ms'] = meta.get('latency_ms')
+    except Exception as e:  # one broken case must not lose the rest of the run
+        row['error'] = f'{type(e).__name__}: {e}'[:200]
+    return row
 
 
 def grade_saved(path: str, cases: list[dict]) -> list[dict]:
