@@ -1,0 +1,36 @@
+{"id": "v2-01", "language": "en", "appliance": "ceiling_fan", "query": "fan is dead, no sound at all when I switch it on", "relevant": ["fixsaathi:fan_no_start", "mfr:crompton-fan-no-power", "mfr:crompton-fan-fuse", "mfr:orient-fan-not-working"]}
+{"id": "v2-02", "language": "en", "appliance": "ceiling_fan", "query": "there is a burning smell coming from the ceiling fan", "relevant": ["mfr:orient-fan-burning-smell"]}
+{"id": "v2-03", "language": "en", "appliance": "ceiling_fan", "query": "fan light works but the blades do not turn", "relevant": ["mfr:crompton-fan-light-ok", "mfr:crompton-fan-no-start-power", "fixsaathi:fan_slow_hum"]}
+{"id": "v2-04", "language": "hinglish", "appliance": "ceiling_fan", "query": "pankha bahut hil raha hai aur khat khat awaaz aa rahi hai", "relevant": ["fixsaathi:fan_wobble_noise", "mfr:crompton-fan-wobble", "mfr:orient-fan-wobble", "mfr:crompton-fan-noise"]}
+{"id": "v2-05", "language": "en", "appliance": "ceiling_fan", "query": "regulator does nothing, fan stays at the same speed", "relevant": ["mfr:crompton-fan-some-speeds"]}
+{"id": "v2-06", "language": "en", "appliance": "ceiling_fan", "query": "fan stops on its own after running for some time and the motor feels hot", "relevant": ["mfr:crompton-fan-sudden-stop"]}
+{"id": "v2-07", "language": "en", "appliance": "split_ac", "query": "water dripping from the indoor unit onto the wall", "relevant": ["fixsaathi:ac_water_leak", "mfr:daikin-split-water-leak", "mfr:samsung-ac-drain-slope", "mfr:samsung-ac-dew-droplets", "mfr:lg-ac-ch04"]}
+{"id": "v2-08", "language": "en", "appliance": "split_ac", "query": "LG AC showing CH05", "relevant": ["mfr:lg-ac-ch05"]}
+{"id": "v2-09", "language": "en", "appliance": "split_ac", "query": "AC trips the MCB as soon as the compressor starts", "relevant": ["mfr:samsung-ac-breaker-trip", "fixsaathi:mcb_trip"]}
+{"id": "v2-10", "language": "hinglish", "appliance": "split_ac", "query": "AC se paani tapak raha hai", "relevant": ["fixsaathi:ac_water_leak", "mfr:daikin-split-water-leak", "mfr:samsung-ac-drain-slope", "mfr:samsung-ac-dew-droplets"]}
+{"id": "v2-11", "language": "en", "appliance": "split_ac", "query": "outdoor fan is not spinning on the LG split", "relevant": ["mfr:lg-ac-ch67"]}
+{"id": "v2-12", "language": "en", "appliance": "split_ac", "query": "Daikin AC stops suddenly and the lamp keeps flashing", "relevant": ["mfr:daikin-split-stops-flashing"]}
+{"id": "v2-13", "language": "en", "appliance": "split_ac", "query": "AC is completely off, remote does nothing and no light on the unit", "relevant": ["mfr:daikin-split-no-operate", "mfr:samsung-ac-settings-cooling", "mfr:samsung-ac-breaker-trip"]}
+{"id": "v2-14", "language": "hi", "appliance": "split_ac", "query": "एसी से पानी टपक रहा है", "relevant": ["fixsaathi:ac_water_leak", "mfr:daikin-split-water-leak", "mfr:samsung-ac-drain-slope", "mfr:samsung-ac-dew-droplets"]}
+{"id": "v2-15", "language": "en", "appliance": "refrigerator", "query": "freezer is fine but the bottom fridge section is warm", "relevant": ["fixsaathi:fridge_not_cooling"]}
+{"id": "v2-16", "language": "en", "appliance": "refrigerator", "query": "thick ice forming in the freezer of my direct cool fridge", "relevant": ["mfr:samsung-fridge-directcool-ice"]}
+{"id": "v2-17", "language": "en", "appliance": "refrigerator", "query": "fridge makes a loud rattling sound from the back", "relevant": ["fixsaathi:fridge_noise", "mfr:lg-fridge-compressor-noise", "mfr:lg-fridge-fan-frost", "mfr:lg-fridge-unlevel-vibration"]}
+{"id": "v2-18", "language": "en", "appliance": "refrigerator", "query": "the sides of the refrigerator get very hot", "relevant": ["mfr:samsung-fridge-directcool-install"]}
+{"id": "v2-19", "language": "en", "appliance": "refrigerator", "query": "fridge is completely dead, inside light also off", "relevant": ["mfr:samsung-fridge-no-power"]}
+{"id": "v2-20", "language": "hinglish", "appliance": "refrigerator", "query": "fridge thanda nahi kar raha", "relevant": ["fixsaathi:fridge_not_cooling", "mfr:samsung-fridge-no-power", "mfr:samsung-fridge-directcool-settings", "mfr:samsung-fridge-directcool-ice", "mfr:samsung-fridge-directcool-install"]}
+{"id": "v2-21", "language": "en", "appliance": "washing_machine", "query": "washing machine shakes violently and moves across the floor during spin", "relevant": ["fixsaathi:wm_spin_noise"]}
+{"id": "v2-22", "language": "en", "appliance": "washing_machine", "query": "front load door won't unlock and machine does not start", "relevant": ["fixsaathi:wm_door_lock"]}
+{"id": "v2-23", "language": "hinglish", "appliance": "washing_machine", "query": "machine spin ke time bahut awaaz karti hai", "relevant": ["fixsaathi:wm_spin_noise"]}
+{"id": "v2-24", "language": "en", "appliance": "microwave_oven", "query": "sparks and crackling inside the microwave while heating", "relevant": ["mfr:samsung-mw-arcing"]}
+{"id": "v2-25", "language": "en", "appliance": "microwave_oven", "query": "microwave runs and the plate turns but food stays cold", "relevant": ["mfr:samsung-mw-kitchen-timer", "mfr:samsung-mw-demo-mode", "mfr:samsung-mw-ventilation", "mfr:samsung-mw-not-cooking-breaker"]}
+{"id": "v2-26", "language": "en", "appliance": "microwave_oven", "query": "microwave light inside does not come on", "relevant": ["mfr:samsung-mw-lamp"]}
+{"id": "v2-27", "language": "en", "appliance": "microwave_oven", "query": "steam coming out from around the microwave door", "relevant": ["mfr:samsung-mw-door-steam"]}
+{"id": "v2-28", "language": "en", "appliance": "microwave_oven", "query": "new microwave smells and smokes a little on first use", "relevant": ["mfr:samsung-mw-first-use-smell"]}
+{"id": "v2-29", "language": "en", "appliance": "microwave_oven", "query": "microwave takes much longer than before to heat food", "relevant": ["mfr:samsung-mw-slow-cooking", "mfr:samsung-mw-ventilation"]}
+{"id": "v2-30", "language": "en", "appliance": "water_purifier", "query": "Aquaguard red light blinking and beeping, no water", "relevant": ["mfr:aquaguard-classic-red-led"]}
+{"id": "v2-31", "language": "en", "appliance": "water_purifier", "query": "purifier water tastes salty and strange", "relevant": ["mfr:aquaguard-royale-taste", "mfr:kent-sapphire-taste", "mfr:kent-sterling-taste"]}
+{"id": "v2-32", "language": "en", "appliance": "water_purifier", "query": "Kent purifier leaking water from the bottom", "relevant": ["mfr:kent-sapphire-leak", "mfr:kent-sterling-leak"]}
+{"id": "v2-33", "language": "hinglish", "appliance": "water_purifier", "query": "purifier se paani bahut dheere aa raha hai", "relevant": ["mfr:kent-sterling-slow", "mfr:aquaguard-royale-low-output", "mfr:kent-sapphire-low-pressure", "mfr:aquaguard-royale-low-pressure"]}
+{"id": "v2-34", "language": "en", "appliance": "water_purifier", "query": "Aquaguard yellow LED blinking", "relevant": ["mfr:aquaguard-classic-yellow-led"]}
+{"id": "v2-35", "language": "en", "appliance": "mcb_electrical", "query": "MCB keeps tripping whenever the geyser is switched on", "relevant": ["fixsaathi:mcb_trip"]}
+{"id": "v2-36", "language": "en", "appliance": "rooftop_solar", "query": "solar panels producing much less power than last month", "relevant": ["fixsaathi:solar_low_output"]}

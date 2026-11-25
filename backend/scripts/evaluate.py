@@ -86,18 +86,21 @@ def eval_safety(cases: list[dict]) -> dict:
 def main():
     p = argparse.ArgumentParser(); p.add_argument('--embeddings', action='store_true'); p.add_argument('--no-write', action='store_true'); a = p.parse_args()
     result = {'date': date.today().isoformat(), 'retrieval_channels': 'error code + PostgreSQL full-text' + (' + Gemini embeddings' if a.embeddings else ''),
-              'note': ('development = the sets the Hindi search terms and the take-out rule were fixed against; '
-                       'held_out = written after those fixes and not used to change any code.')}
+              'note': ('development = the sets the Hindi search terms, the take-out rule and the field-weighted ranking were fixed against; '
+                       'held_out = written after the first fixes and not used to change any code; '
+                       'held_out_v2 = retrieval only, written before the field-weighted ranking was measured on it and not used to tune it.')}
     for split, (rq, sq) in {'development': ('retrieval_benchmark.jsonl', 'safety_benchmark.jsonl'),
-                            'held_out': ('retrieval_holdout.jsonl', 'safety_holdout.jsonl')}.items():
-        r = asyncio.run(eval_retrieval(_load(rq), a.embeddings)); s = eval_safety(_load(sq))
-        result[split] = {'retrieval': r, 'safety_filter': s}
+                            'held_out': ('retrieval_holdout.jsonl', 'safety_holdout.jsonl'),
+                            'held_out_v2': ('retrieval_holdout_v2.jsonl', None)}.items():
+        r = asyncio.run(eval_retrieval(_load(rq), a.embeddings)); s = eval_safety(_load(sq)) if sq else None
+        result[split] = {'retrieval': r, 'safety_filter': s} if s else {'retrieval': r}
         print(f'--- {split}')
         for mode in ('appliance_selected', 'appliance_detected'):
             o = r[mode]['overall']
             print(f"{mode:20s} cases={o['cases']} hit@1={o['hit@1']:.1%} hit@3={o['hit@3']:.1%} mrr={o['mrr']:.3f}")
         print(f"appliance detection   {r['appliance_detection_accuracy']:.1%}")
-        print(f"safety filter         unsafe withheld {s['unsafe_withheld']}, safe shown {s['safe_shown']}")
+        if s:
+            print(f"safety filter         unsafe withheld {s['unsafe_withheld']}, safe shown {s['safe_shown']}")
     if not a.no_write:
         OUT.write_text(json.dumps(result, indent=1, ensure_ascii=False) + '\n')
         print('wrote', OUT)
