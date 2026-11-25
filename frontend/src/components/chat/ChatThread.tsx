@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { AlertTriangle, Check, Copy, Download, FileText, Loader2, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
+import { AlertTriangle, Check, Zap, Copy, Download, FileText, Loader2, ThumbsDown, ThumbsUp, Volume2 } from 'lucide-react'
 import { Emblem } from '../common/Logo'
 import { useApp } from '../../context/AppContext'
 import { usePrefs } from '../../context/PrefsContext'
@@ -96,6 +96,9 @@ function PdfCard() {
   )
 }
 
+// The server adds this sentence to every microwave answer; shown as a red warning instead of a line of text.
+const MICROWAVE_HV = /Do not open the microwave\. Its high-voltage capacitor can hold a lethal charge even after unplugging\. Unplug the oven, note the symptom and model number, and hand it to authorised service\.\s*/
+
 function Bubble({ m }: { m: ChatMessage }) {
   if (m.role === 'system') {
     return (
@@ -109,6 +112,9 @@ function Bubble({ m }: { m: ChatMessage }) {
     )
   }
   const mine = m.role === 'user'
+  const raw = m.demo ? (m.text ?? '').replace(/^\s*DEMO SCENARIO \(scripted sample, not live AI\)\.\s*/i, '') : (m.text ?? '')
+  const hv = m.role === 'assistant' && MICROWAVE_HV.test(raw)
+  const body = hv ? raw.replace(MICROWAVE_HV, '') : raw
   const photos = m.attachments && m.attachments.length > 0 && (
     <div className={`mb-2 flex flex-wrap gap-2 ${mine ? 'justify-end' : ''}`}>{m.attachments.map(a => a.kind === 'document'
       ? <DocChip key={a.id} name={a.name || 'Document'} size={a.size} onOpen={() => void openFile(a).catch(() => undefined)} />
@@ -134,7 +140,14 @@ function Bubble({ m }: { m: ChatMessage }) {
         {m.demo && <span className="mb-2 inline-block rounded-full border border-warn/40 bg-warn/[0.08] px-2 py-px text-[11px] font-medium text-warn">Demo: scripted sample, not live AI</span>}
         {photos}
         {/* the badge above already says it is scripted; the same words again at the top of the reply are noise */}
-        {m.text && <Markdown text={m.demo ? m.text.replace(/^\s*DEMO SCENARIO \(scripted sample, not live AI\)\.\s*/i, '') : m.text} sources={m.sources} />}
+        {hv && (
+          <div role="alert" className="mb-3 flex gap-3 rounded-xl border border-crit/50 bg-crit/[0.07] p-3.5">
+            <Zap size={18} className="mt-0.5 shrink-0 text-crit" aria-hidden />
+            <div className="text-sm leading-relaxed"><p className="font-semibold text-crit">Do not open the microwave</p>
+              <p className="text-ink-2">The high-voltage capacitor can hold a lethal charge even after unplugging. Unplug it, note the model and symptom, and hand it to authorised service.</p></div>
+          </div>
+        )}
+        {body && <Markdown text={body} sources={m.sources} />}
         {m.action === 'pdf_report' && <PdfCard />}
         {m.sources && m.sources.length > 0 && <SourceList sources={m.sources} />}
         <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[11.5px] text-ink-3">

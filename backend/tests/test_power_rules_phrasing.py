@@ -42,3 +42,9 @@ def test_devanagari_live_work_is_withheld(text):
 ])
 def test_devanagari_safety_reminders_and_questions_pass(text):
     assert not _iw(text)
+
+
+def test_wire_used_as_a_tool_is_not_a_live_part():
+    assert not _step('2. Clear the drain pipe with a thin wire or blow through it.')
+    assert _step('Check the wires at the terminal block.')
+    assert _step('Tighten the loose wire on the capacitor.')

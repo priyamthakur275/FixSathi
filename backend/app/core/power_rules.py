@@ -32,7 +32,7 @@ ACTION_WORDS = re.compile(
 # ("Note the microfarad rating printed on the capacitor" means the canopy is already open). The verbs of POWER_WORDS are in
 # ACTION_WORDS. External parts (motor, pump, compressor, valve, cover, panel) lock unless the step only observes them, so
 # "Note the error code on the display panel" or "Listen for the compressor clicking" stays readable.
-_LIVE = (r'canopy|wire(s|d)?|wiring|terminal(s)?|capacitor(s)?|connector(s)?|(control |main |power |circuit )?board(s)?|pcb(s)?|'
+_LIVE = (r'canopy|(?<!thin )(?<!stiff )(?<!piece of )(?<!cleaning )wire(s|d)?(?! brush)|wiring|terminal(s)?|capacitor(s)?|connector(s)?|(control |main |power |circuit )?board(s)?|pcb(s)?|'
          r'element(s)?|thermistor(s)?|relay(s)?|ptc|olp|overload (protector|relay)|starter( relay)?|winding(s)?|taar')
 LIVE_PARTS = re.compile(rf'\b({_LIVE}|removal|multimeter|continuity|live (wire|terminal|circuit|side))\b', re.I)
 SOFT_PARTS = re.compile(r'\b(cover(s)?|panel(s)?|motor(s)?|pump(s)?|valve(s)?|compressor(s)?)\b', re.I)

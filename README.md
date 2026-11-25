@@ -154,7 +154,8 @@ cd ../frontend && npm test && npm run build && npm run lint
 - **No field data yet.** FixSaathi has not been used on real jobs. The answer-feedback buttons exist so that the first pilot produces real numbers.
 - **The safety statements are the technician's word.** FixSaathi cannot measure voltage or verify isolation, and the app and reports say so.
 - **The knowledge base is small** (377 records, two-thirds of them washing-machine error codes). Answers outside it are marked as not grounded.
-- **Free hosting.** The API runs on Render's free plan; the first request after an idle spell can take up to a minute.
+- **Free hosting.** The API runs on Render's free plan, which sleeps after 15 idle minutes. A GitHub Actions job pings it every 4 minutes to keep it awake; if that job is late, the first request can still take 30-50 seconds.
+- **No live-testing mode, by design.** Some checks (running current with a clamp meter, PCB voltages) need the supply on. FixSaathi does not guide work on live circuits; it tells the technician what the reading should be checked against and leaves live work to their training and judgement.
 
 ## Team
 
