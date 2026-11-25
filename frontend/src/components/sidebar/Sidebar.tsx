@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { HandHelping, Home, LayoutDashboard, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Pencil, Search, Settings, SquarePen, Trash2, X } from 'lucide-react'
+import { FileText, HandHelping, Home, LayoutDashboard, LogOut, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Pencil, PlayCircle, Search, Settings, SquarePen, Trash2, Wrench, X } from 'lucide-react'
 import { Emblem, Wordmark } from '../common/Logo'
 import { ConfirmDialog, useDismiss } from '../common/Dialog'
 import { useApp } from '../../context/AppContext'
@@ -117,7 +117,6 @@ function ProfileMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             </div>
             <div className="pt-1">
               <button role="menuitem" onClick={() => go('/settings')} className={item}><Settings size={16} className="text-ink-3" />{t('nav.settings')}</button>
-              {isManager && <button role="menuitem" onClick={() => go('/manager')} className={item}><LayoutDashboard size={16} className="text-ink-3" />{t('nav.manager')}</button>}
               {isManager && <button role="menuitem" onClick={() => go('/senior')} className={item}><HandHelping size={16} className="text-ink-3" />{t('nav.senior')}</button>}
               <button role="menuitem" onClick={() => void signOut()} className={item}><LogOut size={16} className="text-ink-3" />{t('nav.signOut')}</button>
             </div>
@@ -125,6 +124,32 @@ function ProfileMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/** The rest of the app, one click away: repairs, reports, the team dashboard for managers, and the labelled demos. */
+function WorkspaceLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
+  const t = useT()
+  const { user } = useAuth()
+  if (!user) return null
+  const isManager = user.role === 'manager' || user.role === 'admin'
+  const links = [
+    ...(isManager ? [{ to: '/manager', label: t('nav.manager'), Icon: LayoutDashboard }] : []),
+    { to: isManager ? '/history' : '/repairs', label: isManager ? t('nav.teamRepairs') : t('nav.repairs'), Icon: Wrench },
+    { to: '/reports', label: t('nav.reports'), Icon: FileText },
+    { to: '/demo', label: t('nav.demo'), Icon: PlayCircle },
+  ]
+  const cls = ({ isActive }: { isActive: boolean }) => collapsed
+    ? `icon-btn ${isActive ? 'bg-surface-2 text-ink' : ''}`
+    : `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-surface hover:text-ink ${isActive ? 'bg-surface-2 text-ink' : 'text-ink-2'}`
+  return (
+    <nav aria-label={t('nav.workspace')} className={`mt-3 space-y-0.5 border-t border-line pt-3 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+      {links.map(({ to, label, Icon }) => (
+        <NavLink key={to} to={to} onClick={() => { speech.stop(); onNavigate?.() }} title={label} aria-label={collapsed ? label : undefined} className={cls}>
+          <Icon size={17} />{!collapsed && label}
+        </NavLink>
+      ))}
+    </nav>
   )
 }
 
@@ -187,6 +212,8 @@ function Panel({ collapsed, onNavigate, onClose }: { collapsed: boolean; onNavig
           </div>
         ) : <button onClick={openSearch} title={t('nav.search')} aria-label={t('nav.search')} className={collapsed ? 'icon-btn' : row}><Search size={17} />{!collapsed && t('nav.search')}</button>}
       </div>
+
+      <WorkspaceLinks collapsed={collapsed} onNavigate={onNavigate} />
 
       <nav className="-mr-1 mt-4 min-h-0 flex-1 overflow-y-auto pr-1" aria-label={t('nav.chats')}>
         {!collapsed && (<>

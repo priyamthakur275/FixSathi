@@ -9,7 +9,7 @@ export function SafetyPanel({ state, busy, canEdit, onChange }: Props) {
   const both = !!state?.unlocked
   const box = 'mt-0.5 h-5 w-5 shrink-0 accent-[var(--color-accent)]'
   return (
-    <section aria-labelledby="safety-h" className={`relative overflow-hidden rounded-[1.25rem] border p-5 md:p-6 transition-colors ${both ? 'border-ok/40 bg-gradient-to-b from-ok/[0.09] to-ok/[0.02]' : 'border-crit/40 bg-gradient-to-b from-crit/[0.09] to-crit/[0.02]'}`}>
+    <section id="safety" aria-labelledby="safety-h" className={`scroll-mt-20 relative overflow-hidden rounded-[1.25rem] border p-5 md:p-6 transition-colors ${both ? 'border-ok/40 bg-gradient-to-b from-ok/[0.09] to-ok/[0.02]' : 'border-crit/40 bg-gradient-to-b from-crit/[0.09] to-crit/[0.02]'}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="safety-h" className="flex items-center gap-2.5 text-[15px] font-semibold">
           <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${both ? 'bg-ok/15 text-ok' : 'bg-crit/15 text-crit'}`}>
