@@ -15,7 +15,7 @@
   --color-line-2: #2c3647;
   --color-ink: #e9edf4;
   --color-ink-2: #a4aebf;
-  --color-ink-3: #778296;
+  --color-ink-3: #8a95a8;   /* 4.5:1 or better on every dark surface */
   --color-teal: #2bb3a3;
   --color-cyan: #3aa6df;
   --color-blue: #5b8def;
@@ -26,6 +26,7 @@
   --color-crit: #ee6b6b;
   --color-accent: #4a86ec;
   --color-on-accent: #ffffff;
+  --color-accent-fill: #2f6fdf;   /* filled buttons: white text needs 4.5:1, which the brighter text accent does not give */
   --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.25);
   --shadow-pop: 0 18px 50px -16px rgb(0 0 0 / 0.65);
 }
@@ -51,16 +52,17 @@
   --color-line-2: #cfd6df;
   --color-ink: #111827;
   --color-ink-2: #4a5466;
-  --color-ink-3: #6b7486;
-  --color-teal: #0f8a7e;
+  --color-ink-3: #5f6879;   /* 4.6:1 or better on every light surface (WCAG AA for small text) */
+  --color-teal: #0a7268;
   --color-cyan: #0d7fb8;
   --color-blue: #2f6fdf;
   --color-violet: #6a5fe0;
   --color-amber: #b7650c;
   --color-ok: #15803d;
-  --color-warn: #a35f00;
+  --color-warn: #8f5300;
   --color-crit: #d12f2f;
   --color-accent: #2f6fdf;
+  --color-accent-fill: #2f6fdf;
   --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.06);
   --shadow-pop: 0 18px 44px -16px rgb(15 23 42 / 0.28);
   --fs-gradient: linear-gradient(120deg, #0f8a7e 0%, #2f6fdf 100%);
@@ -112,8 +114,8 @@ body {
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: .75rem; padding: .5rem .9rem; font-size: .875rem; font-weight: 500; border: 1px solid var(--color-line-2); color: var(--color-ink); background: var(--color-surface); transition: background .15s ease, border-color .15s ease, opacity .15s ease; white-space: nowrap; }
   .btn:hover:not(:disabled) { background: var(--color-surface-2); }
   .btn:disabled { opacity: .5; cursor: not-allowed; }
-  .btn-primary, .btn-brand { border: 0; color: var(--color-on-accent); font-weight: 600; background: var(--color-accent); }
-  .btn-primary:hover:not(:disabled), .btn-brand:hover:not(:disabled) { background: var(--color-accent); filter: brightness(1.08); }
+  .btn-primary, .btn-brand { border: 0; color: var(--color-on-accent); font-weight: 600; background: var(--color-accent-fill); }
+  .btn-primary:hover:not(:disabled), .btn-brand:hover:not(:disabled) { background: var(--color-accent-fill); filter: brightness(1.08); }
   .btn-danger { border: 0; color: #fff; font-weight: 600; background: var(--color-crit); }
   .btn-danger:hover:not(:disabled) { background: var(--color-crit); filter: brightness(1.08); }
   .btn-ghost { border-color: transparent; background: transparent; color: var(--color-ink-2); }

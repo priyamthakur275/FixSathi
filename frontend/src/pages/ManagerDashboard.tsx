@@ -52,10 +52,12 @@ export default function ManagerDashboard() {
           {kpis.map(([k, v, sub]) => (
             <div key={k} className="card px-4 py-4">
               <dt className="text-xs font-medium text-ink-2">{k}</dt>
-              <dd className="mt-2 text-[26px] font-semibold leading-none tabular-nums">
-                {v === null ? <span className="text-sm font-normal text-ink-3">Not enough data</span> : <span className="fs-grad-text">{v}</span>}
+              <dd className="mt-2">
+                <span className="block text-[26px] font-semibold leading-none tabular-nums">
+                  {v === null ? <span className="text-sm font-normal text-ink-3">Not enough data</span> : <span className="fs-grad-text">{v}</span>}
+                </span>
+                {sub && <span className="mt-1.5 block text-[11px] text-ink-3">{sub}</span>}
               </dd>
-              {sub && <p className="mt-1.5 text-[11px] text-ink-3">{sub}</p>}
             </div>
           ))}
         </dl>

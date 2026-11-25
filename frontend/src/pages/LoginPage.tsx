@@ -56,17 +56,19 @@ export default function LoginPage() {
                 <span><span className="block font-semibold">{x.title}</span><span className="mt-0.5 block text-sm leading-relaxed text-ink-2">{x.body}</span></span>
               </li>) })}
           </ul>
+          {/* Figures from docs/EVALUATION.md (held-out v2 Hit@1; held-out safety set). 189 of the 377 records come from manufacturer
+              documentation; the rest are labelled unverified, so they are "sourced", not "verified". */}
           <dl className="mt-10 grid grid-cols-3 gap-3 border-t border-line pt-6">
             <div>
-              <dt className="text-[11px] text-ink-3">Held-out Hit@3</dt>
-              <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">96.7%</dd>
+              <dt className="text-[11px] text-ink-3">Right record first (held-out)</dt>
+              <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">94.4%</dd>
             </div>
             <div>
-              <dt className="text-[11px] text-ink-3">Safety lock</dt>
+              <dt className="text-[11px] text-ink-3">Unsafe steps withheld</dt>
               <dd className="mt-1 text-lg font-semibold tabular-nums text-teal">12 / 12</dd>
             </div>
             <div>
-              <dt className="text-[11px] text-ink-3">Verified records</dt>
+              <dt className="text-[11px] text-ink-3">Sourced repair records</dt>
               <dd className="mt-1 text-lg font-semibold tabular-nums text-ink">377</dd>
             </div>
           </dl>

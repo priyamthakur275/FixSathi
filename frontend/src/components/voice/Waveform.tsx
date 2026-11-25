@@ -1,5 +1,4 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react'
-import { speech } from '../../services/speech'
+import { useEffect, useRef } from 'react'
 
 const BARS = 32
 
@@ -24,21 +23,4 @@ export function LiveWaveform({ level, className = '' }: { level: () => number; c
       {Array.from({ length: BARS }).map((_, i) => <span key={i} ref={el => { bars.current[i] = el }} className="h-full w-[3px] origin-center rounded-full bg-accent transition-transform duration-75" style={{ transform: 'scaleY(.12)' }} />)}
     </div>
   )
-}
-
-/** True while FixSaathi is preparing or reading a reply aloud. */
-export function useSpeaking() {
-  return useSyncExternalStore(cb => speech.subscribe(cb), () => speech.isSpeaking(), () => false)
-}
-
-/** Diagnostics: the last personal-voice failure (server VOICE_STRICT), or null. */
-export function useVoiceError() {
-  return useSyncExternalStore(cb => speech.subscribe(cb), () => speech.error(), () => null)
-}
-
-/** 'preparing' while the natural voice is being generated, then 'speaking'; and which engine is speaking. */
-export function useSpeechPhase() {
-  const phase = useSyncExternalStore(cb => speech.subscribe(cb), () => speech.phase(), () => 'idle' as const)
-  const engine = useSyncExternalStore(cb => speech.subscribe(cb), () => speech.engine(), () => null)
-  return { phase, engine }
 }

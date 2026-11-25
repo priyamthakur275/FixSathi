@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Camera, Check, ChevronLeft, Circle, Download, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, ScanSearch, Sparkles, Stethoscope, Wand2 } from 'lucide-react'
+import { Camera, Check, ChevronLeft, Circle, Download, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, ScanSearch, ShieldCheck, Sparkles, Stethoscope, Wand2 } from 'lucide-react'
 import { CameraModal } from '../components/camera/CameraModal'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
 import { AuthImage } from '../components/common/AuthImage'
@@ -103,7 +103,13 @@ export default function RepairSessionPage() {
         <div className="min-w-0">
           <p className="section-label"><span className="text-teal">{s.appliance_label}</span> · Session {s.reference}</p>
           <h1 className="mt-1.5 text-xl font-semibold leading-snug md:text-2xl">{s.title}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2"><StatusPill status={s.status} />{s.technician_name && !owner && <span className="text-xs text-ink-2">Technician: {s.technician_name}</span>}</div>
+          <div className="mt-2 flex flex-wrap items-center gap-2"><StatusPill status={s.status} />
+            {safety && open && (
+              // On a phone the safety panel sits below the photos and diagnosis: this shows its state at the top and jumps to it.
+              <a href="#safety" className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium lg:hidden ${safety.unlocked ? 'border-ok/40 text-ok' : 'border-crit/40 text-crit'}`}>
+                {safety.unlocked ? <ShieldCheck size={13} aria-hidden /> : <Lock size={13} aria-hidden />}{safety.unlocked ? 'Power steps unlocked' : 'Power steps locked: record safety'}
+              </a>
+            )}{s.technician_name && !owner && <span className="text-xs text-ink-2">Technician: {s.technician_name}</span>}</div>
         </div>
         <div className="flex flex-wrap gap-2">
           <button className={btn} onClick={() => nav(`/chat/${id}`)}><MessageSquare size={16} />Chat</button>
