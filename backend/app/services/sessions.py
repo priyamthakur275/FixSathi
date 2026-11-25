@@ -17,7 +17,7 @@ TRANSITIONS: dict[str, set[str]] = {
 TERMINAL = {'completed', 'cancelled'}
 APPLIANCE_LABELS = {'ceiling_fan': 'Ceiling fan', 'split_ac': 'Split AC', 'washing_machine': 'Washing machine', 'refrigerator': 'Refrigerator',
                     'mcb_electrical': 'MCB / electrical', 'rooftop_solar': 'Rooftop solar', 'microwave_oven': 'Microwave oven',
-                    'water_purifier': 'Water purifier', 'unknown': 'Appliance'}
+                    'water_purifier': 'Water purifier', 'unknown': 'Not specified'}
 def guess_appliance(text: str) -> str:
     from ..datasets.normalize import detect_appliance
     return detect_appliance(text)
@@ -73,8 +73,28 @@ def chat_title(issue: str, appliance_type: str) -> str:
     while keep and keep[-1] in ('Not', 'In', 'On', 'At', 'For', 'From', 'Or'):
         keep.pop()
     if len(keep) < 2:
-        return f'{APPLIANCE_LABELS.get(appliance_type, "Appliance")} Repair'
+        return generic_title(appliance_type)
     return ' '.join(keep)[:80]
+
+
+def generic_title(appliance_type: str) -> str:
+    """The name a chat gets before anyone has described a fault ('hi', a photo alone)."""
+    return 'New chat' if appliance_type in (None, '', 'unknown') else f'{APPLIANCE_LABELS.get(appliance_type, appliance_type)} repair'
+
+
+def retitle_from(s: RepairSession, text: str) -> bool:
+    """A chat opened with small talk ('hey') keeps a placeholder name. The first message that describes a fault names it,
+    becomes its issue description, and sets the appliance if none was known. Titles the technician typed are never changed."""
+    if not (s.appliance_details or {}).get('title_auto') or s.title != generic_title(s.appliance_type) or not text.strip():
+        return False
+    app = s.appliance_type if s.appliance_type not in (None, '', 'unknown') else guess_appliance(text)
+    title = chat_title(text, app)
+    if title == generic_title(app):
+        return False
+    s.title, s.issue_description = title, text.strip()[:2000]
+    if s.appliance_type in (None, '', 'unknown') and app != 'unknown':
+        s.appliance_type = app
+    return True
 
 
 def create_session(db: Session, user: User, appliance_type: str | None, issue: str, title: str | None) -> RepairSession:

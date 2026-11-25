@@ -14,7 +14,7 @@ from ...integrations.storage.local import get_storage
 from ...schemas.repair import AnswerFeedbackIn, ChatResult, MediaOut, MessageIn, MessageOut, Page, SessionCreate, SessionOut, SessionPatch
 from ...services import ai
 from ...services.access import get_owned_session, get_readable_session, session_scope
-from ...services.sessions import TERMINAL, add_message, chat_title, create_session, ensure_open, transition
+from ...services.sessions import TERMINAL, add_message, chat_title, create_session, ensure_open, retitle_from, transition
 from .serializers import media_out, session_out
 
 router = APIRouter(tags=['sessions'])
@@ -148,6 +148,8 @@ async def post_message(session_id: uuid.UUID, body: MessageIn, u: User = Depends
         s.issue_description = body.text.strip()[:2000]
         if (s.appliance_details or {}).get('title_auto'):  # e.g. a photo-only first message: name the chat after the first description
             s.title = chat_title(s.issue_description, s.appliance_type)
+    elif body.text.strip():
+        retitle_from(s, body.text)
     if not body.media_ids and wants_pdf(body.text):
         # Answered by the server, not Gemini: the PDF is built from recorded data, so there is nothing for the model to write.
         am = add_message(db, s, 'assistant', PDF_REPLY, meta={'action': 'pdf_report', 'ai_generated': False, 'channel': body.channel})

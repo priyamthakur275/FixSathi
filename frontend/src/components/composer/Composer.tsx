@@ -12,7 +12,7 @@ import { useDictation } from '../../hooks/useDictation'
 import { useLanguage, useT, type Key } from '../../i18n'
 import type { Attachment } from '../../types'
 
-interface Props { onSend: (text: string, attachments: Attachment[], channel?: 'text' | 'voice') => void; disabled?: boolean; autoFocus?: boolean; initial?: string; compact?: boolean }
+interface Props { onSend: (text: string, attachments: Attachment[], channel?: 'text' | 'voice') => void; disabled?: boolean; autoFocus?: boolean; initial?: string; compact?: boolean; placeholder?: string }
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
@@ -47,7 +47,7 @@ export function SpeakerToggle({ className = '' }: { className?: string }) {
   )
 }
 
-export function Composer({ onSend, disabled, autoFocus, compact }: Props) {
+export function Composer({ onSend, disabled, autoFocus, compact, placeholder }: Props) {
   const t = useT()
   const language = useLanguage()
   const { draft, clearDraft } = useApp()
@@ -188,7 +188,7 @@ export function Composer({ onSend, disabled, autoFocus, compact }: Props) {
           ) : (<>
             <label className="sr-only" htmlFor="composer-input">Describe the appliance issue</label>
             <textarea id="composer-input" ref={area} maxLength={4000} value={text} onChange={e => setText(e.target.value)} onKeyDown={key} onPaste={paste} autoFocus={autoFocus} rows={compact ? 1 : 2}
-              placeholder={compact ? t('composer.followup') : t('composer.placeholder')}
+              placeholder={placeholder ?? (compact ? t('composer.followup') : t('composer.placeholder'))}
               className="block max-h-[200px] w-full resize-none bg-transparent px-3 py-2.5 text-[15px] leading-relaxed text-ink outline-none placeholder:text-ink-3" />
             <div className="flex items-center justify-between gap-2 px-0.5">
               <div className="relative flex items-center">

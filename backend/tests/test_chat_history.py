@@ -21,15 +21,35 @@ def test_chat_titles_are_short_and_meaningful():
     assert chat_title('My ceiling fan is not rotating', 'ceiling_fan') == 'Ceiling Fan Not Rotating'
     assert chat_title('LG split AC showing CH38, not cooling', 'split_ac') == 'LG Split AC Showing CH38'
     assert chat_title("The fridge isn't cooling at all since yesterday.", 'refrigerator') == 'Fridge Not Cooling'
-    assert chat_title('hi', 'washing_machine') == 'Washing machine Repair'
+    assert chat_title('hi', 'washing_machine') == 'Washing machine repair'
+    assert chat_title('hey', 'unknown') == 'New chat'
 
 
 def test_new_sessions_get_a_readable_title_and_photo_first_chats_are_named_later(client, tech):
     assert _new(client, tech, 'Washing machine is not draining water')['title'] == 'Washing Machine Not Draining Water'
     s = _new(client, tech, '', 'ceiling_fan')
-    assert s['title'] == 'Ceiling fan Repair'
+    assert s['title'] == 'Ceiling fan repair'
     client.post(f"/api/v1/sessions/{s['id']}/messages", json={'text': 'Fan is making a humming noise'}, headers=tech['h'])
     assert client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()['title'] == 'Fan Making Humming Noise'
+
+
+def test_a_chat_opened_with_small_talk_is_named_by_the_first_real_fault(client, tech):
+    s = _new(client, tech, 'hey')
+    assert s['title'] == 'New chat'
+    client.post(f"/api/v1/sessions/{s['id']}/messages", json={'text': 'ok'}, headers=tech['h'])
+    assert client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()['title'] == 'New chat'
+    client.post(f"/api/v1/sessions/{s['id']}/messages", json={'text': 'LG split AC showing CH38, not cooling'}, headers=tech['h'])
+    got = client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()
+    assert got['title'] == 'LG Split AC Showing CH38' and got['appliance_type'] == 'split_ac'
+    client.post(f"/api/v1/sessions/{s['id']}/messages", json={'text': 'fridge also making noise now'}, headers=tech['h'])
+    assert client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()['title'] == 'LG Split AC Showing CH38'  # named once
+
+
+def test_a_title_the_technician_typed_is_never_replaced(client, tech):
+    s = _new(client, tech, 'hey')
+    client.patch(f"/api/v1/sessions/{s['id']}", json={'title': 'New chat'}, headers=tech['h'])
+    client.post(f"/api/v1/sessions/{s['id']}/messages", json={'text': 'Washing machine is not draining water'}, headers=tech['h'])
+    assert client.get(f"/api/v1/sessions/{s['id']}", headers=tech['h']).json()['title'] == 'New chat'
 
 
 def test_search_finds_titles_and_message_text_and_is_scoped(client, tech):

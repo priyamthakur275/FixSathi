@@ -49,6 +49,9 @@ export default function ChatPage() {
     return () => { live = false }
   }, [sessionId, replies])
 
+  // The lock matters once there is an appliance to open or the AI has held a step back; on "hey" it is only noise.
+  const powerContext = (!!session?.appliance_type && session.appliance_type !== 'unknown') || messages.some(m => m.role === 'assistant' && /power-sensitive step withheld/i.test(m.text))
+
   const pdf = async () => {
     if (!sessionId) return
     setPdfBusy(true); setPdfErr(null)
@@ -74,7 +77,7 @@ export default function ChatPage() {
           <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 py-2 md:px-6">
             <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight" title={title}>{loading ? <span className="skeleton inline-block h-4 w-48 align-middle" /> : title}</h1>
             {sessionId && <>
-              {unlocked !== null && (
+              {unlocked !== null && (unlocked || powerContext) && (
                 <Link to={`/session/${sessionId}#safety`} title={unlocked ? 'Safety statements recorded: power steps are released' : 'Power steps are locked until you record both safety statements'}
                   className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${unlocked ? 'border-ok/35 text-ok hover:bg-ok/10' : 'border-crit/35 text-crit hover:bg-crit/10'}`}>
                   {unlocked ? <ShieldCheck size={13} aria-hidden /> : <Lock size={13} aria-hidden />}<span className="hidden sm:inline">{unlocked ? 'Isolated' : 'Power steps locked'}</span><span className="sr-only sm:hidden">{unlocked ? 'Isolated' : 'Power steps locked'}</span>
@@ -105,7 +108,7 @@ export default function ChatPage() {
 
       <div className="sticky bottom-0 bg-gradient-to-t from-bg via-bg to-transparent px-4 pb-3 pt-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         <div className="mx-auto w-full max-w-3xl">
-          <Composer compact disabled={thinking || loading || session?.status === 'completed' || session?.status === 'cancelled'} onSend={(text, a, channel) => void send(text, a, undefined, channel)} />
+          <Composer compact placeholder={messages.length ? undefined : t('composer.placeholder')} disabled={thinking || loading || session?.status === 'completed' || session?.status === 'cancelled'} onSend={(text, a, channel) => void send(text, a, undefined, channel)} />
           <p className="mt-2 text-center text-[11px] text-ink-3">{session && (session.status === 'completed' || session.status === 'cancelled') ? 'This repair session is closed. Start a new chat to continue.' : t('chat.disclaimer')}</p>
         </div>
       </div>
