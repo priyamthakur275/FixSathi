@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Download, FileText, Loader2, Printer } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Circle, Copy, Download, FileText, Loader2, Printer, Send } from 'lucide-react'
+import { jobSummary, whatsappLink } from '../utils/jobSummary'
 import { EmptyState, ErrorState, PageHeader, Skeleton, StatusPill } from '../components/common/ui'
 import { historyService, sessionService } from '../services'
 import { useAsync } from '../hooks/useAsync'
@@ -35,6 +36,16 @@ export function ReportDetailPage() {
     setBusy(true); setErr(null)
     try { await sessionService.downloadPdf(data.session_id, data.session_reference) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
+  const [copied, setCopied] = useState(false)
+  // Send the customer a plain summary of the visit: the phone's share sheet where there is one, WhatsApp otherwise.
+  const share = async () => {
+    if (!data) return
+    const text = jobSummary(data)
+    const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> }
+    if (nav.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) { try { await nav.share({ title: `Service report ${data.reference}`, text }); return } catch { /* cancelled */ return } }
+    window.open(whatsappLink(text), '_blank', 'noopener')
+  }
+  const copy = async () => { if (!data) return; try { await navigator.clipboard.writeText(jobSummary(data)); setCopied(true); setTimeout(() => setCopied(false), 1800) } catch { setErr('Could not copy. Select the text and copy it instead.') } }
   const sec = 'border-t border-line py-5'
   const h2 = 'section-label mb-2'
   const d = data?.data
@@ -45,20 +56,23 @@ export function ReportDetailPage() {
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && d && (<>
         <PageHeader title={`Report ${data.reference}`} subtitle={`${d.session.appliance} · ${new Date(data.created_at).toLocaleDateString()} · ${d.session.technician ?? ''}`}
-          eyebrow="Service report" right={<div className="flex items-center gap-2 print:hidden"><button onClick={() => window.print()} className="btn"><Printer size={15} />Print</button><button onClick={() => void download()} disabled={busy} className="btn btn-primary">{busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}Download PDF</button></div>} />
+          eyebrow="Service report" right={<div className="flex flex-wrap items-center gap-2 print:hidden"><button onClick={() => void share()} className="btn" title="Send a short summary of this visit to the customer"><Send size={15} />Send to customer</button><button onClick={() => void copy()} className="btn" aria-live="polite">{copied ? <Check size={15} className="text-ok" /> : <Copy size={15} />}{copied ? 'Copied' : 'Copy summary'}</button><button onClick={() => window.print()} className="btn"><Printer size={15} />Print</button><button onClick={() => void download()} disabled={busy} className="btn btn-primary">{busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}Download PDF</button></div>} />
         {err && <p role="alert" className="mb-4 rounded-xl border border-crit/40 bg-crit/10 px-4 py-2.5 text-sm text-crit">{err}</p>}
         <div className="card card-pad">
         <StatusPill status={data.resolution_status} />
-        {d.demo && <p role="note" className="mt-3 rounded-2xl border border-warn/50 bg-warn/10 px-4 py-3 text-sm text-warn"><b>Demo scenario report.</b> The diagnosis and steps came from scripted sample content, not live AI. Safety statements and steps performed are real records from this session.</p>}
+        {d.demo && <p role="note" className="mt-3 rounded-xl border border-warn/35 bg-warn/[0.06] px-4 py-2.5 text-[13px] text-ink-2"><b>Demo scenario report.</b> The diagnosis and steps came from scripted sample content, not live AI. Safety statements and steps performed are real records from this session.</p>}
         <section className="mt-4 pb-5 pt-2"><h2 className={h2}>Customer issue</h2><p>{d.customer_issue || 'Not recorded'}</p></section>
         <section className={sec}><h2 className={h2}>Diagnosis</h2>{d.diagnosis ? <><p>{d.diagnosis.problem_summary}</p><ul className="mt-2 list-disc pl-5 text-sm">{d.diagnosis.faults.map(f => <li key={f.fault}>{f.fault} ({Math.round(f.confidence * 100)}% {d.demo ? 'sample value' : 'AI estimate'})</li>)}</ul><p className="mt-1 text-xs text-ink-3">{d.diagnosis.note}</p></> : <p className="text-ink-2">No diagnosis was run.</p>}</section>
         <section className={sec}><h2 className={h2}>Steps performed</h2>{d.steps_performed.length ? <ol className="list-decimal space-y-1 pl-5">{d.steps_performed.map(s => <li key={s.step_number}>{s.title}</li>)}</ol> : <p className="text-ink-2">None marked done.</p>}
           {d.steps_not_performed.length > 0 && <><h3 className="mb-1 mt-3 text-xs font-semibold text-ink-3">Not performed</h3><ul className="list-disc pl-5 text-sm text-ink-2">{d.steps_not_performed.map(s => <li key={s.step_number}>{s.title}</li>)}</ul></>}</section>
         <section className={sec}><h2 className={h2}>Parts identified</h2>{d.parts_identified.length ? <ul className="list-disc pl-5">{d.parts_identified.map((p, i) => <li key={i}>{p.name}</li>)}</ul> : <p className="text-ink-2">None.</p>}</section>
         <section className={sec}><h2 className={h2}>Recorded safety statements</h2>
-          <ul className="space-y-1 text-sm"><li>{d.safety.final_state.power_off_confirmed ? '✓' : '○'} Technician stated power was switched off</li><li>{d.safety.final_state.tester_checked ? '✓' : '○'} Technician stated tester showed no live line</li><li>Blocked unsafe attempts: {d.safety.blocked_attempts}</li></ul>
+          <ul className="space-y-1.5 text-sm">
+            {([[d.safety.final_state.power_off_confirmed, 'Technician stated power was switched off'], [d.safety.final_state.tester_checked, 'Technician stated tester showed no live line']] as const).map(([on, label]) =>
+              <li key={label} className="flex items-center gap-2">{on ? <Check size={15} className="text-ok" aria-label="Recorded" /> : <Circle size={13} className="text-ink-3" aria-label="Not recorded" />}{label}</li>)}
+            <li className="text-ink-2">Unsafe attempts blocked by the server: <span className="num">{d.safety.blocked_attempts}</span></li></ul>
           <p className="mt-2 text-xs text-ink-3">{d.safety.disclaimer}</p></section>
-        <section className={sec}><h2 className={h2}>Resolution</h2><p className="capitalize">{d.resolution.outcome.replace('_', ' ')}{d.resolution.first_time_fix ? ', fixed on first visit' : ''}</p>{d.resolution.notes && <p className="mt-1 text-ink-2">{d.resolution.notes}</p>}</section>
+        <section className={sec}><h2 className={h2}>Resolution</h2><p>{({ resolved: 'Fixed', not_resolved: 'Not fixed', escalated: 'Escalated to a senior technician' } as Record<string, string>)[d.resolution.outcome] ?? d.resolution.outcome}{d.resolution.first_time_fix ? ', on the first visit' : ''}</p>{d.resolution.notes && <p className="mt-1 text-ink-2">{d.resolution.notes}</p>}</section>
         <section className={sec}><h2 className={h2}>Technician feedback</h2><p>{d.feedback ? `Rated ${d.feedback.rating}/5` : 'No feedback given.'}</p></section>
         </div>
       </>)}
