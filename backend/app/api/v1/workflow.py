@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ...core.exceptions import NotFound, error_body
+from ...core.quota import check_ai_quota
+from ...demo.client import is_demo
 from ...db.base import utcnow
 from ...db.models import DiagnosisResult, IdentifiedComponent, RepairStep, SafetyEvent, User
 from ...db.session import get_db
@@ -22,9 +24,15 @@ def safety_out(st: safety.SafetyState) -> SafetyOut:
                      expired=st.expired, confirmed_at=st.confirmed_at, expires_at=st.expires_at, disclaimer=safety.DISCLAIMER)
 
 
+def _quota(u: User, s) -> None:
+    if not is_demo(s):  # scripted demo sessions call no model
+        check_ai_quota(u.id)
+
+
 @router.post('/sessions/{session_id}/diagnose', response_model=DiagnosisOut, status_code=201)
 async def diagnose(session_id: uuid.UUID, body: DiagnoseIn | None = None, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
     s = get_owned_session(db, u, session_id)
+    _quota(u, s)
     return DiagnosisOut.model_validate(await ai.diagnose(db, s, (body.media_ids if body else None) or None))
 
 
@@ -49,6 +57,7 @@ def my_diagnoses(limit: int = Query(20, ge=1, le=100), u: User = Depends(current
 @router.post('/sessions/{session_id}/identify-component', status_code=201)
 async def identify(session_id: uuid.UUID, body: IdentifyIn, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
     s = get_owned_session(db, u, session_id)
+    _quota(u, s)
     c: IdentifiedComponent = await ai.identify_component(db, s, body.media_id, body.query)
     return {'id': str(c.id), 'media_id': str(c.media_id), 'coordinate_system': 'normalised 0-1000, origin top-left of the original image',
             **c.result, 'note': 'Visual identification only. The component has not been measured or tested.'}
@@ -64,6 +73,7 @@ def steps(session_id: uuid.UUID, u: User = Depends(current_user), db: Session = 
 @router.post('/sessions/{session_id}/steps/generate', response_model=list[StepOut], status_code=201)
 async def generate(session_id: uuid.UUID, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
     s = get_owned_session(db, u, session_id)
+    _quota(u, s)
     out = await ai.generate_steps(db, s)
     unlocked = safety.current_state(db, s).unlocked
     return [step_out(x, unlocked) for x in out]
@@ -103,6 +113,8 @@ async def step_visual(session_id: uuid.UUID, step_id: uuid.UUID, u: User = Depen
     if x.requires_power_off and not safety.current_state(db, s).unlocked:
         d = safety.guard(db, s, u, f'visual_for_step:{x.step_number}', True, actor='api'); db.commit()
         return JSONResponse(error_body('SAFETY_CONFIRMATION_REQUIRED', 'Record both safety statements first.', d.as_dict()), status_code=409)
+    if not x.visual_media_id:  # an illustration already made is returned without a new call
+        _quota(u, s)
     return media_out(await ai.step_visual(db, s, x))
 
 

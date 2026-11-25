@@ -3,6 +3,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from ...config import get_settings
 from ...core.exceptions import AppError
 from ...core.logging import log
+from ...core.quota import check_ai_quota
 from ...db.session import SessionLocal
 from ...dependencies import user_from_token
 from ...services import live
@@ -34,6 +35,7 @@ async def live_ws(ws: WebSocket, session_id: uuid.UUID):
         try:
             u = user_from_token(db, first['token'])
             s = get_owned_session(db, u, session_id)
+            check_ai_quota(u.id)  # one Live conversation counts as one AI request
             if s.status in ('completed', 'cancelled'):
                 raise AppError('This session is closed.', code='SESSION_CLOSED', status=409)
             ctx = live.LiveContext(session_id=s.id, user_id=u.id, language=str(first.get('language') or u.preferred_language)[:20])
