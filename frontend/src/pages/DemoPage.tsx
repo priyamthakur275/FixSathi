@@ -20,7 +20,7 @@ export default function DemoPage() {
     catch (e) { setErr((e as Error).message || 'Could not start the demo.') } finally { setBusy(null) }
   }
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
+    <div className="page page-mid">
       <h1 className="font-display text-[26px] leading-tight md:text-[34px]">Demo scenarios</h1>
       <p className="mt-2 max-w-2xl text-ink-2">Walk through a complete repair even when live AI is unavailable. Replies, diagnosis and steps in these sessions are <b className="text-ink">scripted sample content written by our team, not live AI</b>, and every screen says so.</p>
       <div className="mt-5 flex max-w-2xl items-start gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3.5 text-sm text-ink-2">

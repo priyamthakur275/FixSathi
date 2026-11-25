@@ -56,7 +56,7 @@ export default function SettingsPage() {
   const signOut = async () => { speech.stop(); await logout(); newSession(); nav('/login', { replace: true }) }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 md:px-8 md:py-10">
+    <div className="page page-read">
       <h1 className="font-display text-[26px] leading-tight md:text-[34px]">{t('settings.title')}</h1>
 
       <div className="mt-4">

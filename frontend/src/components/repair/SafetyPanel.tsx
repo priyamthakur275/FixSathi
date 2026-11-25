@@ -30,7 +30,7 @@ export function SafetyPanel({ state, busy, canEdit, onChange }: Props) {
               {both ? <ShieldCheck size={13} aria-hidden /> : <Lock size={13} aria-hidden />}
               {both ? `Isolated${until ? `, unlocked until ${until}` : ''}` : 'Live: power steps locked by the server'}
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-ink-2">These are <strong className="font-semibold text-ink">your own statements</strong>, recorded on the server for this session only. FixSaathi cannot measure voltage, control a tester or confirm that a circuit is dead. Always verify with your own tester.</p>
+            <p className="mt-3 text-sm leading-relaxed text-ink-2">FixSaathi can't measure voltage. These are <strong className="font-semibold text-ink">your own statements</strong>: only your tester proves a circuit is dead.</p>
           </div>
         </div>
         <div className="mt-5 space-y-2.5">
@@ -48,7 +48,7 @@ export function SafetyPanel({ state, busy, canEdit, onChange }: Props) {
         <p className={`mt-4 text-xs font-medium ${both ? 'text-ok' : 'text-crit'}`} role="status">
           {state?.expired ? 'Your earlier statements expired. Check again and record them again.'
             : both ? `Statements recorded. Power-sensitive steps are unlocked until ${until ?? 'they expire'}.`
-              : 'Power-sensitive steps stay locked on the server until both statements are recorded.'}
+              : 'Tick both to unlock power steps.'}
         </p>
         {!canEdit && <p className="mt-2 text-xs text-ink-3">Only the technician working on this session can record these.</p>}
       </div>
