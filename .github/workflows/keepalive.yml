@@ -8,4 +8,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping API health
-        run: curl -fsS --max-time 60 https://fixsaathi-copilot-api-v9cb.onrender.com/health > /dev/null || true
+        run: curl -fsS --max-time 60 https://fixsaathi-vu9s.onrender.com/health > /dev/null || true
