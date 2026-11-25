@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 export function useAsync<T>(fn: () => Promise<T>, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null)
@@ -13,5 +13,6 @@ export function useAsync<T>(fn: () => Promise<T>, deps: unknown[] = []) {
     return () => { live = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, tick])
-  return { data, error, loading, retry: () => setTick(t => t + 1) }
+  const retry = useCallback(() => setTick(t => t + 1), [])  // stable, so callers can use it in effects
+  return { data, error, loading, retry }
 }
