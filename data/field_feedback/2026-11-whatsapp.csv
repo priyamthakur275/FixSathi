@@ -1,0 +1,51 @@
+id,name,city,work,years,appliance,fault_tried,cause_correct,rating,will_use,issues
+1,Rajesh Sharma,Delhi,AC and fridge,14,split_ac,Indoor runs but outdoor does not,yes,4,team,slow_first_load
+2,Irfan Khan,Jaipur,Washing machine,7,washing_machine,LG top load not draining,partly,3.5,sometimes,simpler_language;missed_causes
+3,,Lucknow,Electrician,18,ceiling_fan,Ceiling fan running slow,yes,2,no,slow_first_load;repeated_isolation;basic_for_experts
+4,Vicky Verma,Pune,AC and RO,4,split_ac,Inverter AC E1 communication fault,partly,4,sometimes,offline;live_testing;brand_codes
+5,Deepak Mistri,Patna,RO,5,water_purifier,Slow water and high waste,yes,4,yes,photos
+6,,Ahmedabad,Fridge,11,refrigerator,Not cooling but light on,yes,3.5,sometimes,slow_first_load
+7,Rohit Kumar,Noida,Helper (AC and washing machine),1.5,washing_machine,Body shock from washing machine,yes,5,yes,
+8,Sunil Chauhan,Chandigarh,Microwave and washing machine,9,microwave_oven,Microwave not heating,yes,4,team,microwave_warning
+9,Ravi Shankar,Indore,AC,6,split_ac,Ice on indoor coil,yes,3,conditional,basic_for_experts;advanced_data
+10,Santosh Nair,Bengaluru,Fridge and washing machine,10,refrigerator,Frost-free lower section not cooling,yes,4,yes,slow_first_load;live_testing
+11,Manoj Verma,Kanpur,AC and fridge,12,refrigerator,Gas present but low cooling,yes,4,sometimes,slow_first_load
+12,Salman Sheikh,Mumbai,Washing machine,6,washing_machine,Front load door not locking,yes,4.5,yes,brand_codes
+13,Pradeep Kumar,Patna,Electrician,8,mcb_electrical,MCB tripping repeatedly,yes,4,team,simpler_language
+14,Karthik R.,Chennai,AC and fridge,5,split_ac,Indoor unit water leakage,yes,4,yes,slow_first_load;unneeded_isolation
+15,Harish Joshi,Jaipur,RO,9,water_purifier,RO dead with no power,yes,4,yes,voice_in_noise
+16,,Agra,Fan and wiring,15,ceiling_fan,Ceiling fan jammed,yes,2.5,no,no_time
+17,Arjun Singh,Gurgaon,AC helper,1,split_ac,AC trips after 10 minutes,yes,5,yes,
+18,Farhan Ali,Hyderabad,Fridge,7,refrigerator,Inverter fridge compressor not starting,partly,3.5,conditional,brand_codes;live_testing
+19,Vikramjit Singh,Ludhiana,AC contractor,13,split_ac,Ice on suction pipe,yes,4,team,basic_for_experts
+20,Pappu Kumar,Ranchi,Washing machine and RO,4,washing_machine,Spin motor not turning,yes,4.5,yes,
+21,Ganesh Naik,Bengaluru,Washing machine and microwave,8,microwave_oven,Sparking inside microwave,yes,4,yes,slow_first_load
+22,,Surat,Fridge and AC,10,split_ac,Window AC very noisy,yes,3.5,sometimes,simpler_language
+23,Imran Ansari,Bhopal,AC,5,split_ac,Not turning on from remote,yes,4,yes,unneeded_isolation
+24,Subhash Chandra,Varanasi,Electrician,20,ceiling_fan,Ceiling fan turning in reverse,yes,3,team,basic_for_experts
+25,Deepu Yadav,Ghaziabad,Helper (fridge and AC),0.7,refrigerator,Heavy ice in freezer,yes,5,yes,photos
+26,Wasim Akram,Meerut,Washing machine,7,washing_machine,Water not filling,yes,4,yes,simpler_language
+27,Sanjay Kulkarni,Nagpur,Fridge and washing machine,12,refrigerator,Water dripping in double door fridge,yes,4,team,slow_first_load
+28,Abhishek Nair,Kochi,AC and RO,3.5,water_purifier,High TDS and bad taste,yes,4,sometimes,offline;brand_codes
+29,Anil Kumar,Faridabad,AC,9,split_ac,Outdoor fan runs but compressor does not,yes,4,sometimes,live_testing
+30,,Kolkata,Fridge and AC,14,refrigerator,Compressor runs but zero cooling,partly,3.5,team,slow_first_load;advanced_data
+31,Javed Khan,Ahmedabad,Washing machine,8,washing_machine,Front load vibrating on spin,yes,4,yes,slow_first_load
+32,Maheshwar Reddy,Vijayawada,AC,6,split_ac,Warm air at 16 degrees,yes,4,yes,repeated_isolation
+33,Praveen Solanki,Jodhpur,Rooftop solar,5,rooftop_solar,Zero generation in full sun,yes,4,team,dc_warning
+34,Ravi Tiwari,Prayagraj,Fridge washing machine and RO,7,washing_machine,Dryer not running,yes,4,yes,
+35,Kuldeep Singh,Amritsar,Shop owner,17,microwave_oven,Turntable not rotating,yes,4,team,slow_first_load
+36,Dinesh Mandal,Siliguri,RO,3,water_purifier,Booster pump runs but no pressure,yes,4.5,yes,
+37,,Lucknow,AC and fridge,10,split_ac,Inverter AC outdoor dead,partly,3,conditional,advanced_data
+38,Hemant Pawar,Nashik,Electrician,6,ceiling_fan,Fan humming but not turning,yes,4,yes,slow_first_load
+39,Arvind Kumar,Noida,Junior technician,1,refrigerator,No light and no cooling,yes,5,yes,
+40,Naveen Gowda,Mysuru,Washing machine and fridge,9,washing_machine,Top load unbalance error,yes,4,sometimes,slow_first_load
+41,,Jodhpur,AC,8,split_ac,Bad smell from AC,yes,3.5,sometimes,unneeded_isolation
+42,Mohit Bansal,Chandigarh,Microwave,5,microwave_oven,Stops after 3 seconds,yes,4.5,yes,microwave_warning
+43,Rizwan Malik,Delhi,Fridge and AC,11,refrigerator,Frost-free fan runs but no cooling,yes,4,team,slow_first_load
+44,Yogesh Joshi,Vadodara,RO,6,water_purifier,Does not stop when tank is full,yes,4.5,yes,
+45,Vijay Bhaskar,Coimbatore,AC washing machine and microwave,7,washing_machine,Not spinning properly,yes,4,yes,
+46,Deepak Rawat,Haldwani,AC,4,split_ac,Indoor blower slow,yes,4,yes,slow_first_load
+47,Suresh Babu,Tirupati,AC and fridge,10,refrigerator,Compressor hot and tripping,yes,4,sometimes,slow_first_load
+48,Chintu Sharma,Jaipur,Trainee (AC and RO),0.5,water_purifier,No water from RO,yes,5,yes,
+49,Kamlesh Soni,Ujjain,Fridge and washing machine,11,washing_machine,Semi-automatic leaking from below,yes,4,yes,slow_first_load
+50,Nitin Kulkarni,Pune,Rooftop solar and wiring,6,rooftop_solar,RCCB tripping on solar system,yes,4,team,slow_first_load
