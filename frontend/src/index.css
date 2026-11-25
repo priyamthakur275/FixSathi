@@ -109,6 +109,11 @@ body {
 
   /* Surfaces. Three radii by level: the shell 20px, panels 16px, controls 10px; chips are round. */
   .card { border: 1px solid var(--color-line); background: var(--fs-card); border-radius: 1rem; box-shadow: var(--shadow-card); }
+  /* Every workspace page shares one column, so headings line up from page to page. */
+  .page { margin-inline: auto; width: 100%; max-width: 72rem; padding: 2rem 1rem 3rem; }
+  @media (min-width: 768px) { .page { padding-inline: 2rem; } }
+  .page-mid > * { max-width: 56rem; }
+  .page-read > * { max-width: 42rem; }
   .card-pad { padding: 1.25rem; }
   @media (min-width: 768px) { .card-pad { padding: 1.5rem; } }
   .card-hover { transition: border-color .18s ease, background .18s ease, box-shadow .18s ease, transform .18s ease; }

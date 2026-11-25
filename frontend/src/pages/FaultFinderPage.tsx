@@ -91,7 +91,7 @@ export default function FaultFinderPage() {
   const shown = q.trim() ? data : null
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
+    <div className="page page-mid">
       <h1 className="font-display text-[26px] leading-tight md:text-[34px]">Fault finder</h1>
       <p className="mt-1.5 max-w-2xl text-sm text-ink-2">Type an error code or a symptom. Answers come straight from the sourced repair records, instantly, without the AI.</p>
 

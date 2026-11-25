@@ -1,0 +1,153 @@
+{
+ "_about": "Replies from the live app (https://fixsaathi-vu9s.onrender.com, Gemini) on 2026-11-25, asked through the public API by a throwaway account, before the Devanagari power-rule fix. Citation tags and the server's lock note were stripped to keep the file small; withheld steps are kept as markers.",
+ "a01": {
+  "reply": "**CH38** on an LG split AC indicates low refrigerant (gas protection) or a piping/installation leak .\n**Likely Causes:**\n1. **Low Refrigerant (Gas Leak):** Refrigerant shortage due to flare nut loose, pinhole leak in coil/piping .\n2. **Recent Relocation/Installation Fault:** Improper flare work or gas loss during recent service .\n3. **Temporary PCB/Power Glitch:** Sensor falsely triggering error due to minor electrical surge .\n*(power-sensitive step withheld: see the note below)* Record both steps in your app's safety panel.\n**Steps to Check:**\n1. **Power-Cycle Test:** Switch off the breaker/MCB for 5 minutes, turn it back on, and see if the code clears temporarily .\n2. **Inspect Piping & Flares:** Visually check indoor and outdoor unit flare joints for oil residue (sign of gas leak).\n3. **Check Pressure:** Connect your manifold gauge to check standing and running pressures against the refrigerant type specified on the rating label.\nWas this AC recently installed, relocated, or serviced, or did the error start suddenly during normal use?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2695
+ },
+ "a02": {
+  "reply": "This is a common issue on split ACs. Since no brand was specified, here are the most likely causes and checks to diagnose it:\n**Likely Causes:**\n1. **Wrong remote settings** – Mode set to Fan/Dry instead of Cool, or set temperature is too high   .\n2. **Dirty indoor filter or coil** – Restricts airflow, reducing cooling efficiency   .\n3. **Outdoor unit not running** – Outdoor fan or compressor is off due to capacitor failure, wiring issue, or PCB relay fault .\n4. **Low refrigerant** – Gas leak or low pressure in the system   .\n**Checks to perform:**\n1. **Check remote settings:** Ensure the mode is set to **Cool** mode and set temperature is at least 3–4°C below room temperature (e.g., 20–22°C)  .\n*(power-sensitive step withheld: see the note below)*\n3. **Check outdoor unit operation:** Stand near the outdoor unit while the AC is running in Cool mode. Listen if the compressor hums and check if the outdoor fan blade is spinning .\n*(power-sensitive step withheld: see the note below)* Record both safety checks in the app panel.\nWhat brand is this AC, and is the outdoor unit (fan and compressor) running when you turn it on?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 6,
+  "latency_ms": 2768
+ },
+ "a03": {
+  "reply": "Indoor unit se paani tapakne ke sabse zyada chances drain block ya slope issue ke hote hain.\n**Likely Causes:**\n- **Blocked drain line:** Dust ya kachre ki wajah se drain pipe block ho jana  .\n- **Incorrect slope/level:** Indoor unit ya drain pipe ka slope sahi na hona  .\n- **Dirty air filter/coil:** Coil par ice jamna aur pighal kar tray se overflow hona  .\n**Checks to perform:**\n*(power-sensitive step withheld: see the note below)*\n3. Indoor unit ka level check karein ki wo drain pipe ki taraf sahi sloped hai ya nahi  .\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 2,
+  "latency_ms": 5207
+ },
+ "a04": {
+  "reply": "This usually happens when the outdoor fan motor or its run capacitor fails, or if something is physically blocking the fan blade. Since the compressor is humming, the outdoor unit is getting main power.\n*(power-sensitive step withheld: see the note below)* Record both steps in your app's safety panel.\n**Likely Causes & Checks:**\n1. **Blocked Fan Blade:** With power OFF, try spinning the outdoor fan blade by hand . If it feels stiff or stuck, check for debris or worn motor bearings.\n*(power-sensitive step withheld: see the note below)*\nInspect the outdoor fan blade and capacitor first—let me know what you find!\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 1826
+ },
+ "a05": {
+  "reply": "I don't have the meaning for error code **U4** on Daikin ACs in my knowledge base.\nPlease share the full model number from the rating label (or attach a photo of it) so I can help you diagnose the exact issue.",
+  "sources": 0,
+  "latency_ms": 1042
+ },
+ "a06": {
+  "reply": "This symptom almost always points to a **weak or failed capacitor**  or **worn motor bearings**  .\n**Safety First:** Before checking internal wiring or components, switch off power at the MCB, confirm with your voltage tester that power is completely off, and record both steps in your app's safety panel.\nHere are the most likely causes and checks in order:\n- **Weak or Failed Capacitor (Most Common):** The capacitor provides the phase shift needed to start the motor. When it loses capacitance, the motor hums but lacks starting torque until manually pushed  .\n- **Worn/Sticking Bearings:** Hardened grease or bearing wear adds friction, preventing the motor from self-starting under load  .\n**Next Steps to diagnose:**\n1. With power isolated and verified, spin the fan blades by hand . If they rotate smoothly without resistance or noise, the bearings are fine and the **capacitor is the primary suspect**.\n*(power-sensitive step withheld: see the note below)*\nDoes the blade spin freely when turned by hand with power off?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 3,
+  "latency_ms": 2184
+ },
+ "a07": {
+  "reply": "**Safety First:** Sabse pehle MCB off karein aur tester se confirmation kar lein ki power bilkul nahi aa rahi hai. Is safety step ko app ke safety panel mein zarur record karein.\nPankha hilne (wobble) aur awaaz karne ke ye main kaaran ho sakte hain:\n- **Loose screws ya bolts:** Blade holders ya canopy ke screws dheele hone se pankha hilta hai aur noise karta hai   .\n- **Unbalanced ya bent blades:** Kisi ek blade ka alignment kharab hone se balance bigad jata hai   .\n- **Worn bearings:** Agar awaaz grinding (ragadne) ki hai, toh motor ke bearings ghise ho sakte hain  .\n**Step-by-step checks:**\n*(power-sensitive step withheld: see the note below)*\n2. **Blade Alignment dekhein:** Chhat se har blade ke tip tak ki doori (distance) scale se naapein. Agar koi blade uper-neeche hai, toh use halke haath se align karein  .\n*(power-sensitive step withheld: see the note below)*\nKripya batayein ki awaaz kis tarah ki hai—grinding (ragadne ki) hai ya clicking/humming ki? Kaunsi company ka fan hai?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 4,
+  "latency_ms": 2818
+ },
+ "a08": {
+  "reply": "This sounds like a faulty regulator or a wiring issue between the regulator and the fan .\nSince the fan works on some speeds but not others, the motor itself is likely fine, and the issue is in the control circuit. Please check these in order:\n*(power-sensitive step withheld: see the note below)*\n**Safety First:** Before you touch any wiring or terminals, switch off the power at the MCB and confirm it is isolated with your own tester. Record these steps in your app's safety panel.\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 2,
+  "latency_ms": 5190
+ },
+ "a09": {
+  "reply": "This indicates a serious electrical fault, likely at the connection point.\n**Safety First:** Switch off the power at the MCB immediately and confirm isolation with your own tester before touching anything. Record these steps in the safety panel.\nThe black marks near the hook suggest arcing or a loose connection at the terminal block or the ceiling rose. Here are the likely causes:\n- **Loose Terminal Connection:** The most common cause for burning near the hook is a loose wire at the ceiling rose or the fan's terminal block. This creates high resistance, heat, and eventually arcing, which leaves black burn marks .\n- **Overheated Wiring/Insulation:** If the connection was loose, the heat may have melted the insulation on the supply wires, causing a short circuit or further burning.\n- **Motor Overheating:** While less likely to cause marks specifically at the hook, a failing motor can draw excessive current, overheating the entire circuit including the supply wires .\n**Next Steps:**\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 3,
+  "latency_ms": 10144
+ },
+ "a10": {
+  "reply": "पंखा बिल्कुल बंद है और कोई साउंड भी नहीं है, तो सबसे पहले सप्लाई और बेसिक कनेक्शन चेक करने होंगे ।\n**संभावित कारण:**\n- मेन सप्लाई या रेगुलेटर/स्विच में खराबी\n*(power-sensitive step withheld: see the note below)*\n**चेक करने के स्टेप्स:**\n1. उसी बोर्ड में दूसरा उपकरण चलाकर देखें कि मेन स्विच और फ़्यूज़/MCB ठीक है या नहीं ।\n2. **सुरक्षा निर्देश:** पंखे को खोलने या तारों को छूने से पहले **MCB/मेन स्विच बंद करें** और अपने **टेस्टर से वोल्टेज न होने की पुष्टि करें**। ऐप के सेफ्टी पैनल में भी इसे रिकॉर्ड करें।\n3. कैनोपी खोलकर चेक करें कि वायर टर्मिनल ब्लॉक से सही से कनेक्टेड हैं या ढीले तो नहीं हैं ।\n4. मल्टीमीटर से लाइन और न्यूट्रल के बीच वोल्टेज (230V AC) चेक करें, और रेगुलेटर को बाईपास/फुल पर करके सप्लाई की पुष्टि करें।\n*(power-sensitive step withheld: see the note below)*\nक्या आपको कैनोपी टर्मिनल पर 230V सप्लाई मिल रही है?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2527
+ },
+ "a11": {
+  "reply": "The **5C error code** on a Samsung washing machine indicates a drain issue—water is not draining out properly or at all [appliancedb:56] [appliancedb:299]. Note that this code information comes from US/UK models, so verify against the machine's service manual if needed [appliancedb:56] [appliancedb:299].\n**Likely Causes:**\n- Blocked drain pump filter or debris stuck in the pump impeller [appliancedb:56] [appliancedb:299].\n- Clogged, kinked, or improperly positioned drain hose [appliancedb:56] [appliancedb:299].\n- Faulty or failed drain pump motor [appliancedb:56].\n*(power-sensitive step withheld: see the note below)*\n**Diagnostic Steps:**\n*(power-sensitive step withheld: see the note below)*\n3. **Check Drain Hose:** Ensure the external drain hose is free of kinks, bends, or blockages [appliancedb:56] [appliancedb:299].\n*(power-sensitive step withheld: see the note below)*\nDid cleaning the filter resolve it, or is the pump not running even when powered?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 2,
+  "latency_ms": 2643
+ },
+ "a12": {
+  "reply": "This is usually caused by an uneven load, an unlevel machine, or worn suspension components. If it's a new installation, check if the transit bolts were left in .\nBefore inspecting internal components, **switch off the appliance at the MCB and verify power is off with your tester**, then record both actions in your app's safety panel.\nHere are the step-by-step checks:\n*(power-sensitive step withheld: see the note below)*\n2. **Leveling:** Place a spirit level on top of the machine and adjust the feet so all four rest firmly on the floor without wobbling .\n*(power-sensitive step withheld: see the note below)*\n4. **Drum Bearings:** Rotate the drum by hand to check for play or rough bearing noise .\nIs this a brand-new installation, or has the machine been working fine until recently?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 1737
+ },
+ "a13": {
+  "reply": "Washing machine mein paani na nikalne (no drain) ke teen main reasons hote hain .\n**Safety Warning:** Koyi bhi part kholne se pehle machine ko MCB se switch off karein, apne tester se confirm karein ki power off hai, aur app ke safety panel mein ise record karein.\n**Likely Causes:**\n- Drain filter ya coin trap mein kachra/coin atka hona\n- Drain pipe (hose) mudi hui ya andar se jam hona\n- Drain pump motor kharab hona ya impeller block hona\n**Checks to perform:**\n1. **Drain Hose:** Machine ke picche drain pipe ko check karein ki kahin se mudi (kinked) ya dab to nahi rahi .\n*(power-sensitive step withheld: see the note below)*\nAap kaunsi brand aur type (Top Load / Front Load) ki machine check kar rahe hain?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 4500
+ },
+ "a14": {
+  "reply": "*(power-sensitive step withheld: see the note below)* Record both actions in your app's safety panel.\nA front load washing machine door usually stays locked because water remains in the drum, the safety thermistor/heater has not cooled down, or the door switch thermal element is stuck.\n**Likely Causes & Checks:**\n1. **Water Left in Drum:** If the tub hasn't drained fully, the pressure switch keeps the door locked for safety.\n*(power-sensitive step withheld: see the note below)*\n2. **Thermal Lock Switch Delay / Stuck Mechanism:** The PTC element inside the door lock switch takes 2–3 minutes to cool down after power is cut [appliancedb:377].\n*(power-sensitive step withheld: see the note below)*\n3. **Faulty Door Lock Assembly:** Internal mechanical latch failure or shorted lock coil [appliancedb:377].\n*(power-sensitive step withheld: see the note below)*\nWhat brand and model number are you working on today?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2288
+ },
+ "a15": {
+  "reply": "An **IE error** on an LG washing machine means the machine did not reach the required water level within the set fill time [appliancedb:1]. Note that this code information comes from a US model record, so confirm against the machine's manual if needed.\n**Safety First:** Before opening panels or inspecting internal connections, switch off the appliance at the MCB, confirm it is de-energised using your tester, and record both statements in your app's safety panel.\n**Likely Causes & Checks:**\n*(power-sensitive step withheld: see the note below)*\n- **Water Inlet Valve:** If supply pressure, hose, and filter are all clear, the inlet valve may be failing or blocked internally [appliancedb:1].\nStart by checking the tap pressure and cleaning the inlet filter screen. Let me know what you find!\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2290
+ },
+ "a16": {
+  "reply": "I don't have the meaning for error code **ZZ7** on Whirlpool washing machines in my knowledge base.\nPlease share the model number of the machine or attach a clear photo of the rating label/display, so I can help you find the correct information.",
+  "sources": 0,
+  "latency_ms": 1027
+ },
+ "a17": {
+  "reply": "This usually happens when cold air from the freezer isn't circulating properly down to the fridge compartment .\n*(power-sensitive step withheld: see the note below)*\n**Likely Causes:**\n- **Defrost System Failure:** Frost build-up on the evaporator coil blocking the air duct .\n- **Evaporator Fan Issue:** Fan motor failed, blade jammed by ice, or door switch not triggering the fan .\n- **Air Damper/Flap Blocked:** Auto-damper stuck closed or manual control set too low.\n- **Door Gasket Leak:** Warm room air entering the fridge section .\n**Next Steps to Check:**\n*(power-sensitive step withheld: see the note below)*\n2. Look at the freezer back panel for heavy frost build-up or bulging .\n3. Check if air is blowing out of the vents in the lower fridge section.\nIs this a frost-free or direct cool model, and what is the brand name?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2062
+ },
+ "a18": {
+  "reply": "**Safety first:** Switch off the appliance at the MCB and confirm it is de-energised with your voltage tester before removing back covers or touching wiring. Record both statements in your app's safety panel.\nA loud rattling noise from the back of the fridge is usually caused by physical vibration or fan obstructions. Here are the most likely causes and checks:\n- **Uneven cabinet or touching wall:** The fridge might not be level, or it may be vibrating against a wall or adjacent cabinet .\n- **Condenser fan obstruction or loose mounting:** Dust, debris, wires, or loose panel screws near the bottom-back condenser fan can cause rattling .\n- **Compressor vibration or internal issue:** Loose compressor mounting grommets/bolts, or internal component rattle .\n**Next steps to check:**\n1. **Clearance & Leveling:** Ensure at least 2 inches of space around the cabinet and adjust the front levelling legs so the fridge sits firmly on the floor .\n*(power-sensitive step withheld: see the note below)*\nWhat is the brand and model number of this refrigerator?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 3,
+  "latency_ms": 2434
+ },
+ "a19": {
+  "reply": "Direct Cool ya Frost Free? Agar Samsung Direct Cool hai, toh shuruat bilkul basic checks se kijiye:\n**Safety Warning:** Kisi bhi electrical terminal ya wiring ko haath lagane se pehle **MCB off karein** aur apne tester se confirm karein. App ke safety panel mein dono steps record karein.\n**Likely Causes & Checks:**\n1. **Power Supply Issue:** Check karein ki socket mein 230V power aa rahi hai ya nahi, aur interior light on ho rahi hai kya .\n2. **Defrost / Heavy Ice:** Direct cool fridge mein agar freezer par zyada baraf jami ho, toh defrost button press karke puri baraf pighlne dein .\n3. **Thermostat Setting & Loading:** Knob setting seasonal temperature ke hisab se set karein (Garmiyo mein 5-6) aur air circulation ke liye fridge overloaded na ho .\n4. **Gasket Leak:** Door rubber (gasket) damaged ya loose toh nahi hai, check karein .\nKya compressor start hone ki aawaz (humming/vibration) aa rahi hai, aur light chalu hai? Model batayenge toh aur exact guidance milegi.",
+  "sources": 4,
+  "latency_ms": 2263
+ },
+ "a20": {
+  "reply": "Heavy ice build-up in a direct cool refrigerator freezer is usually caused by missed manual defrosting or warm, moist air entering the cabinet.\n**Likely Causes:**\n- **Missed defrost cycles:** Direct cool models require periodic manual defrosting .\n- **Damaged or loose door gasket:** Allows room air/humidity to enter and freeze .\n*(power-sensitive step withheld: see the note below)*\n**Checks & Next Steps:**\n*(power-sensitive step withheld: see the note below)*\n2. Check the **defrost button** on the thermostat assembly and test its mechanism. Press the button to initiate a full manual defrost .\n3. Inspect the **door rubber gasket** all around for gaps, cracks, or improper seating . Perform a paper strip test to ensure a complete seal.\n4. Advise the customer to clear heavy frost whenever it reaches 5–6 mm thick, or about twice a week depending on usage .\nWhat brand is this fridge, and is the door sealing properly around all edges?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 3,
+  "latency_ms": 2107
+ },
+ "a21": {
+  "reply": "Do not open the microwave. Its high-voltage capacitor can hold a lethal charge even after unplugging. Unplug the oven, note the symptom and model number, and hand it to authorised service.\nSince the microwave is running (fan/light works) but food remains completely cold, here are the most likely causes to check first:\n- **Kitchen Timer mode selected:** The timer counts down without activating cooking functions .\n**Steps to check:**\n1. **Test the Timer display:** Set a short cook time (e.g., 30 seconds) and press Start. If the timer counts down extremely fast, **Demo mode** is active . Disable it via the Options/Settings menu according to the user manual .\n2. **Verify Cooking Mode:** Ensure you are selecting a standard Micro/Cook power cycle and pressing **Start**, rather than setting the **Kitchen Timer** .\n3. **Test with a standard water cup:** Place 200 ml of water inside and run on 100% High Power for 1 minute .\nIs this a Samsung digital panel model, and does the timer count down at normal speed?",
+  "sources": 2,
+  "latency_ms": 2311
+ },
+ "a22": {
+  "reply": "This is almost certainly caused by metal inside the cavity or a damaged waveguide cover.\n**Likely causes:**\n* **Metal objects:** Metal utensils, dishes with metallic trim, or foil left inside the cavity .\n* **Damaged Waveguide Cover:** If the mica sheet (the small rectangular cover on the side wall) is burnt, food-splattered, or damaged, it can cause arcing.\n**Checks to perform:**\n*(power-sensitive step withheld: see the note below)*\n**Next step:**\nAsk the customer if they were using any metal containers or foil when it happened. If the cavity is clean and clear of metal, inspect the waveguide cover for burn marks.\nDo not open the microwave. Its high-voltage capacitor can hold a lethal charge even after unplugging. Unplug the oven, note the symptom and model number, and hand it to authorised service. If the issue is not a simple metal object or a damaged waveguide cover, recommend a senior technician or an authorized service center.\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2115
+ },
+ "a23": {
+  "reply": "Do not open the microwave. Its high-voltage capacitor can hold a lethal charge even after unplugging. Unplug the oven, note the symptom and model number, and hand it to authorised service.\nBefore doing any basic external checks or moving the unit, always switch off power at the MCB, unplug the appliance, and confirm it is isolated with your own voltage tester. Please record both safety steps in your app's safety panel.",
+  "sources": 0,
+  "latency_ms": 1639
+ },
+ "a24": {
+  "reply": "A continuous beep on a Kent RO purifier usually indicates a system error or a sensor alert.\nLikely causes include:\n- **System fault:** The internal controller has detected an error .\n- **Low water pressure:** The unit isn't receiving enough inlet water to operate safely .\n*(power-sensitive step withheld: see the note below)*\n**Next steps:**\n*(power-sensitive step withheld: see the note below)*\n3. If there is no display code, check the UV lamp connection and the integrity of the lamp itself.\n**Safety:** Before opening the unit or touching any electrical components, switch off the power at the source and confirm it is isolated with your own tester. Record these safety steps in the app.\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 1724
+ },
+ "a25": {
+  "reply": "Paani dheere aane ke liye ye sabse likely causes hain:\n* **Clogged filters ya RO membrane:** Sediment ya carbon filter block ho sakta hai, ya membrane purani ho gayi hai  .\n* **Low inlet water pressure:** Agar input water pressure kam hai, toh output bhi slow hoga  .\n* **Low storage tank pressure:** Agar purifier mein pressurized tank hai, toh usmein air pressure kam hone se flow slow ho sakta hai .\n**Agla step:**\nSabse pehle **pre-filter aur sediment filter check karein** ki wo choke toh nahi hain. Saath hi, input water supply check karein ki pressure sahi hai ya nahi. Agar filters saaf hain, toh membrane ki condition check karein.",
+  "sources": 4,
+  "latency_ms": 8915
+ },
+ "a26": {
+  "reply": "If the purified water tastes salty, the RO membrane is likely failing to reject dissolved solids properly.\nHere are the most likely causes and how to check them:\n- **RO Membrane failure:** The membrane may be damaged, clogged, or simply reached the end of its life, allowing dissolved salts to pass through. Check the TDS (Total Dissolved Solids) level of the input water versus the output water; if the rejection rate is very low, the membrane needs replacement.\n*(power-sensitive step withheld: see the note below)*\n- **Filter exhaustion:** While less common for a \"salty\" taste (which is usually TDS-related), pre-filters that are completely blocked can sometimes cause pressure issues that affect membrane performance. Check the service history and replacement dates for all filters.\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 0,
+  "latency_ms": 7064
+ },
+ "a27": {
+  "reply": "This indicates a direct fault in the geyser circuit or the appliance itself.\nLikely causes:\n- **Short circuit** inside the geyser (heating element or thermostat wiring).\n- **Earth leakage** (if it's an ELCB/RCCB tripping).\n- **Overload** if the MCB rating is too low for the geyser's wattage.\n**Safety First:** Before touching any wiring or components, switch off the main supply at the MCB and confirm isolation with your own tester. Record these safety steps in the app.\nNext steps:\n*(power-sensitive step withheld: see the note below)*\nIf you find burnt wiring or a faulty PCB, recommend a senior technician or a specialist for the repair.\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 2431
+ },
+ "a28": {
+  "reply": "It is likely that environmental factors or a minor connection issue are causing the drop in output.\nHere are the most likely causes to investigate:\n- **Dirty panels or shading:** Dust, bird droppings, or new shadows (like tree growth or new structures) are the most common causes for a gradual drop in performance .\n- **Loose DC connector:** A connection between panels or at the inverter input may have loosened over time due to thermal expansion/contraction .\n- **Inverter fault:** The inverter itself might be flagging an internal issue or efficiency loss .\n**Recommended next steps:**\n1. **Check the inverter display:** Look for any specific error codes or status messages on the inverter screen.\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)* Record these safety steps in the app.\nIf the inverter is showing an error code, please let me know what it is.\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 1,
+  "latency_ms": 3652
+ },
+ "a29": {
+  "reply": "*(power-sensitive step withheld: see the note below)* A ceiling fan motor requires the capacitor to create the phase shift needed to start and run; attempting to run it without one will prevent the motor from starting and could cause damage.\n*(power-sensitive step withheld: see the note below)* Please record these safety steps in the app's safety panel.\nIf you suspect the capacitor is faulty—for example, if the fan is humming or running slowly—follow these steps instead:\n1. **Check for mechanical resistance:** With power isolated, verify if the blades turn freely by hand to rule out worn bearings or debris .\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 2,
+  "latency_ms": 5142
+ },
+ "a30": {
+  "reply": "No, you must not short the contactor. *(power-sensitive step withheld: see the note below)*\nIf you suspect the contactor is faulty, you should test it while the power is isolated:\n1. **Safety First:** Switch off the power at the MCB and confirm with your own tester that the unit is de-energized. Record both statements in the app's safety panel.\n*(power-sensitive step withheld: see the note below)*\nIf you are unsure about the electrical diagnosis or if the wiring appears burnt, please recommend a senior technician to handle the repair. What specific symptoms or error codes are you seeing that make you suspect the contactor?\n*(power-sensitive step withheld: see the note below)*",
+  "sources": 0,
+  "latency_ms": 2477
+ }
+}

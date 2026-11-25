@@ -97,7 +97,6 @@ function PdfCard() {
 }
 
 function Bubble({ m }: { m: ChatMessage }) {
-  const t = useT()
   if (m.role === 'system') {
     return (
       <div role="status" className="mx-auto flex max-w-xl items-start gap-3 rounded-2xl border border-warn/35 bg-warn/[0.07] px-4 py-3.5 text-sm text-warn">
@@ -132,9 +131,10 @@ function Bubble({ m }: { m: ChatMessage }) {
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex gap-3">
       <Avatar />
       <div className="min-w-0 flex-1 pt-0.5">
-        {m.demo && <span className="mb-1.5 inline-block rounded-full border border-warn/50 bg-warn/10 px-2 py-px text-[11px] font-medium text-warn">Demo scenario: scripted sample, not live AI</span>}
+        {m.demo && <span className="mb-2 inline-block rounded-full border border-warn/40 bg-warn/[0.08] px-2 py-px text-[11px] font-medium text-warn">Demo: scripted sample, not live AI</span>}
         {photos}
-        {m.text && <Markdown text={m.text} sources={m.sources} />}
+        {/* the badge above already says it is scripted; the same words again at the top of the reply are noise */}
+        {m.text && <Markdown text={m.demo ? m.text.replace(/^\s*DEMO SCENARIO \(scripted sample, not live AI\)\.\s*/i, '') : m.text} sources={m.sources} />}
         {m.action === 'pdf_report' && <PdfCard />}
         {m.sources && m.sources.length > 0 && <SourceList sources={m.sources} />}
         <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[11.5px] text-ink-3">
@@ -142,7 +142,6 @@ function Bubble({ m }: { m: ChatMessage }) {
           {m.text && <CopyButton text={m.text} />}
           {m.aiGenerated && !m.demo && m.action !== 'pdf_report' && <RateAnswer m={m} />}
           <span className="ml-1.5">{time(m.at)}</span>
-          {m.aiGenerated && <span className="ml-2 hidden sm:inline">· {t('chat.aiGenerated')}</span>}
         </div>
       </div>
     </motion.div>

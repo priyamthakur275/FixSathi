@@ -1,0 +1,29 @@
+name: Answer quality
+
+# Asks the deployed app the 30 questions in data/eval/answer_quality.jsonl and grades the replies.
+# Run it by hand after a prompt or model change; it uses that server's Gemini key, not one stored here.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Server to test
+        default: https://fixsaathi-vu9s.onrender.com
+
+jobs:
+  answers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install httpx
+      - name: Wake the server
+        run: curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "${{ inputs.base_url }}/health"
+      - run: python backend/scripts/eval_answers.py --base-url "${{ inputs.base_url }}" --out answer-eval.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: answer-eval
+          path: answer-eval.json

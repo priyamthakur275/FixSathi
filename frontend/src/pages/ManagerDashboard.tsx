@@ -62,7 +62,7 @@ export default function ManagerDashboard() {
   const totalRatings = data?.ratings.reduce((a, r) => a + r.count, 0) ?? 0
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+    <div className="page">
       <header className="mb-7 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <h1 className="font-display text-[28px] leading-tight md:text-[34px]">Team dashboard</h1>

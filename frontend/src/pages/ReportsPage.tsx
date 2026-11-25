@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Check, ChevronLeft, ChevronRight, Circle, Copy, Download, FileText, Loader2, Printer, Send } from 'lucide-react'
 import { jobSummary, whatsappLink } from '../utils/jobSummary'
+import { when } from '../utils/when'
 import { EmptyState, ErrorState, PageHeader, Skeleton, StatusPill } from '../components/common/ui'
 import { historyService, sessionService } from '../services'
 import { useAsync } from '../hooks/useAsync'
@@ -9,19 +10,27 @@ import { useAsync } from '../hooks/useAsync'
 export function ReportsList() {
   const { data, loading, error, retry } = useAsync(() => historyService.reports(), [])
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 md:px-8">
+    <div className="page page-mid">
       <PageHeader eyebrow="Workspace" title="Service reports" subtitle="Generated from finished sessions, using only recorded data." />
       {loading && <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-20" />)}</div>}
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && data.items.length === 0 && <EmptyState icon={<FileText size={22} />} title="No reports yet" hint="Finish a repair session to create its service report." />}
-      <ul className="space-y-2.5">
-        {data?.items.map(r => (
-          <li key={r.id}><Link to={`/reports/${r.id}`} className="card card-hover flex items-center gap-4 px-5 py-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface-3 text-teal"><FileText size={19} /></span>
-            <div className="min-w-0 flex-1"><p className="font-semibold">{r.reference} <span className="font-normal text-ink-3">· {r.appliance}</span></p><p className="truncate text-sm text-ink-2">{r.title}</p></div><StatusPill status={r.resolution_status} /><ChevronRight size={16} className="text-ink-3" />
-          </Link></li>
-        ))}
-      </ul>
+      {data && data.items.length > 0 && (
+        <ul className="card divide-y divide-line/70 overflow-hidden">
+          {data.items.map(r => (
+            <li key={r.id}><Link to={`/reports/${r.id}`} className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-surface-2/50">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-3 text-teal"><FileText size={18} /></span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{r.title}</p>
+                <p className="mt-0.5 truncate text-xs text-ink-3"><span className="num">{r.reference}</span> · {r.appliance}{r.technician ? ` · ${r.technician}` : ''}</p>
+              </div>
+              <span className="hidden text-xs text-ink-3 sm:block">{when(r.created_at)}</span>
+              <StatusPill status={r.resolution_status} />
+              <ChevronRight size={16} className="text-ink-3 transition-transform group-hover:translate-x-0.5" />
+            </Link></li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
@@ -50,7 +59,7 @@ export function ReportDetailPage() {
   const h2 = 'section-label mb-2'
   const d = data?.data
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8">
+    <div className="page page-mid">
       <Link to="/reports" className="mb-4 inline-flex items-center gap-1 text-sm text-ink-2 hover:text-ink print:hidden"><ChevronLeft size={16} />All reports</Link>
       {loading && <div className="space-y-3"><Skeleton className="h-10" /><Skeleton className="h-40" /></div>}
       {error && <ErrorState message={error} onRetry={retry} />}

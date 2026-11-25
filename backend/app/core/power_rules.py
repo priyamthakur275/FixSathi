@@ -63,6 +63,24 @@ NEGATION = re.compile(r"\b(not|never|don'?t|do not|avoid|without|mat|na|nahi|nah
 BEFORE = re.compile(r'\b(before|prior to|until)\W*$', re.I)
 BEFORE_HI = re.compile(r'^\w*\s+(se|ke|say)\s+(pehle|pahle|pehele)\b', re.I)
 
+# Hindi in Devanagari. \b does not work inside Devanagari words (vowel signs are not \w), so these match word stems.
+# Work verbs: open, take out, change, join, touch, cut, remove, discharge, short, bypass.
+HI_ACTION = re.compile(r'(खोल|निकाल|बदल|जोड़|जोड़|छू|छुए|छुएं|काट|हटा|डिस्चार्ज|शॉर्ट|बाईपास|बायपास|मल्टीमीटर|मीटर लगा)')
+# Measuring voltage or current is live work ("मल्टीमीटर से वोल्टेज चेक करें").
+HI_MEASURE = re.compile(r'(वोल्टेज|करंट|वोल्ट)[^।.!?\n]{0,40}?(चेक|जांच|जाँच|नाप|माप|टेस्ट(?!र))|(चेक|जांच|जाँच|नाप|माप|टेस्ट(?!र))[^।.!?\n]{0,20}?(वोल्टेज|करंट)')
+HI_NEGATION = re.compile(r'(^|\s)(मत|न|ना|नहीं|नहीँ|कभी|बिना)\s+(\S+\s+){0,2}$')
+HI_BEFORE = re.compile(r'^[^।.!?\n]{0,30}?(से|के)\s+(पहले|पूर्व)')
+
+
+def _hi_instruction(t: str) -> bool:
+    for rx in (HI_ACTION, HI_MEASURE):
+        for m in rx.finditer(t):
+            if HI_NEGATION.search(t[max(0, m.start() - 25):m.start()]) or HI_BEFORE.match(t[m.start():]):
+                continue
+            return True
+    return False
+
+
 MICROWAVE_INTERNAL = re.compile(
     r'\b(cabinet|outer (case|cover)|remove (the )?(cover|case|casing|panel)|open(ing)? (the )?(oven|microwave|case|casing|cover|panel)|'
     r'unscrew|magnetron|high[- ]voltage|hv (capacitor|diode|transformer)|capacitor|diode|transformer|interlock switch)\b', re.I)
@@ -72,7 +90,7 @@ MICROWAVE_ESCALATION = ('Do not open the microwave. Its high-voltage capacitor c
 
 def step_needs_power_off(text: str) -> bool:
     """Structured repair steps: broad rule."""
-    return bool(POWER_WORDS.search(text or '') or ACTION_WORDS.search(text or ''))
+    return bool(POWER_WORDS.search(text or '') or ACTION_WORDS.search(text or '') or _hi_instruction(text or ''))
 
 
 def _is_instruction(t: str, m: re.Match) -> bool:
@@ -86,7 +104,7 @@ def instructs_power_work(text: str) -> bool:
     """Free text: True if it tells someone to do power-sensitive work. Prohibitions ('never open the cover') and
     preconditions ('before opening it, switch off the MCB') do not count; the work itself does."""
     t = text or ''
-    return any(_is_instruction(t, m) for rx in (ACTION_WORDS, HANDS_ON_LIVE) for m in rx.finditer(t))
+    return any(_is_instruction(t, m) for rx in (ACTION_WORDS, HANDS_ON_LIVE) for m in rx.finditer(t)) or _hi_instruction(t)
 
 
 def step_text_needs_power_off(text: str) -> bool:
@@ -96,7 +114,8 @@ def step_text_needs_power_off(text: str) -> bool:
 
     def hit(rx: re.Pattern) -> bool:
         return any(not NEGATION.search(t[max(0, m.start() - 40):m.start()]) for m in rx.finditer(t))
-    return hit(ACTION_WORDS) or hit(LIVE_PARTS) or hit(HANDS_ON_LIVE) or (hit(SOFT_PARTS) and not OBSERVE_ONLY.match(t))
+    return (hit(ACTION_WORDS) or hit(LIVE_PARTS) or hit(HANDS_ON_LIVE) or (hit(SOFT_PARTS) and not OBSERVE_ONLY.match(t))
+            or _hi_instruction(t))
 
 
 def mentions_microwave_internals(text: str) -> bool:
