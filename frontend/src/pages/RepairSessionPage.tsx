@@ -196,8 +196,8 @@ export default function RepairSessionPage() {
       )}
       {msg && <p role={msg.kind === 'error' ? 'alert' : 'status'} className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${msg.kind === 'error' ? 'border-crit/40 bg-crit/10 text-crit' : 'border-accent/40 bg-accent/10 text-ink'}`}>{msg.text}</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-6">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div className="min-w-0 space-y-6">
           {/* Stage 0: Describe */}
           <section aria-labelledby="insp-h" className={`card card-pad ${visStage(0)}`}>
             <h2 id="insp-h" className={`${h2} mb-4`}><span className={ico}><Camera size={16} /></span>1. Describe &amp; visual inspection</h2>
@@ -273,7 +273,7 @@ export default function RepairSessionPage() {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* Stage 2: Isolate (always visible on desktop right rail; step 3 on mobile) */}
           <div className={visStage(2)}>
             <SafetyPanel state={safety} busy={busy === 'safety'} canEdit={owner && open} onChange={setSafe} appliance={s?.appliance_type} />
