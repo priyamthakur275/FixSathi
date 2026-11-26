@@ -26,7 +26,7 @@ function CopyButton({ text }: { text: string }) {
   const t = useT()
   const [ok, setOk] = useState(false)
   const copy = async () => { try { await navigator.clipboard.writeText(speakable(text)); setOk(true); setTimeout(() => setOk(false), 1500) } catch { /* clipboard blocked */ } }
-  return <button onClick={copy} aria-label={t('chat.copy')} title={t('chat.copy')} className={tool}>{ok ? <Check size={13} className="text-ok" /> : <Copy size={13} />}<span className="sr-only sm:not-sr-only">{ok ? t('chat.copied') : t('chat.copy')}</span></button>
+  return <button onClick={copy} aria-label={t('chat.copy')} title={t('chat.copy')} className={tool}>{ok ? <Check size={13} className="text-accent" /> : <Copy size={13} />}<span className="sr-only sm:not-sr-only">{ok ? t('chat.copied') : t('chat.copy')}</span></button>
 }
 
 function ReadAloud({ text, id }: { text: string; id: string }) {
@@ -61,9 +61,9 @@ function RateAnswer({ m }: { m: ChatMessage }) {
   const on = 'bg-surface-2 text-ink'
   return (
     <>
-      <button onClick={() => pick(true)} aria-pressed={value === true} aria-label={t('chat.helpful')} title={t('chat.helpful')} className={`${tool} ${value === true ? on : ''}`}><ThumbsUp size={13} className={value === true ? 'text-ok' : ''} /></button>
-      <button onClick={() => pick(false)} aria-pressed={value === false} aria-label={t('chat.notHelpful')} title={t('chat.notHelpful')} className={`${tool} ${value === false ? on : ''}`}><ThumbsDown size={13} className={value === false ? 'text-crit' : ''} /></button>
-      {sent && !failed && <span className="ml-1 text-ok">{t('chat.thanks')}</span>}
+      <button onClick={() => pick(true)} aria-pressed={value === true} aria-label={t('chat.helpful')} title={t('chat.helpful')} className={`${tool} ${value === true ? on : ''}`}><ThumbsUp size={13} className={value === true ? 'text-accent' : ''} /></button>
+      <button onClick={() => pick(false)} aria-pressed={value === false} aria-label={t('chat.notHelpful')} title={t('chat.notHelpful')} className={`${tool} ${value === false ? on : ''}`}><ThumbsDown size={13} className={value === false ? 'text-warn' : ''} /></button>
+      {sent && !failed && <span className="ml-1 text-accent">{t('chat.thanks')}</span>}
       {failed && <span role="alert" className="ml-1 text-crit">{t('chat.rateFailed')}</span>}
       {asking && (
         <form className="mt-1.5 flex w-full max-w-md items-center gap-2" onSubmit={e => { e.preventDefault(); setAsking(false); void save(false, note.trim()).then(ok => setSent(ok)) }}>

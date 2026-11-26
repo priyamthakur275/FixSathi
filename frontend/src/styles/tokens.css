@@ -1,0 +1,151 @@
+/* FixSaathi design tokens — single source of truth for colour, type scale, spacing, radius, shadow, and motion.
+   Power-state rule: red (--color-crit / --color-power-live) and green (--color-ok / --color-power-isolated) are
+   reserved strictly for power state (live/locked/electrical hazard vs isolated/unlocked). */
+
+@theme {
+  /* Typography */
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans", sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-hero: clamp(2rem, 4.5vw, 3rem);
+
+  /* Spacing & touch ergonomics */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --touch-min: 44px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-control: 10px;
+  --radius-panel: 16px;
+  --radius-shell: 22px;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.5, 1.5, 0.4, 1);
+
+  /* Dark theme colours (default) */
+  --color-bg: #090c11;
+  --color-bg-2: #0c1016;
+  --color-surface: #11161e;
+  --color-surface-2: #171d27;
+  --color-surface-3: #1f2631;
+  --color-line: #1d2430;
+  --color-line-2: #2a3341;
+  --color-ink: #e9edf3;
+  --color-ink-2: #a6b0c0;
+  --color-ink-3: #8b96a9;     /* >= 4.5:1 on dark surfaces */
+  --color-teal: #4c8fd6;      /* slate-blue for appliance/metadata badges (never green) */
+  --color-cyan: #3aa6df;
+  --color-blue: #5b8ef0;
+  --color-violet: #8f86f0;
+  --color-amber: #e8a04f;
+  --color-ok: #3dcb86;        /* power isolated ONLY */
+  --color-warn: #f0b44a;      /* caution / escalated / scripted demo */
+  --color-crit: #f26b6b;      /* live / locked / electrical hazard / error */
+  --color-power-live: var(--color-crit);
+  --color-power-isolated: var(--color-ok);
+  --color-accent: #5b8ef0;
+  --color-on-accent: #ffffff;
+  --color-accent-fill: #2f6fdf;
+
+  /* Shadows */
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.03) inset, 0 1px 2px 0 rgb(0 0 0 / 0.35);
+  --shadow-lift: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 12px 32px -18px rgb(0 0 0 / 0.8);
+  --shadow-pop: 0 24px 60px -20px rgb(0 0 0 / 0.75), 0 0 0 1px rgb(255 255 255 / 0.04);
+}
+
+:root, :root[data-theme=dark] {
+  color-scheme: dark;
+  --fs-gradient: linear-gradient(120deg, #4c8fd6 0%, #5b8ef0 100%);
+  --fs-accent: linear-gradient(135deg, #3f7fe8 0%, #2a6ec4 100%);
+  --fs-stage: var(--color-bg);
+  --fs-card: var(--color-surface);
+  --fs-field: var(--color-bg-2);
+  --fs-scroll: #2a3341;
+  --fs-dot: rgb(255 255 255 / 0.055);
+  --fs-glow: rgb(91 142 240 / 0.16);
+}
+
+:root[data-theme=light] {
+  color-scheme: light;
+  --color-bg: #f2f4f7;
+  --color-bg-2: #eaeef3;
+  --color-surface: #ffffff;
+  --color-surface-2: #f5f7fa;
+  --color-surface-3: #e7ebf1;
+  --color-line: #dfe4eb;
+  --color-line-2: #c9d1dc;
+  --color-ink: #0e1520;
+  --color-ink-2: #465163;
+  --color-ink-3: #4d5766;     /* >= 4.6:1 on light surfaces */
+  --color-teal: #1d5fa7;      /* crisp blue (never green) */
+  --color-cyan: #0d7fb8;
+  --color-blue: #2f6fdf;
+  --color-violet: #6a5fe0;
+  --color-amber: #a85b08;
+  --color-ok: #0f7342;
+  --color-warn: #8f5300;
+  --color-crit: #c92a2a;
+  --color-accent: #2f6fdf;
+  --color-accent-fill: #2f6fdf;
+  --shadow-card: 0 1px 2px 0 rgb(14 21 32 / 0.05), 0 0 0 1px rgb(14 21 32 / 0.01);
+  --shadow-lift: 0 14px 34px -20px rgb(14 21 32 / 0.28), 0 1px 2px 0 rgb(14 21 32 / 0.05);
+  --shadow-pop: 0 24px 56px -22px rgb(14 21 32 / 0.35), 0 0 0 1px rgb(14 21 32 / 0.04);
+  --fs-gradient: linear-gradient(120deg, #1d5fa7 0%, #2f6fdf 100%);
+  --fs-accent: linear-gradient(135deg, #2f6fdf 0%, #1d5fa7 100%);
+  --fs-field: var(--color-surface);
+  --fs-scroll: #c9d1dc;
+  --fs-dot: rgb(14 21 32 / 0.07);
+  --fs-glow: rgb(47 111 223 / 0.10);
+}
+
+/* Sunlight mode: high-contrast, larger type, strong borders, zero washout for outdoor/rooftop use. */
+:root[data-theme=sunlight] {
+  color-scheme: light;
+  font-size: 112.5%;
+  --color-bg: #ffffff;
+  --color-bg-2: #f3f4f6;
+  --color-surface: #ffffff;
+  --color-surface-2: #edf0f5;
+  --color-surface-3: #e0e5ee;
+  --color-line: #4b5563;
+  --color-line-2: #111827;
+  --color-ink: #000000;
+  --color-ink-2: #111827;
+  --color-ink-3: #1f2937;
+  --color-teal: #0b4ec9;
+  --color-cyan: #08589c;
+  --color-blue: #0b4ec9;
+  --color-violet: #4c3fc4;
+  --color-amber: #7c3a00;
+  --color-ok: #005c2e;
+  --color-warn: #8a4300;
+  --color-crit: #b00020;
+  --color-accent: #0b4ec9;
+  --color-accent-fill: #0b4ec9;
+  --shadow-card: 0 0 0 1px #111827;
+  --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.18), 0 0 0 1.5px #111827;
+  --shadow-pop: 0 12px 28px rgb(0 0 0 / 0.25), 0 0 0 2px #111827;
+  --fs-gradient: linear-gradient(120deg, #0b4ec9 0%, #08589c 100%);
+  --fs-accent: linear-gradient(135deg, #0b4ec9 0%, #08589c 100%);
+  --fs-field: #ffffff;
+  --fs-scroll: #4b5563;
+  --fs-dot: rgb(0 0 0 / 0.08);
+  --fs-glow: rgb(11 78 201 / 0.08);
+}

@@ -60,7 +60,7 @@ export function SeniorSupport() {
             <div className="flex flex-wrap items-center gap-2"><Link to={`/session/${e.session_id}`} className="font-medium hover:text-teal">{appliances.find(a => a.id === e.appliance_type)?.label ?? 'Repair'} <span className="num text-sm font-normal text-ink-3">{e.session_reference}</span></Link><StatusPill status={e.status} /><span className="text-xs text-ink-3">{e.technician ? `${e.technician} · ` : ''}{when(e.created_at)}</span></div>
             <p className="mt-1 text-sm">{e.reason}</p>
             {e.diagnosis_summary && <p className="text-sm text-ink-2">Diagnosis: {e.diagnosis_summary}</p>}
-            {isManager && e.status !== 'resolved' && <div className="mt-2 flex gap-2">{e.status === 'open' && <button onClick={() => void update(e.id, 'in_review')} className="btn btn-sm">Mark in review</button>}<button onClick={() => void update(e.id, 'resolved')} className="btn btn-sm !border-ok/40 !text-ok">Mark resolved</button></div>}
+            {isManager && e.status !== 'resolved' && <div className="mt-2 flex gap-2">{e.status === 'open' && <button onClick={() => void update(e.id, 'in_review')} className="btn btn-sm">Mark in review</button>}<button onClick={() => void update(e.id, 'resolved')} className="btn btn-sm !border-accent/40 !text-accent">Mark resolved</button></div>}
           </li>
         ))}
       </ul>

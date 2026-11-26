@@ -75,7 +75,7 @@ export default function LoginPage() {
                     {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {mode === 'register' && <p id="pw-hint" className={`mt-1.5 text-xs ${f.password.length === 0 ? 'text-ink-3' : f.password.length < 8 ? 'text-warn' : 'text-ok'}`}>{f.password.length === 0 ? 'Use at least 8 characters.' : f.password.length < 8 ? `${8 - f.password.length} more character${8 - f.password.length === 1 ? '' : 's'} needed.` : 'Looks good.'}</p>}
+                {mode === 'register' && <p id="pw-hint" className={`mt-1.5 text-xs ${f.password.length === 0 ? 'text-ink-3' : f.password.length < 8 ? 'text-warn' : 'text-accent'}`}>{f.password.length === 0 ? 'Use at least 8 characters.' : f.password.length < 8 ? `${8 - f.password.length} more character${8 - f.password.length === 1 ? '' : 's'} needed.` : 'Looks good.'}</p>}
               </div>
               {err && <p role="alert" className="rounded-xl border border-crit/40 bg-crit/10 px-3 py-2 text-sm text-crit">{err}</p>}
               <button type="submit" disabled={busy} className="btn btn-primary w-full py-3 text-[15px]">{busy && <Loader2 size={16} className="animate-spin" />}{mode === 'login' ? 'Sign in' : 'Create account'}</button>

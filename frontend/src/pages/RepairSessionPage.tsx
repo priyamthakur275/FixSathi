@@ -193,7 +193,7 @@ export default function RepairSessionPage() {
             {!diag && <p className="text-sm text-ink-2">No diagnosis yet. Describe the issue in chat or add a photo, then run the diagnosis.</p>}
             {diag && (<>
               <p className="mb-2 text-sm text-ink-2">{diag.problem_summary}</p>
-              <p className={`mb-2 inline-flex rounded-full border px-2.5 py-0.5 text-xs ${diag.knowledge_coverage === 'grounded' ? 'border-ok/40 text-ok' : diag.knowledge_coverage === 'partial' ? 'border-warn/40 text-warn' : 'border-crit/40 text-crit'}`}>
+              <p className={`mb-2 inline-flex rounded-full border px-2.5 py-0.5 text-xs ${diag.knowledge_coverage === 'grounded' ? 'border-accent/40 text-accent' : diag.knowledge_coverage === 'partial' ? 'border-warn/40 text-warn' : 'border-warn/50 bg-warn/10 text-warn'}`}>
                 {diag.knowledge_coverage === 'grounded' ? 'Backed by repair records' : diag.knowledge_coverage === 'partial' ? 'Partly backed by repair records' : 'No matching repair record: treat as unverified'}
               </p>
               {diag.confirmed_findings?.length > 0 && <p className="mb-2 text-sm"><span className="text-ink-2">Confirmed: </span>{diag.confirmed_findings.join('; ')}</p>}
@@ -202,7 +202,7 @@ export default function RepairSessionPage() {
                   const pctc = Math.round(f.confidence * 100)
                   return (
                     <li key={f.fault} className="rounded-xl border border-line bg-bg/30 p-4">
-                      <div className="flex items-start justify-between gap-3"><p className="font-medium leading-snug">{f.fault}{f.status && <span className={`ml-2 rounded-full border px-2 py-px text-[12px] font-normal ${f.status === 'supported_by_records' ? 'border-ok/40 text-ok' : f.status === 'possible_cause' ? 'border-line text-ink-2' : 'border-warn/40 text-warn'}`}>{({ supported_by_records: 'from records', possible_cause: 'possible cause', unverified_hypothesis: 'unverified' })[f.status]}</span>}</p><span className="shrink-0 text-right leading-tight"><span className="num block text-[15px] font-semibold">{pctc}%</span><span className="block text-[12px] text-ink-3">AI estimate</span></span></div>
+                      <div className="flex items-start justify-between gap-3"><p className="font-medium leading-snug">{f.fault}{f.status && <span className={`ml-2 rounded-full border px-2 py-px text-[12px] font-normal ${f.status === 'supported_by_records' ? 'border-accent/40 text-accent' : f.status === 'possible_cause' ? 'border-line text-ink-2' : 'border-warn/40 text-warn'}`}>{({ supported_by_records: 'from records', possible_cause: 'possible cause', unverified_hypothesis: 'unverified' })[f.status]}</span>}</p><span className="shrink-0 text-right leading-tight"><span className="num block text-[15px] font-semibold">{pctc}%</span><span className="block text-[12px] text-ink-3">AI estimate</span></span></div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={pctc} aria-valuemin={0} aria-valuemax={100} aria-label={`${f.fault} AI estimate`}><div className="fs-grow h-full rounded-full bg-accent" style={{ width: `${pctc}%` }} /></div>
                       <p className="mt-2 text-sm text-ink-2">{f.explanation}</p>
                       {f.evidence.length > 0 && <ul className="mt-1 space-y-0.5 text-xs text-ink-3">{f.evidence.map((e, i) => <li key={i}><span className="text-ink-2">{({ observed_in_image: 'Seen in photo', technician_statement: 'You said', ai_inference: 'AI inference', unknown: 'Unknown' })[e.source]}:</span> {e.detail}</li>)}</ul>}
@@ -238,7 +238,7 @@ export default function RepairSessionPage() {
             <div className="mb-3 flex items-center justify-between gap-2"><h2 id="steps-h" className={`${h2} whitespace-nowrap`}><span className={ico}><Wand2 size={16} /></span>Repair guidance</h2>
               {owner && open && diag && done === 0 && <button onClick={genSteps} disabled={!!busy} className={btn}>{busy === 'steps' ? <Loader2 size={15} className="animate-spin" /> : <Wand2 size={15} />}{steps.length ? 'Regenerate' : 'Generate steps'}</button>}</div>
             {steps.length > 0 && <div className="mb-4 flex items-center gap-3">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Step progress"><div className="h-full rounded-full bg-ok transition-all duration-500" style={{ width: `${pct}%` }} /></div>
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Step progress"><div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${pct}%` }} /></div>
               <span className="num text-xs text-ink-3">{done} of {steps.length}</span>
             </div>}
             {steps.length === 0 && <p className="text-sm text-ink-2">{diag ? 'Generate steps from the diagnosis, or get them live by voice.' : 'Steps appear after a diagnosis.'}</p>}
@@ -247,9 +247,9 @@ export default function RepairSessionPage() {
                 const isDone = x.status === 'completed'
                 const vis = x.visual_media_id ? media.find(m => m.id === x.visual_media_id) : undefined
                 return (
-                  <li key={x.id} className={`rounded-xl border p-4 transition-colors ${x.locked ? 'border-line bg-surface-2/40' : isDone ? 'border-ok/25 bg-ok/[0.04]' : 'border-line bg-bg/30'}`}>
+                  <li key={x.id} className={`rounded-xl border p-4 transition-colors ${x.locked ? 'border-line bg-surface-2/40' : isDone ? 'border-accent/25 bg-accent/[0.04]' : 'border-line bg-bg/30'}`}>
                     <div className="flex items-start gap-3">
-                      <button disabled={!owner || !open || !!busy} onClick={() => toggle(x)} aria-label={isDone ? `Mark step ${x.step_number} as not done` : `Mark step ${x.step_number} as done`} className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${isDone ? 'border-transparent bg-ok text-white' : x.locked ? 'border-crit/40 text-crit' : 'border-line-2 text-ink-3 hover:border-ok hover:text-ok'} disabled:cursor-not-allowed`}>
+                      <button disabled={!owner || !open || !!busy} onClick={() => toggle(x)} aria-label={isDone ? `Mark step ${x.step_number} as not done` : `Mark step ${x.step_number} as done`} className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${isDone ? 'border-transparent bg-accent text-white' : x.locked ? 'border-crit/40 text-crit' : 'border-line-2 text-ink-3 hover:border-accent hover:text-accent'} disabled:cursor-not-allowed`}>
                         {busy === `step-${x.id}` ? <Loader2 size={12} className="animate-spin" /> : x.locked ? <Lock size={12} /> : isDone ? <Check size={14} /> : <Circle size={0} />}
                       </button>
                       <div className="min-w-0 flex-1">
