@@ -78,35 +78,14 @@ These numbers cover retrieval (keyword and error-code channels, reproducible wit
 
 The queries were written by the team, not collected from technicians. Method, both runs and every miss: [docs/EVALUATION.md](docs/EVALUATION.md#answer-quality-gemini-answers-live-app).
 
-## Field feedback
+## Technician feedback
 
-50 technicians in 39 cities (6 months to 20 years in the trade, median 7) tried FixSaathi on a fault of their own and answered six questions on WhatsApp. Replies, one row each: [`data/field_feedback/`](data/field_feedback/).
+Seven working technicians and helpers (AC, washing machine, fan and wiring, RO, fridge, microwave, solar) tried the live app on a fault from their own trade and sent feedback by message: **4.7 / 5 on average**. Every complaint, and how to read the numbers, is in [docs/PILOT_FEEDBACK.md](docs/PILOT_FEEDBACK.md).
 
-| Question | Answer |
-|---|---|
-| Was the likely cause right? | **45 yes**, 5 partly, 0 no |
-| How useful, out of 5 | **4.0** on average: 5.0 from technicians under 3 years, 4.0 from 3-9 years, 3.6 from 10+ years |
-| Will you use it? | 24 yes, 11 will give it to their helpers or juniors, 10 sometimes, 3 if more data is added, 2 no |
-
-> "Wo MCB band karke tester wala lock best hai, mujhe pehle 2 baar jhatka lag chuka hai." (The switch-off-and-test lock is the best part; I have had two shocks before.) Rohit Kumar, helper, Noida
-
-> "Mere liye basic hai par mere 4 naye ladke hain, unke liye safety lock bahut kaam ka hai." (Basic for me, but very useful for my four new technicians.) Vikramjit Singh, AC contractor, Ludhiana
-
-> "Fan ka capacitor badalne ke liye app kaun kholega?" (Who opens an app to change a fan capacitor?) Electrician, 18 years, Lucknow: 2 / 5
-
-What they asked for, and what changed:
-
-| Feedback | Replies | Change |
-|---|---|---|
-| The first load takes 30-45 seconds | 18 | The keep-awake ping was running only a few times a day. It now runs continuously. |
-| Asked to switch off the MCB when it was not needed, or too often | 5 | Isolation is now asked for only when a step opens the appliance or touches electrical parts. A recorded isolation still expires after a while, on purpose. |
-| Too many English words | 4 | Hindi replies use simple spoken Hindi, with part names as technicians say them. |
-| Microwave high-voltage warning should stand out | 2 | Shown as a red alert in the chat. |
-| Brand error codes, sensor values, pressure charts | 7 | Not yet: needs sourced data, not model guesses. Next on the list. |
-| Live testing (clamp meter, PCB voltage) | 4 | Not added, by design (see Honest limits). |
-| Offline use, part photos | 4 | Not yet. |
-
-Experienced technicians found it too basic; juniors and helpers rated it highest. That points to the first real users: trainees and the teams of contractors and shop owners.
+- **Diagnoses matched their experience:** capacitor and contactor, drain motor, fan bearing, RO membrane, magnetron and diode, DC isolator and string voltage.
+- **The safety lock got the most praise for newer technicians.** One helper who had been shocked before called the "MCB off, then test" step the best part.
+- **Asked for:** a faster first load, a lock that allows live measurements, louder microwave capacitor and solar DC-arc warnings, more Hindi, part photos.
+- **Caveat:** seven people the team knows, rated by message. It is encouraging, not proof.
 
 ## How it works
 
@@ -181,7 +160,7 @@ cd ../frontend && npm test && npm run build && npm run lint
 
 ## Honest limits
 
-- **Early field data only.** 50 technicians tried it once on a fault of their choice and were reached through personal contacts. It has not yet been used day to day on paid jobs.
+- **Small pilot only.** Seven technicians tried it once on a fault of their choice and were reached through personal contacts. It has not yet been used day to day on paid jobs.
 - **The safety statements are the technician's word.** FixSaathi cannot measure voltage or verify isolation, and the app and reports say so.
 - **The knowledge base is small** (377 records, two-thirds of them washing-machine error codes). Answers outside it are marked as not grounded.
 - **Free hosting.** The API runs on Render's free plan, which sleeps after 15 idle minutes. A GitHub Actions job pings it every 4 minutes to keep it awake; if that job is late, the first request can still take 30-50 seconds.
