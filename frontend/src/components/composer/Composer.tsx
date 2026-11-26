@@ -189,15 +189,15 @@ export function Composer({ onSend, disabled, autoFocus, compact, hero, placehold
             {hero && (
               <div className="mb-2 px-1 pt-1">
                 <button type="button" onClick={startVoice} disabled={disabled} aria-label={t('voice.start')} title={t('voice.start')}
-                  className="btn btn-primary flex min-h-[54px] w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left">
-                  <span className="flex items-center gap-3">
+                  className="btn btn-primary flex min-h-[54px] w-full items-center justify-between gap-3 overflow-hidden rounded-2xl px-4 py-3 text-left !whitespace-normal">
+                  <span className="flex min-w-0 flex-1 items-center gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15"><Mic size={20} aria-hidden /></span>
-                    <span>
+                    <span className="min-w-0 flex-1">
                       <span className="block text-[15px] font-semibold leading-tight">{t('home.speakCta')}</span>
-                      <span className="block text-xs font-normal text-white/85">{t('home.speakHint')}</span>
+                      <span className="mt-0.5 block text-xs font-normal leading-snug text-white/85">{t('home.speakHint')}</span>
                     </span>
                   </span>
-                  <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium">{t('voice.speak')}</span>
+                  <span className="hidden shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium sm:inline-flex">{t('voice.speak')}</span>
                 </button>
               </div>
             )}

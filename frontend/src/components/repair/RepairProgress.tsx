@@ -26,13 +26,13 @@ export function RepairProgress({
         const content = (
           <>
             <span aria-hidden className={`block h-1.5 w-full rounded-full transition-colors duration-300 ${bar}`} />
-            <span className={`mt-2 flex items-center justify-center gap-1 sm:justify-start text-[11px] sm:text-xs ${selected ? 'font-semibold text-ink' : s.done ? 'text-ink-2' : now ? 'font-semibold text-ink' : 'text-ink-3'}`}>
+            <span className={`mt-2 flex flex-col items-center justify-center gap-1 text-[10.5px] leading-tight sm:flex-row sm:justify-start sm:gap-1.5 sm:text-xs ${selected ? 'font-semibold text-ink' : s.done ? 'text-ink-2' : now ? 'font-semibold text-ink' : 'text-ink-3'}`}>
               {s.done ? (
                 <Check size={12} strokeWidth={3} className={`shrink-0 ${power ? 'text-ok' : 'text-accent'}`} aria-hidden />
               ) : (
                 <span className={`num flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[11px] ${selected ? 'bg-accent text-white' : 'bg-surface-2 text-ink-3'}`}>{i + 1}</span>
               )}
-              <span className="truncate">{s.label}</span>
+              <span>{s.label}</span>
               <span className="sr-only">{s.done ? ' (done)' : now ? ' (current)' : ''}</span>
             </span>
           </>
