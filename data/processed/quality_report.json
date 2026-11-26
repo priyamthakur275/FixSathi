@@ -1,0 +1,71 @@
+{
+ "existing_record_count": 292,
+ "new_record_count": 85,
+ "removed_record_count": 0,
+ "final_verified_record_count": 377,
+ "by_category": {
+  "washing_machine": 253,
+  "refrigerator": 41,
+  "split_ac": 28,
+  "ceiling_fan": 19,
+  "water_purifier": 18,
+  "microwave_oven": 16,
+  "mcb_electrical": 1,
+  "rooftop_solar": 1
+ },
+ "by_category_and_source": {
+  "washing_machine | appliancedb": 250,
+  "refrigerator | appliancedb": 30,
+  "split_ac | mfr": 26,
+  "water_purifier | mfr": 18,
+  "ceiling_fan | mfr": 16,
+  "microwave_oven | mfr": 16,
+  "refrigerator | mfr": 9,
+  "ceiling_fan | fixsaathi": 3,
+  "washing_machine | fixsaathi": 3,
+  "split_ac | fixsaathi": 2,
+  "refrigerator | fixsaathi": 2,
+  "mcb_electrical | fixsaathi": 1,
+  "rooftop_solar | fixsaathi": 1
+ },
+ "by_verification_status": {
+  "unverified": 188,
+  "verified_source": 189
+ },
+ "with_source_url": 365,
+ "without_source_url": [
+  "fixsaathi:fan_slow_hum",
+  "fixsaathi:fan_no_start",
+  "fixsaathi:fan_wobble_noise",
+  "fixsaathi:ac_low_cooling",
+  "fixsaathi:ac_water_leak",
+  "fixsaathi:wm_spin_noise",
+  "fixsaathi:wm_no_drain",
+  "fixsaathi:wm_door_lock",
+  "fixsaathi:fridge_not_cooling",
+  "fixsaathi:fridge_noise",
+  "fixsaathi:mcb_trip",
+  "fixsaathi:solar_low_output"
+ ],
+ "duplicate_record_ids": [],
+ "duplicate_content": 0,
+ "invalid_category": [],
+ "unsupported_error_code_format": [],
+ "empty_diagnostic_procedure": 284,
+ "no_fault_and_no_procedure": [
+  "mfr:samsung-mw-lamp"
+ ],
+ "same_code_different_faults": [],
+ "rejected_in_processed_file": 0,
+ "manufacturer_docs": {
+  "candidates": 85,
+  "skipped": 0,
+  "rejected": 0,
+  "by_evidence_level": {
+   "manufacturer_documented": 51,
+   "manufacturer_general_guidance": 16,
+   "manufacturer_manual_secondary_host": 18
+  },
+  "sources": 21
+ }
+}

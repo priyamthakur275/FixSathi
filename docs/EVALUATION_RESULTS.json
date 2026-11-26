@@ -1,0 +1,592 @@
+{
+ "date": "2026-11-25",
+ "retrieval_channels": "error code + PostgreSQL full-text",
+ "note": "development = the sets the Hindi search terms, the take-out rule and the field-weighted ranking were fixed against; held_out = written after the first fixes and not used to change any code; held_out_v2 = retrieval only, written before the field-weighted ranking was measured on it and not used to tune it.",
+ "development": {
+  "retrieval": {
+   "appliance_selected": {
+    "overall": {
+     "cases": 60,
+     "hit@1": 0.95,
+     "hit@3": 1.0,
+     "hit@6": 1.0,
+     "mrr": 0.972
+    },
+    "by_language": {
+     "en": {
+      "cases": 51,
+      "hit@1": 0.941,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.967
+     },
+     "hi": {
+      "cases": 2,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "hinglish": {
+      "cases": 7,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 10,
+      "hit@1": 0.9,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.95
+     },
+     "microwave_oven": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.917
+     },
+     "refrigerator": {
+      "cases": 12,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "split_ac": {
+      "cases": 12,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "washing_machine": {
+      "cases": 14,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "water_purifier": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.889
+     }
+    },
+    "misses_top3": []
+   },
+   "appliance_detected": {
+    "overall": {
+     "cases": 60,
+     "hit@1": 0.95,
+     "hit@3": 1.0,
+     "hit@6": 1.0,
+     "mrr": 0.972
+    },
+    "by_language": {
+     "en": {
+      "cases": 51,
+      "hit@1": 0.941,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.967
+     },
+     "hi": {
+      "cases": 2,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "hinglish": {
+      "cases": 7,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 10,
+      "hit@1": 0.9,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.95
+     },
+     "microwave_oven": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.917
+     },
+     "refrigerator": {
+      "cases": 12,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "split_ac": {
+      "cases": 12,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "washing_machine": {
+      "cases": 14,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "water_purifier": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.889
+     }
+    },
+    "misses_top3": []
+   },
+   "appliance_detection_accuracy": 1.0,
+   "appliance_detection_misses": []
+  },
+  "safety_filter": {
+   "cases": 50,
+   "unsafe_withheld": "25/25",
+   "recall_unsafe": 1.0,
+   "safe_shown": "25/25",
+   "false_positive_rate": 0.0,
+   "errors": []
+  }
+ },
+ "held_out": {
+  "retrieval": {
+   "appliance_selected": {
+    "overall": {
+     "cases": 30,
+     "hit@1": 0.867,
+     "hit@3": 1.0,
+     "hit@6": 1.0,
+     "mrr": 0.928
+    },
+    "by_language": {
+     "en": {
+      "cases": 19,
+      "hit@1": 0.947,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.974
+     },
+     "hi": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.889
+     },
+     "hinglish": {
+      "cases": 5,
+      "hit@1": 0.6,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.8
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 5,
+      "hit@1": 0.8,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.867
+     },
+     "microwave_oven": {
+      "cases": 4,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "refrigerator": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "split_ac": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.833
+     },
+     "washing_machine": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "water_purifier": {
+      "cases": 3,
+      "hit@1": 0.667,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.833
+     }
+    },
+    "misses_top3": []
+   },
+   "appliance_detected": {
+    "overall": {
+     "cases": 30,
+     "hit@1": 0.867,
+     "hit@3": 1.0,
+     "hit@6": 1.0,
+     "mrr": 0.928
+    },
+    "by_language": {
+     "en": {
+      "cases": 19,
+      "hit@1": 0.947,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.974
+     },
+     "hi": {
+      "cases": 6,
+      "hit@1": 0.833,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.889
+     },
+     "hinglish": {
+      "cases": 5,
+      "hit@1": 0.6,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.8
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 5,
+      "hit@1": 0.8,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.867
+     },
+     "microwave_oven": {
+      "cases": 4,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "refrigerator": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "split_ac": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.833
+     },
+     "washing_machine": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "water_purifier": {
+      "cases": 3,
+      "hit@1": 0.667,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 0.833
+     }
+    },
+    "misses_top3": []
+   },
+   "appliance_detection_accuracy": 0.967,
+   "appliance_detection_misses": [
+    {
+     "id": "h28",
+     "query": "RO se paani bahut kam aa raha hai",
+     "expected": "water_purifier",
+     "got": "unknown"
+    }
+   ]
+  },
+  "safety_filter": {
+   "cases": 24,
+   "unsafe_withheld": "12/12",
+   "recall_unsafe": 1.0,
+   "safe_shown": "11/12",
+   "false_positive_rate": 0.083,
+   "errors": [
+    {
+     "id": "hs08",
+     "text": "Make sure the inlet tap is fully open.",
+     "expected": "safe_to_show",
+     "withheld": true
+    }
+   ]
+  }
+ },
+ "held_out_v2": {
+  "retrieval": {
+   "appliance_selected": {
+    "overall": {
+     "cases": 36,
+     "hit@1": 0.944,
+     "hit@3": 0.944,
+     "hit@6": 1.0,
+     "mrr": 0.958
+    },
+    "by_language": {
+     "en": {
+      "cases": 30,
+      "hit@1": 0.933,
+      "hit@3": 0.933,
+      "hit@6": 1.0,
+      "mrr": 0.95
+     },
+     "hi": {
+      "cases": 1,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "hinglish": {
+      "cases": 5,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "mcb_electrical": {
+      "cases": 1,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "microwave_oven": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.667,
+      "hit@6": 1.0,
+      "mrr": 0.75
+     },
+     "refrigerator": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "rooftop_solar": {
+      "cases": 1,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "split_ac": {
+      "cases": 8,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "washing_machine": {
+      "cases": 3,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "water_purifier": {
+      "cases": 5,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "misses_top3": [
+     {
+      "id": "v2-26",
+      "query": "microwave light inside does not come on",
+      "rank": 4,
+      "top3": [
+       "mfr:samsung-mw-arcing",
+       "mfr:samsung-mw-condensation",
+       "mfr:samsung-mw-kitchen-timer"
+      ]
+     },
+     {
+      "id": "v2-29",
+      "query": "microwave takes much longer than before to heat food",
+      "rank": 4,
+      "top3": [
+       "mfr:samsung-mw-kitchen-timer",
+       "mfr:samsung-mw-uneven-cooking",
+       "mfr:samsung-mw-demo-mode"
+      ]
+     }
+    ]
+   },
+   "appliance_detected": {
+    "overall": {
+     "cases": 36,
+     "hit@1": 0.944,
+     "hit@3": 0.944,
+     "hit@6": 1.0,
+     "mrr": 0.958
+    },
+    "by_language": {
+     "en": {
+      "cases": 30,
+      "hit@1": 0.933,
+      "hit@3": 0.933,
+      "hit@6": 1.0,
+      "mrr": 0.95
+     },
+     "hi": {
+      "cases": 1,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "hinglish": {
+      "cases": 5,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "by_appliance": {
+     "ceiling_fan": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "mcb_electrical": {
+      "cases": 1,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "microwave_oven": {
+      "cases": 6,
+      "hit@1": 0.667,
+      "hit@3": 0.667,
+      "hit@6": 1.0,
+      "mrr": 0.75
+     },
+     "refrigerator": {
+      "cases": 6,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "rooftop_solar": {
+      "cases": 1,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "split_ac": {
+      "cases": 8,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "washing_machine": {
+      "cases": 3,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     },
+     "water_purifier": {
+      "cases": 5,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@6": 1.0,
+      "mrr": 1.0
+     }
+    },
+    "misses_top3": [
+     {
+      "id": "v2-26",
+      "query": "microwave light inside does not come on",
+      "rank": 4,
+      "top3": [
+       "mfr:samsung-mw-arcing",
+       "mfr:samsung-mw-condensation",
+       "mfr:samsung-mw-kitchen-timer"
+      ]
+     },
+     {
+      "id": "v2-29",
+      "query": "microwave takes much longer than before to heat food",
+      "rank": 4,
+      "top3": [
+       "mfr:samsung-mw-kitchen-timer",
+       "mfr:samsung-mw-uneven-cooking",
+       "mfr:samsung-mw-demo-mode"
+      ]
+     }
+    ]
+   },
+   "appliance_detection_accuracy": 0.972,
+   "appliance_detection_misses": [
+    {
+     "id": "v2-07",
+     "query": "water dripping from the indoor unit onto the wall",
+     "expected": "split_ac",
+     "got": "unknown"
+    }
+   ]
+  }
+ }
+}

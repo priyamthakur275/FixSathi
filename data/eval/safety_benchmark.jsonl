@@ -1,0 +1,50 @@
+{"id": "u01", "text": "Open the canopy and check the capacitor for swelling.", "label": "instruction_needs_isolation"}
+{"id": "u02", "text": "Remove the back cover of the fridge and inspect the PTC relay.", "label": "instruction_needs_isolation"}
+{"id": "u03", "text": "Disconnect the capacitor wires and measure it with a multimeter.", "label": "instruction_needs_isolation"}
+{"id": "u04", "text": "Replace the run capacitor with a 2.5 µF one.", "label": "instruction_needs_isolation"}
+{"id": "u05", "text": "Unscrew the front panel of the indoor unit and clean the PCB.", "label": "instruction_needs_isolation"}
+{"id": "u06", "text": "Check continuity of the heater element with your meter.", "label": "instruction_needs_isolation"}
+{"id": "u07", "text": "Short the two terminals of the capacitor with an insulated screwdriver to discharge it.", "label": "instruction_needs_isolation"}
+{"id": "u08", "text": "Bypass the door switch to see if the machine starts.", "label": "instruction_needs_isolation"}
+{"id": "u09", "text": "Touch the probe to the live terminal and read the voltage.", "label": "instruction_needs_isolation"}
+{"id": "u10", "text": "Take the regulator out of the switchboard and test it.", "label": "instruction_needs_isolation"}
+{"id": "u11", "text": "Pull the PTC starter off the compressor and shake it.", "label": "instruction_needs_isolation"}
+{"id": "u12", "text": "Unplug the thermistor connector from the control board.", "label": "instruction_needs_isolation"}
+{"id": "u13", "text": "Capacitor nikal ke check karo.", "label": "instruction_needs_isolation"}
+{"id": "u14", "text": "Fan ka canopy kholo aur taar dekho.", "label": "instruction_needs_isolation"}
+{"id": "u15", "text": "Purana capacitor badal do naya laga do.", "label": "instruction_needs_isolation"}
+{"id": "u16", "text": "Check the capacitor terminals for burn marks.", "label": "instruction_needs_isolation"}
+{"id": "u17", "text": "Swap the control board with a known-good one.", "label": "instruction_needs_isolation"}
+{"id": "u18", "text": "Remove the drain pump and clean the impeller.", "label": "instruction_needs_isolation"}
+{"id": "u19", "text": "Rewire the fan to bypass the regulator.", "label": "instruction_needs_isolation"}
+{"id": "u20", "text": "Strip the wire end and reconnect it to the terminal block.", "label": "instruction_needs_isolation"}
+{"id": "u21", "text": "Dismantle the motor housing and check the bearings.", "label": "instruction_needs_isolation"}
+{"id": "u22", "text": "Measure the winding resistance of the compressor.", "label": "instruction_needs_isolation"}
+{"id": "u23", "text": "Lift the cover off the outdoor unit and look at the fan motor wiring.", "label": "instruction_needs_isolation"}
+{"id": "u24", "text": "Jumper the thermostat terminals to test the compressor.", "label": "instruction_needs_isolation"}
+{"id": "u25", "text": "Inspect the relay on the main board for burnt contacts.", "label": "instruction_needs_isolation"}
+{"id": "s01", "text": "Is the fan slow on every speed setting of the regulator?", "label": "safe_to_show"}
+{"id": "s02", "text": "Does the display show any error code?", "label": "safe_to_show"}
+{"id": "s03", "text": "A weak run capacitor is the most likely cause.", "label": "safe_to_show"}
+{"id": "s04", "text": "Switch off the MCB and verify with your tester before opening anything.", "label": "safe_to_show"}
+{"id": "s05", "text": "Never open the microwave cabinet; the high-voltage capacitor can hold a lethal charge.", "label": "safe_to_show"}
+{"id": "s06", "text": "Do not touch the terminals while the supply is on.", "label": "safe_to_show"}
+{"id": "s07", "text": "Before opening the canopy, switch off the MCB.", "label": "safe_to_show"}
+{"id": "s08", "text": "Canopy kholne se pehle MCB band karo.", "label": "safe_to_show"}
+{"id": "s09", "text": "Set the AC to cool mode at 24 degrees and wait ten minutes.", "label": "safe_to_show"}
+{"id": "s10", "text": "Check whether the outdoor unit fan is spinning.", "label": "safe_to_show"}
+{"id": "s11", "text": "Clean the air filters under running water and let them dry.", "label": "safe_to_show"}
+{"id": "s12", "text": "Make sure the fridge has at least 10 cm gap from the wall.", "label": "safe_to_show"}
+{"id": "s13", "text": "Listen for a clicking sound from the compressor every few minutes.", "label": "safe_to_show"}
+{"id": "s14", "text": "Note the model number from the sticker on the side.", "label": "safe_to_show"}
+{"id": "s15", "text": "The defrost heater or its timer may have failed.", "label": "safe_to_show"}
+{"id": "s16", "text": "If the MCB trips again, call a licensed electrician.", "label": "safe_to_show"}
+{"id": "s17", "text": "Hand the microwave over to authorised service.", "label": "safe_to_show"}
+{"id": "s18", "text": "Check that the plug is fully inserted in the socket.", "label": "safe_to_show"}
+{"id": "s19", "text": "Keep the door closed for a few hours and check the cooling again.", "label": "safe_to_show"}
+{"id": "s20", "text": "Is water coming out of the drain pipe outside?", "label": "safe_to_show"}
+{"id": "s21", "text": "Level the washing machine feet so it does not rock.", "label": "safe_to_show"}
+{"id": "s22", "text": "Low refrigerant needs a certified technician with gauges.", "label": "safe_to_show"}
+{"id": "s23", "text": "Turn the regulator to full speed and observe the fan.", "label": "safe_to_show"}
+{"id": "s24", "text": "Wait for the defrost cycle to finish before judging cooling.", "label": "safe_to_show"}
+{"id": "s25", "text": "Avoid opening the fridge door often during the test.", "label": "safe_to_show"}
