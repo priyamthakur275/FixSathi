@@ -114,7 +114,7 @@ export default function RepairSessionPage() {
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-2 text-[13px] text-ink-2">
                 <span className="font-semibold text-teal">{s.appliance_label}</span>
-                <span className="num rounded-md border border-line bg-surface-2 px-1.5 py-px text-[11px] text-ink-3" title="Session reference">{s.reference}</span>
+                <span className="num rounded-md border border-line bg-surface-2 px-1.5 py-px text-[12px] text-ink-3" title="Session reference">{s.reference}</span>
                 <StatusPill status={s.status} />
                 {safety && open && (
                   // On a phone the safety panel sits below the photos and diagnosis: this shows its state at the top and jumps to it.
@@ -202,7 +202,7 @@ export default function RepairSessionPage() {
                   const pctc = Math.round(f.confidence * 100)
                   return (
                     <li key={f.fault} className="rounded-xl border border-line bg-bg/30 p-4">
-                      <div className="flex items-start justify-between gap-3"><p className="font-medium leading-snug">{f.fault}{f.status && <span className={`ml-2 rounded-full border px-2 py-px text-[11px] font-normal ${f.status === 'supported_by_records' ? 'border-ok/40 text-ok' : f.status === 'possible_cause' ? 'border-line text-ink-2' : 'border-warn/40 text-warn'}`}>{({ supported_by_records: 'from records', possible_cause: 'possible cause', unverified_hypothesis: 'unverified' })[f.status]}</span>}</p><span className="shrink-0 text-right leading-tight"><span className="num block text-[15px] font-semibold">{pctc}%</span><span className="block text-[11px] text-ink-3">AI estimate</span></span></div>
+                      <div className="flex items-start justify-between gap-3"><p className="font-medium leading-snug">{f.fault}{f.status && <span className={`ml-2 rounded-full border px-2 py-px text-[12px] font-normal ${f.status === 'supported_by_records' ? 'border-ok/40 text-ok' : f.status === 'possible_cause' ? 'border-line text-ink-2' : 'border-warn/40 text-warn'}`}>{({ supported_by_records: 'from records', possible_cause: 'possible cause', unverified_hypothesis: 'unverified' })[f.status]}</span>}</p><span className="shrink-0 text-right leading-tight"><span className="num block text-[15px] font-semibold">{pctc}%</span><span className="block text-[12px] text-ink-3">AI estimate</span></span></div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={pctc} aria-valuemin={0} aria-valuemax={100} aria-label={`${f.fault} AI estimate`}><div className="fs-grow h-full rounded-full bg-accent" style={{ width: `${pctc}%` }} /></div>
                       <p className="mt-2 text-sm text-ink-2">{f.explanation}</p>
                       {f.evidence.length > 0 && <ul className="mt-1 space-y-0.5 text-xs text-ink-3">{f.evidence.map((e, i) => <li key={i}><span className="text-ink-2">{({ observed_in_image: 'Seen in photo', technician_statement: 'You said', ai_inference: 'AI inference', unknown: 'Unknown' })[e.source]}:</span> {e.detail}</li>)}</ul>}
@@ -253,10 +253,10 @@ export default function RepairSessionPage() {
                         {busy === `step-${x.id}` ? <Loader2 size={12} className="animate-spin" /> : x.locked ? <Lock size={12} /> : isDone ? <Check size={14} /> : <Circle size={0} />}
                       </button>
                       <div className="min-w-0 flex-1">
-                        <p className={`font-medium ${isDone ? 'text-ink-2 line-through' : ''}`}>{x.step_number}. {x.title}{x.requires_power_off && !x.locked && <span className="ml-2 rounded-full border border-warn/40 px-2 py-px text-[11px] font-normal text-warn">power off</span>}</p>
+                        <p className={`font-medium ${isDone ? 'text-ink-2 line-through' : ''}`}>{x.step_number}. {x.title}{x.requires_power_off && !x.locked && <span className="ml-2 rounded-full border border-warn/40 px-2 py-px text-[12px] font-normal text-warn">power off</span>}</p>
                         {x.locked ? <a href="#safety" className="mt-0.5 inline-block text-sm text-crit hover:underline">Isolate the power to unlock</a> : <p className="mt-0.5 text-sm leading-relaxed text-ink-2">{x.instruction}</p>}
                         {!x.locked && owner && open && !vis && <button onClick={() => visual(x)} disabled={!!busy} className="mt-2 inline-flex items-center gap-1 text-xs text-teal disabled:opacity-50">{busy === `vis-${x.id}` ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}Show a picture of this step</button>}
-                        {vis && <div className="mt-2"><AuthImage src={vis.url} alt={`Illustration for step ${x.step_number}`} className="h-44 w-full max-w-xs rounded-xl border border-line" /><p className="mt-1 text-[11px] text-ink-3">AI-generated illustration, not a photo of this appliance.</p></div>}
+                        {vis && <div className="mt-2"><AuthImage src={vis.url} alt={`Illustration for step ${x.step_number}`} className="h-44 w-full max-w-xs rounded-xl border border-line" /><p className="mt-1 text-[12px] text-ink-3">AI-generated illustration, not a photo of this appliance.</p></div>}
                       </div>
                     </div>
                   </li>)

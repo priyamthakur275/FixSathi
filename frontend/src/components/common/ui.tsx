@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { AlertTriangle, Inbox, RefreshCw } from 'lucide-react'
 
 export function DemoBadge({ children = 'Sample data' }: { children?: ReactNode }) {
-  return <span className="inline-flex items-center rounded-full border border-warn/40 bg-warn/10 px-2.5 py-0.5 text-[11px] font-medium text-warn">{children}</span>
+  return <span className="inline-flex items-center rounded-full border border-warn/40 bg-warn/10 px-2.5 py-0.5 text-[12px] font-medium text-warn">{children}</span>
 }
 
 const PILL: Record<string, string> = {

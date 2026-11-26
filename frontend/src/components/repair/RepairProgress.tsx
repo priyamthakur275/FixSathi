@@ -16,7 +16,7 @@ export function RepairProgress({ stages, isolateIndex }: { stages: Stage[]; isol
           <li key={s.label} aria-current={now ? 'step' : undefined} className="min-w-0">
             <span aria-hidden className={`block h-1.5 rounded-full transition-colors duration-500 ${bar}`} />
             <span className={`mt-2 flex items-center gap-1.5 truncate text-[12px] ${s.done ? 'text-ink-2' : now ? 'font-semibold text-ink' : 'text-ink-3'}`}>
-              {s.done ? <Check size={12} strokeWidth={3} className={power ? 'text-ok' : 'text-accent'} aria-hidden /> : <span className="num text-[11px]">{i + 1}</span>}
+              {s.done ? <Check size={12} strokeWidth={3} className={power ? 'text-ok' : 'text-accent'} aria-hidden /> : <span className="num text-[12px]">{i + 1}</span>}
               <span className={now ? 'truncate' : 'sr-only truncate sm:not-sr-only'}>{s.label}</span>
               <span className="sr-only">{s.done ? ' (done)' : now ? ' (current)' : ''}</span>
             </span>

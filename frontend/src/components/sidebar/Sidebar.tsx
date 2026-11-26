@@ -105,7 +105,7 @@ function ProfileMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
       <button ref={btn} onClick={() => setOpen(o => !o)} aria-haspopup="menu" aria-expanded={open} aria-label={t('nav.account')}
         className={`flex w-full items-center gap-2.5 rounded-xl p-1.5 text-left transition-colors hover:bg-surface ${collapsed ? 'justify-center' : ''}`}>
         <span className="fs-accent-bg flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold text-white">{initial}</span>
-        {!collapsed && <span className="min-w-0 leading-tight"><span className="block truncate text-[13.5px] font-medium">{user.full_name}</span><span className="block truncate text-[11.5px] text-ink-3">{t(`role.${user.role}` as Key)}</span></span>}
+        {!collapsed && <span className="min-w-0 leading-tight"><span className="block truncate text-[13.5px] font-medium">{user.full_name}</span><span className="block truncate text-[12.5px] text-ink-3">{t(`role.${user.role}` as Key)}</span></span>}
       </button>
       <AnimatePresence>
         {open && (
@@ -192,7 +192,10 @@ function Panel({ collapsed, onNavigate, onClose }: { collapsed: boolean; onNavig
     } finally { setDeleting(false) }
   }
 
-  const groups = useMemo(() => GROUPS.map(g => ({ ...g, items: (chats.data ?? []).filter(s => g.test(daysAgo(s.started_at))) })).filter(g => g.items.length), [chats.data])
+  const groups = useMemo(() => GROUPS.map(g => ({ ...g, items: (chats.data ?? []).filter(s => !s.demo && g.test(daysAgo(s.started_at))) })).filter(g => g.items.length), [chats.data])
+  // Scripted demo chats pile up fast; keep them in one collapsed group so the technician's own repairs stay readable.
+  const demos = useMemo(() => (chats.data ?? []).filter(s => s.demo), [chats.data])
+  const [showDemos, setShowDemos] = useState(false)
   const row = 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] text-ink-2 transition-colors hover:bg-surface hover:text-ink'
   const homeActive = loc.pathname === '/'
 
@@ -228,12 +231,20 @@ function Panel({ collapsed, onNavigate, onClose }: { collapsed: boolean; onNavig
           {chats.data && chats.data.length === 0 && <p className="px-3 py-1 text-xs text-ink-3">{searching && q.trim() ? t('chat.noMatches', { q: q.trim() }) : t('chat.noChats')}</p>}
           {groups.map(g => (
             <div key={g.key} className="mb-3">
-              <p className="px-3 pb-1 pt-1 text-[11.5px] font-medium text-ink-3">{t(g.key)}</p>
+              <p className="px-3 pb-1 pt-1 text-[12.5px] font-medium text-ink-3">{t(g.key)}</p>
               <div className="space-y-px">
                 {g.items.map(s => <ChatRow key={s.id} s={s} active={loc.pathname === `/chat/${s.id}`} onNavigate={onNavigate} onRename={title => rename(s, title)} onDelete={() => setDoomed(s)} />)}
               </div>
             </div>
           ))}
+          {demos.length > 0 && (
+            <div className="mb-3">
+              <button onClick={() => setShowDemos(v => !v)} aria-expanded={showDemos} className="flex w-full items-center justify-between rounded-lg px-3 pb-1 pt-1 text-[12.5px] font-medium text-ink-3 hover:text-ink">
+                <span>Demo chats ({demos.length})</span><span aria-hidden>{showDemos ? '−' : '+'}</span>
+              </button>
+              {showDemos && <div className="space-y-px">{demos.map(s => <ChatRow key={s.id} s={s} active={loc.pathname === `/chat/${s.id}`} onNavigate={onNavigate} onRename={title => rename(s, title)} onDelete={() => setDoomed(s)} />)}</div>}
+            </div>
+          )}
         </>)}
       </nav>
 

@@ -109,7 +109,7 @@ export default function ChatPage() {
       <div className="sticky bottom-0 bg-gradient-to-t from-bg via-bg to-transparent px-4 pb-3 pt-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         <div className="mx-auto w-full max-w-3xl">
           <Composer compact placeholder={messages.length ? undefined : t('composer.placeholder')} disabled={thinking || loading || session?.status === 'completed' || session?.status === 'cancelled'} onSend={(text, a, channel) => void send(text, a, undefined, channel)} />
-          <p className="mt-2 text-center text-[11px] text-ink-3">{session && (session.status === 'completed' || session.status === 'cancelled') ? 'This repair session is closed. Start a new chat to continue.' : t('chat.disclaimer')}</p>
+          <p className="mt-2 text-center text-[12px] text-ink-3">{session && (session.status === 'completed' || session.status === 'cancelled') ? 'This repair session is closed. Start a new chat to continue.' : t('chat.disclaimer')}</p>
         </div>
       </div>
     </div>

@@ -10,7 +10,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-440-2ea44f)
+![Tests](https://img.shields.io/badge/tests-441-2ea44f)
 ![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -117,7 +117,7 @@ flowchart TD
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 440 automated tests: 368 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 72 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
+- **Tests:** 441 automated tests: 368 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 73 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
 - **Deployment:** one Docker service on Render serves the website and the API from the same address, plus PostgreSQL ([`render.yaml`](render.yaml)); no URL is written into the config, so it deploys to any account. Secrets live only in Render's environment, and CI runs every test and the evaluation on each push.
 

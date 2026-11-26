@@ -22,7 +22,7 @@ export function DocChip({ name, size, onRemove, onOpen }: { name: string; size?:
   const body = (
     <>
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${ext === 'PDF' ? 'bg-crit/12 text-crit' : ext === 'DOCX' ? 'bg-blue/12 text-blue' : 'bg-teal/12 text-teal'}`}><FileText size={16} /></span>
-      <span className="min-w-0"><span className="block truncate text-[13px] font-medium text-ink">{name}</span><span className="block text-[11px] text-ink-3">{ext}{size ? ` · ${fmtSize(size)}` : ''}</span></span>
+      <span className="min-w-0"><span className="block truncate text-[13px] font-medium text-ink">{name}</span><span className="block text-[12px] text-ink-3">{ext}{size ? ` · ${fmtSize(size)}` : ''}</span></span>
     </>
   )
   const cls = 'relative inline-flex max-w-[240px] items-center gap-2.5 rounded-xl border border-line bg-surface-2 py-2 pl-2.5 pr-3 text-left'

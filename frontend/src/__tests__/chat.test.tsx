@@ -33,6 +33,17 @@ describe('chat history sidebar', () => {
     expect(within(nav).getByRole('link', { name: 'Split AC Error CH38' }).getAttribute('href')).toBe('/chat/b')
   })
 
+  it('keeps scripted demo chats in one collapsed group', async () => {
+    const demo = { ...chat('x', 'Demo: Ceiling fan: burn marks', 0), demo: true } as RepairSession
+    vi.spyOn(services.sessionService, 'mine').mockResolvedValue(page([chat('a', 'Ceiling Fan Not Rotating', 0), demo]))
+    wrap(<DesktopSidebar />)
+    const nav = await screen.findByRole('navigation', { name: 'Chats' })
+    await within(nav).findByText('Ceiling Fan Not Rotating')
+    expect(within(nav).queryByText('Demo: Ceiling fan: burn marks')).toBeNull()
+    await userEvent.setup().click(within(nav).getByRole('button', { name: /Demo chats \(1\)/ }))
+    expect(within(nav).getByText('Demo: Ceiling fan: burn marks')).toBeTruthy()
+  })
+
   it('searches on the server', async () => {
     const u = userEvent.setup()
     const mine = vi.spyOn(services.sessionService, 'mine').mockImplementation(async (q = '') => page(q ? [chat('b', 'Split AC Error CH38', 1)] : [chat('a', 'Ceiling Fan', 0), chat('b', 'Split AC Error CH38', 1)]))

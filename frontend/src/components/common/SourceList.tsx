@@ -16,7 +16,7 @@ export function SourceList({ sources }: { sources: SourceRef[] }) {
             <span className="mt-px flex h-4 min-w-4 items-center justify-center rounded-full bg-teal/15 px-1 text-[10px] font-semibold text-teal">{i + 1}</span>
             <span className="min-w-0">
               {s.source_url ? <a href={s.source_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-ink-2 hover:text-teal">{s.source_name}<ExternalLink size={10} /></a> : <span className="text-ink-2">{s.source_name}</span>}
-              <span className="block text-[11px] text-ink-3">{s.record_id} · {STATUS[s.verification_status] ?? s.verification_status}{s.related_category ? ' · related category' : ''}</span>
+              <span className="block text-[12px] text-ink-3">{s.record_id} · {STATUS[s.verification_status] ?? s.verification_status}{s.related_category ? ' · related category' : ''}</span>
             </span>
           </li>
         ))}

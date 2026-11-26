@@ -128,7 +128,7 @@ function Bubble({ m }: { m: ChatMessage }) {
         <div className="flex max-w-[85%] flex-col items-end sm:max-w-[75%]">
           {photos}
           {m.text && <div className="whitespace-pre-wrap rounded-[20px] rounded-br-md bg-surface-2 px-4 py-2.5 text-[15px] leading-relaxed text-ink">{m.text}</div>}
-          <span className="mt-1 px-1 text-[11px] text-ink-3">{time(m.at)}</span>
+          <span className="mt-1 px-1 text-[12px] text-ink-3">{time(m.at)}</span>
         </div>
       </motion.div>
     )
@@ -137,7 +137,7 @@ function Bubble({ m }: { m: ChatMessage }) {
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex gap-3">
       <Avatar />
       <div className="min-w-0 flex-1 pt-0.5">
-        {m.demo && <span className="mb-2 inline-block rounded-full border border-warn/40 bg-warn/[0.08] px-2 py-px text-[11px] font-medium text-warn">Demo: scripted sample, not live AI</span>}
+        {m.demo && <span className="mb-2 inline-block rounded-full border border-warn/40 bg-warn/[0.08] px-2 py-px text-[12px] font-medium text-warn">Demo: scripted sample, not live AI</span>}
         {photos}
         {/* the badge above already says it is scripted; the same words again at the top of the reply are noise */}
         {hv && (
@@ -150,7 +150,7 @@ function Bubble({ m }: { m: ChatMessage }) {
         {body && <Markdown text={body} sources={m.sources} />}
         {m.action === 'pdf_report' && <PdfCard />}
         {m.sources && m.sources.length > 0 && <SourceList sources={m.sources} />}
-        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[11.5px] text-ink-3">
+        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[12.5px] text-ink-3">
           {m.text && m.action !== 'pdf_report' && <ReadAloud text={m.text} id={m.id} />}
           {m.text && <CopyButton text={m.text} />}
           {m.aiGenerated && !m.demo && m.action !== 'pdf_report' && <RateAnswer m={m} />}

@@ -79,7 +79,7 @@ export default function LoginPage() {
               </div>
               {err && <p role="alert" className="rounded-xl border border-crit/40 bg-crit/10 px-3 py-2 text-sm text-crit">{err}</p>}
               <button type="submit" disabled={busy} className="btn btn-primary w-full py-3 text-[15px]">{busy && <Loader2 size={16} className="animate-spin" />}{mode === 'login' ? 'Sign in' : 'Create account'}</button>
-              <div className="flex items-center gap-3 text-[11px] text-ink-3"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
+              <div className="flex items-center gap-3 text-[12px] text-ink-3"><span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" /></div>
               <button type="button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErr(null); setShowPw(false) }} className="btn w-full">
                 {mode === 'login' ? 'New here? Create an account' : 'Already have an account? Sign in'}
               </button>
