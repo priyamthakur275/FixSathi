@@ -233,7 +233,7 @@ export default function RepairSessionPage() {
         </div>
 
         <div className="space-y-6">
-          <SafetyPanel state={safety} busy={busy === 'safety'} canEdit={owner && open} onChange={setSafe} />
+          <SafetyPanel state={safety} busy={busy === 'safety'} canEdit={owner && open} onChange={setSafe} appliance={s?.appliance_type} />
           <section aria-labelledby="steps-h" className="card card-pad">
             <div className="mb-3 flex items-center justify-between gap-2"><h2 id="steps-h" className={`${h2} whitespace-nowrap`}><span className={ico}><Wand2 size={16} /></span>Repair guidance</h2>
               {owner && open && diag && done === 0 && <button onClick={genSteps} disabled={!!busy} className={btn}>{busy === 'steps' ? <Loader2 size={15} className="animate-spin" /> : <Wand2 size={15} />}{steps.length ? 'Regenerate' : 'Generate steps'}</button>}</div>

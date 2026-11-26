@@ -33,6 +33,18 @@ describe('safety panel', () => {
     await userEvent.setup().click(screen.getByLabelText('I state that I checked with my own tester and found no live line.'))
     expect(onChange).toHaveBeenCalledWith(true, true)
   })
+  it('warns in red that MCB off is not enough for a microwave', () => {
+    render(<SafetyPanel state={st(false, false)} busy={false} canEdit onChange={() => undefined} appliance="microwave_oven" />)
+    expect(screen.getByRole('alert').textContent).toContain('switching off the MCB is not enough')
+  })
+  it('warns about the live DC side for rooftop solar', () => {
+    render(<SafetyPanel state={st(false, false)} busy={false} canEdit onChange={() => undefined} appliance="rooftop_solar" />)
+    expect(screen.getByRole('alert').textContent).toContain('DC side stays live')
+  })
+  it('shows no special warning for an ordinary appliance', () => {
+    render(<SafetyPanel state={st(false, false)} busy={false} canEdit onChange={() => undefined} appliance="ceiling_fan" />)
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
   it('shows isolated once both are recorded', () => {
     render(<SafetyPanel state={st(true, true)} busy={false} canEdit onChange={() => undefined} />)
     expect(screen.getByText(/^Isolated/)).toBeTruthy()

@@ -27,7 +27,7 @@ APPLIANCE_NOTES = {
     'washing_machine': 'Drum, motor, belt or direct drive, shock absorbers, drain pump, door lock. Check load balance first.',
     'refrigerator': 'Cooling faults are often the defrost system, fan or thermostat before gas. Sealed-system work needs a senior technician.',
     'mcb_electrical': 'Distinguish overload, short circuit and earth leakage. Panel work requires isolation upstream and tester verification.',
-    'rooftop_solar': 'DC side can stay live in daylight even when AC is isolated. Recommend senior escalation for DC wiring and inverter internals.',
+    'rooftop_solar': 'DC side can stay live in daylight even when AC is isolated. Open the DC isolator first and never advise disconnecting DC connectors under load: a DC arc does not extinguish itself. Recommend senior escalation for DC wiring and inverter internals.',
     'microwave_oven': 'Door interlock, magnetron, high-voltage capacitor and diode inside. Never open the cabinet: the HV capacitor can stay lethal after unplugging. Check settings, door seal, circuit and demo mode first; internal faults go to authorised service.',
     'water_purifier': 'RO/UV/UF stages, booster pump, SMPS, float valve, storage tank. Check inlet valve, input pressure, tank level and filter age first. Close the inlet and unplug before touching tubing.',
     'unknown': 'Ask which appliance it is before diagnosing.',

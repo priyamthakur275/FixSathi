@@ -10,7 +10,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-436-2ea44f)
+![Tests](https://img.shields.io/badge/tests-440-2ea44f)
 ![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
@@ -80,12 +80,17 @@ The queries were written by the team, not collected from technicians. Method, bo
 
 ## Technician feedback
 
-Seven working technicians and helpers (AC, washing machine, fan and wiring, RO, fridge, microwave, solar) tried the live app on a fault from their own trade and sent feedback by message: **4.7 / 5 on average**. Every complaint, and how to read the numbers, is in [docs/PILOT_FEEDBACK.md](docs/PILOT_FEEDBACK.md).
+Seven working technicians and helpers tried the live app on a fault from their own trade and sent feedback by message: **4.7 / 5 on average**. They gave permission to be named. Every complaint, and how to read the numbers, is in [docs/PILOT_FEEDBACK.md](docs/PILOT_FEEDBACK.md).
 
-- **Diagnoses matched their experience:** capacitor and contactor, drain motor, fan bearing, RO membrane, magnetron and diode, DC isolator and string voltage.
-- **The safety lock got the most praise for newer technicians.** One helper who had been shocked before called the "MCB off, then test" step the best part.
-- **Asked for:** a faster first load, a lock that allows live measurements, louder microwave capacitor and solar DC-arc warnings, more Hindi, part photos.
-- **Caveat:** seven people the team knows, rated by message. It is encouraging, not proof.
+> "Wo MCB band karke tester se check karne wala lock accha hai, naye ladko ke liye." (The switch-off-and-test lock is good for new technicians.) Ramesh, AC repair: 4.8 / 5
+
+> "MCB off wala lock best laga, mujhe pehle jhatka lag chuka hai ek baar." (The MCB-off lock is the best part; I have been shocked once before.) Deepu, helper, fridge and AC: 5 / 5
+
+> "Microwave me sirf MCB band karne se kaam nahi chalta, capacitor me current rehta hai, wo warning bada red me dikhna chahiye." (With a microwave, switching off the MCB is not enough; the capacitor keeps its charge, so the warning should be big and red.) Manoj, microwave and fridge repair: 4.8 / 5
+
+**What changed because of it:** the repair screen now shows a red warning for microwaves (the capacitor can stay lethal after power-off) and for rooftop solar (the DC side stays live in daylight; open the DC isolator first and never pull DC connectors under load). The solar prompt now says so as well.
+
+**Still open:** a faster first load, a mode for live measurements (left out by design), more Hindi, part photos. Caveat: seven people the team knows, rated by message. It is encouraging, not proof.
 
 ## How it works
 
@@ -112,7 +117,7 @@ flowchart TD
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 436 automated tests: 367 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 69 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
+- **Tests:** 440 automated tests: 368 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 72 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
 - **Deployment:** one Docker service on Render serves the website and the API from the same address, plus PostgreSQL ([`render.yaml`](render.yaml)); no URL is written into the config, so it deploys to any account. Secrets live only in Render's environment, and CI runs every test and the evaluation on each push.
 

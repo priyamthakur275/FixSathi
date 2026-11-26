@@ -1,13 +1,26 @@
-import { Check, Loader2, Lock, ShieldCheck } from 'lucide-react'
+import { Check, Loader2, Lock, ShieldCheck, Zap } from 'lucide-react'
 import type { SafetyState } from '../../types'
 import { IsolatorSwitch } from './IsolatorSwitch'
 
-interface Props { state: SafetyState | null; busy: boolean; canEdit: boolean; onChange: (power: boolean, tester: boolean) => void }
+interface Props { state: SafetyState | null; busy: boolean; canEdit: boolean; onChange: (power: boolean, tester: boolean) => void; appliance?: string }
+
+/** Appliances where "MCB off, tester checked" is not the whole story. Shown in red above the two statements. */
+const SPECIAL_HAZARD: Record<string, { title: string; text: string }> = {
+  microwave_oven: {
+    title: 'Microwave: switching off the MCB is not enough',
+    text: 'The high-voltage capacitor can hold a lethal charge long after power-off. FixSaathi will not guide opening the cabinet. Note the symptom and model, and hand internal work to authorised service.',
+  },
+  rooftop_solar: {
+    title: 'Solar: the DC side stays live in daylight',
+    text: 'Isolating the AC side does not make the panels or strings safe. Open the DC isolator first, never pull DC connectors under load (a DC arc does not go out by itself), and send DC wiring and inverter internals to a qualified solar technician.',
+  },
+}
 
 const time = (iso: string | null | undefined) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null
 
 /** The server's safety gate, drawn as the breaker the technician has to switch off. Red is live and locked, green is isolated. */
-export function SafetyPanel({ state, busy, canEdit, onChange }: Props) {
+export function SafetyPanel({ state, busy, canEdit, onChange, appliance }: Props) {
+  const hazard = appliance ? SPECIAL_HAZARD[appliance] : undefined
   const power = state?.power_off_confirmed ?? false
   const tester = state?.tester_checked ?? false
   const both = !!state?.unlocked
@@ -33,6 +46,12 @@ export function SafetyPanel({ state, busy, canEdit, onChange }: Props) {
             <p className="mt-3 text-sm leading-relaxed text-ink-2">FixSaathi can't measure voltage. These are <strong className="font-semibold text-ink">your own statements</strong>: only your tester proves a circuit is dead.</p>
           </div>
         </div>
+        {hazard && (
+          <div role="alert" className="mt-4 flex gap-3 rounded-xl border border-crit/50 bg-crit/[0.07] p-3.5">
+            <Zap size={18} className="mt-0.5 shrink-0 text-crit" aria-hidden />
+            <div className="text-sm leading-relaxed"><p className="font-semibold text-crit">{hazard.title}</p><p className="text-ink-2">{hazard.text}</p></div>
+          </div>
+        )}
         <div className="mt-5 space-y-2.5">
           <label className={row(power)}>
             <input type="checkbox" disabled={busy || !canEdit} className="peer sr-only" checked={power} onChange={e => onChange(e.target.checked, tester)} />

@@ -1,16 +1,16 @@
 # Pilot feedback from technicians
 
-Seven working technicians and helpers tried the live app in November 2026 and sent their feedback by message. Each tried a real fault from their own trade. Names are withheld unless the person agrees to be named. The messages were written in Hinglish; what is quoted below is paraphrased into English.
+Seven working technicians and helpers tried the live app in November 2026 and sent their feedback by message. Each tried a real fault from their own trade. Testers gave permission to be named by the name or shop name they used with the team. The messages were written in Hinglish; what is quoted below is paraphrased into English.
 
-| # | Trade | Fault they tried | Rating |
+| # | Tester, trade | Fault they tried | Rating |
 |---|-------|------------------|--------|
-| 1 | AC repair | Split AC: indoor unit runs, outdoor does not | 4.8 / 5 |
-| 2 | Washing machine repair | Top-load machine not draining | 4.5 / 5 |
-| 3 | Electrician (15 years, fans and wiring) | Ceiling fan running slow | 4.5 / 5 |
-| 4 | AC and RO technician | Inverter AC and RO purifier | 4.7 / 5 |
-| 5 | Helper (1 year, fridge and AC) | Fridge not cooling | 5.0 / 5 |
-| 6 | Microwave and fridge repair | Microwave not heating | 4.8 / 5 |
-| 7 | Solar installer | Rooftop inverter showing zero generation | 4.8 / 5 |
+| 1 | Ramesh AC Repair, AC repair | Split AC: indoor unit runs, outdoor does not | 4.8 / 5 |
+| 2 | Aslam Bhai, Washing machine repair | Top-load machine not draining | 4.5 / 5 |
+| 3 | Sunil Electrician, Electrician (15 years, fans and wiring) | Ceiling fan running slow | 4.5 / 5 |
+| 4 | Vicky Tech Bro, AC and RO technician | Inverter AC and RO purifier | 4.7 / 5 |
+| 5 | Deepu, Helper (1 year, fridge and AC) | Fridge not cooling | 5.0 / 5 |
+| 6 | Manoj, Microwave and fridge repair | Microwave not heating | 4.8 / 5 |
+| 7 | Praveen Solar, Solar installer | Rooftop inverter showing zero generation | 4.8 / 5 |
 
 **Average: 4.7 / 5 across 7 testers** (33.1 / 7 = 4.73).
 
@@ -30,7 +30,9 @@ Seven working technicians and helpers tried the live app in November 2026 and se
 5. **Photos of parts**, so a newer technician can identify the part faster.
 6. **More detail on common causes** in washers, such as rats cutting wires or the PCB not supplying power.
 
-Not every request will be built. Live measurements with the supply on are left out by design: FixSaathi does not guide work on live circuits. Microwave capacitor and solar DC-arc wording, part photos and a faster first load are the ones to look at next.
+**Changed so far:** the repair screen now shows a red warning for microwaves (capacitor charge) and rooftop solar (live DC side, DC arc), which two testers asked for.
+
+Not every request will be built. Live measurements with the supply on are left out by design: FixSaathi does not guide work on live circuits. Part photos and a faster first load are the ones to look at next.
 
 ## How to read this
 
