@@ -176,7 +176,7 @@ export function ChatThread() {
   const end = useRef<HTMLDivElement>(null)
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }) }, [messages.length, thinking])
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-4 pt-6 md:px-6" role="log" aria-live="polite" aria-label="Conversation">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-4 pt-8 md:px-6" role="log" aria-live="polite" aria-label="Conversation">
       {messages.map(m => <Bubble key={m.id} m={m} />)}
       {thinking && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3" aria-label="FixSaathi is thinking">

@@ -14,7 +14,7 @@ export function ReportsList() {
       <PageHeader eyebrow="Workspace" title="Service reports" subtitle="Generated from finished sessions, using only recorded data." />
       {loading && <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-20" />)}</div>}
       {error && <ErrorState message={error} onRetry={retry} />}
-      {data && data.items.length === 0 && <EmptyState icon={<FileText size={22} />} title="No reports yet" hint="Finish a repair session to create its service report." />}
+      {data && data.items.length === 0 && <EmptyState icon={<FileText size={22} />} title="No reports yet" hint="Finish a repair session to create its service report." action={<Link to="/repairs" className="btn btn-primary">View open repairs</Link>} />}
       {data && data.items.length > 0 && (
         <ul className="card divide-y divide-line/70 overflow-hidden">
           {data.items.map(r => (

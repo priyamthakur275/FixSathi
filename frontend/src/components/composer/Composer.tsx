@@ -12,7 +12,7 @@ import { useDictation } from '../../hooks/useDictation'
 import { useLanguage, useT, type Key } from '../../i18n'
 import type { Attachment } from '../../types'
 
-interface Props { onSend: (text: string, attachments: Attachment[], channel?: 'text' | 'voice') => void; disabled?: boolean; autoFocus?: boolean; initial?: string; compact?: boolean; placeholder?: string }
+interface Props { onSend: (text: string, attachments: Attachment[], channel?: 'text' | 'voice') => void; disabled?: boolean; autoFocus?: boolean; initial?: string; compact?: boolean; hero?: boolean; placeholder?: string }
 
 const uid = () => Math.random().toString(36).slice(2, 10)
 
@@ -41,13 +41,13 @@ export function SpeakerToggle({ className = '' }: { className?: string }) {
   const label = speaker ? t('voice.speakerOn') : t('voice.speakerOff')
   return (
     <button type="button" onClick={() => { if (speaker) speech.stop(); setSpeaker(!speaker) }} aria-pressed={speaker} aria-label={label} title={label}
-      className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${speaker ? 'text-accent hover:bg-accent/10' : 'text-ink-3 hover:bg-surface-2 hover:text-ink'} ${className}`}>
-      {speaker ? <Volume2 size={18} /> : <VolumeX size={18} />}
+      className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${speaker ? 'text-accent hover:bg-accent/10' : 'text-ink-3 hover:bg-surface-2 hover:text-ink'} ${className}`}>
+      {speaker ? <Volume2 size={19} /> : <VolumeX size={19} />}
     </button>
   )
 }
 
-export function Composer({ onSend, disabled, autoFocus, compact, placeholder }: Props) {
+export function Composer({ onSend, disabled, autoFocus, compact, hero, placeholder }: Props) {
   const t = useT()
   const language = useLanguage()
   const { draft, clearDraft } = useApp()
@@ -186,22 +186,38 @@ export function Composer({ onSend, disabled, autoFocus, compact, placeholder }: 
               </div>
             </div>
           ) : (<>
+            {hero && (
+              <div className="mb-2 px-1 pt-1">
+                <button type="button" onClick={startVoice} disabled={disabled} aria-label={t('voice.start')} title={t('voice.start')}
+                  className="btn btn-primary flex min-h-[54px] w-full items-center justify-between gap-3 rounded-2xl px-4 py-3 text-left">
+                  <span className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15"><Mic size={20} aria-hidden /></span>
+                    <span>
+                      <span className="block text-[15px] font-semibold leading-tight">{t('home.speakCta')}</span>
+                      <span className="block text-xs font-normal text-white/85">{t('home.speakHint')}</span>
+                    </span>
+                  </span>
+                  <span className="rounded-full bg-white/15 px-2.5 py-1 text-xs font-medium">{t('voice.speak')}</span>
+                </button>
+              </div>
+            )}
             <label className="sr-only" htmlFor="composer-input">Describe the appliance issue</label>
-            <textarea id="composer-input" ref={area} maxLength={4000} value={text} onChange={e => setText(e.target.value)} onKeyDown={key} onPaste={paste} autoFocus={autoFocus} rows={compact ? 1 : 2}
+            <textarea id="composer-input" ref={area} maxLength={4000} value={text} onChange={e => setText(e.target.value)} onKeyDown={key} onPaste={paste} autoFocus={autoFocus} rows={compact ? 1 : hero ? 3 : 2}
               placeholder={placeholder ?? (compact ? t('composer.followup') : t('composer.placeholder'))}
               className="block max-h-[200px] w-full resize-none bg-transparent px-3 py-2.5 text-[15px] leading-relaxed text-ink outline-none placeholder:text-ink-3" />
             <div className="flex items-center justify-between gap-2 px-0.5">
-              <div className="relative flex items-center">
+              <div className="relative flex items-center gap-1">
                 <input ref={imgInput} id="attach-images" data-testid="attach-images" type="file" accept={FILE_RULES.acceptImages} multiple hidden onChange={e => pick(e.currentTarget)} />
                 <input ref={docInput} id="attach-docs" data-testid="attach-docs" type="file" accept={FILE_RULES.acceptDocs} multiple hidden onChange={e => pick(e.currentTarget)} />
                 <button ref={plusRef} type="button" aria-label="Add photos, documents or camera" aria-haspopup="menu" aria-expanded={menu} title="Attach photos, PDFs or documents, or use the camera"
-                  onClick={() => setMenu(m => !m)} className={`flex h-9 w-9 items-center justify-center rounded-full transition-all ${menu ? 'rotate-45 bg-surface-3 text-ink' : 'text-ink-2 hover:bg-surface-2 hover:text-ink'}`}>
-                  <Plus size={20} strokeWidth={2.2} />
+                  onClick={() => setMenu(m => !m)} className={`flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-all ${menu ? 'bg-surface-3 text-ink' : 'text-ink-2 hover:bg-surface-2 hover:text-ink'}`}>
+                  <Plus size={19} strokeWidth={2.2} className={menu ? 'rotate-45 transition-transform' : 'transition-transform'} />
+                  {hero && <span>Photo / PDF</span>}
                 </button>
                 <AnimatePresence>
                   {menu && (
                     <motion.div ref={menuRef} role="menu" aria-label="Attach" initial={{ opacity: 0, y: 6, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 6, scale: 0.97 }} transition={{ duration: 0.14 }}
-                      className="popover absolute bottom-11 left-0 z-30 w-[min(18rem,calc(100vw-3rem))] p-1.5">
+                      className="popover absolute bottom-12 left-0 z-30 w-[min(18rem,calc(100vw-3rem))] p-1.5">
                       <button role="menuitem" type="button" onClick={() => choose('images')} className={item}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal/12 text-teal"><ImagePlus size={18} /></span><span><span className="block font-medium">Photos and images</span><span className="block text-xs text-ink-3">JPG, PNG, WebP · several at once</span></span></button>
                       <button role="menuitem" type="button" onClick={() => choose('docs')} className={item}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-crit/12 text-crit"><FileText size={18} /></span><span><span className="block font-medium">PDF or document</span><span className="block text-xs text-ink-3">PDF, Word (.docx), TXT, CSV · up to 15 MB</span></span></button>
                       <button role="menuitem" type="button" onClick={() => choose('camera')} className={item}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue/12 text-blue"><Camera size={18} /></span><span><span className="block font-medium">Take a photo</span><span className="block text-xs text-ink-3">Use your device camera</span></span></button>
@@ -211,10 +227,13 @@ export function Composer({ onSend, disabled, autoFocus, compact, placeholder }: 
               </div>
               <div className="flex items-center gap-1">
                 <SpeakerToggle />
-                <button type="button" onClick={startVoice} disabled={disabled} aria-label={t('voice.start')} title={t('voice.start')}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"><Mic size={18} /></button>
-                <button type="submit" disabled={!canSend} aria-label="Send" className="ml-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-ink text-bg transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-ink-3">
+                {!hero && (
+                  <button type="button" onClick={startVoice} disabled={disabled} aria-label={t('voice.start')} title={t('voice.start')}
+                    className="flex h-11 w-11 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-40"><Mic size={19} /></button>
+                )}
+                <button type="submit" disabled={!canSend} aria-label="Send" className="ml-0.5 flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full bg-ink px-3 text-bg transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-ink-3">
                   {disabled && (text.trim() || files.length) ? <Loader2 size={17} className="animate-spin" /> : <ArrowUp size={18} strokeWidth={2.4} />}
+                  {hero && <span className="text-xs font-semibold">{t('chat.send')}</span>}
                 </button>
               </div>
             </div>

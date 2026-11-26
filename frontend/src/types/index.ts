@@ -118,6 +118,7 @@ export interface Report { id: string; reference: string; session_id: string; ses
 
 export interface Overview {
   total_sessions: number; completed: number; active: number; escalated: number; open_escalations: number
+  funnel?: { sessions: number; diagnosed: number; isolated: number; fixed_first_time: number }
   first_time_fix_rate: number | null; first_time_fix_sample: number; avg_repair_minutes: number | null; avg_rating: number | null; ratings_count: number
   guidance_correct_rate: number | null; answers_rated: number; answers_helpful: number; answer_helpful_rate: number | null; avg_ai_latency_ms: number | null; ai_cost_per_repair: number | null; ai_cost_note: string
 }

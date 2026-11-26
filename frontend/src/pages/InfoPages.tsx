@@ -16,7 +16,7 @@ export function SavedDiagnoses() {
       <PageHeader eyebrow="Workspace" title="Saved diagnoses" subtitle="AI diagnoses from your repair sessions." />
       {loading && <Skeleton className="h-40" />}
       {error && <ErrorState message={error} onRetry={retry} />}
-      {data && data.length === 0 && <EmptyState icon={<Bookmark size={22} />} title="No diagnoses yet" hint="Run a diagnosis inside a repair session." />}
+      {data && data.length === 0 && <EmptyState icon={<Bookmark size={22} />} title="No diagnoses yet" hint="Run a diagnosis inside a repair session." action={<Link to="/" className="btn btn-primary">Start a repair</Link>} />}
       {data && data.length > 0 && (
         <ul className="card divide-y divide-line/70 overflow-hidden">
           {data.map(d => {
@@ -53,7 +53,7 @@ export function SeniorSupport() {
       <PageHeader eyebrow="Team" title="Senior technician support" subtitle={isManager ? 'Escalations from your team.' : 'Your requests for senior help.'} />
       {loading && <Skeleton className="h-40" />}
       {error && <ErrorState message={error} onRetry={retry} />}
-      {data && data.length === 0 && <EmptyState icon={<HandHelping size={22} />} title="No escalations" hint="Ask a senior technician from inside a repair session." />}
+      {data && data.length === 0 && <EmptyState icon={<HandHelping size={22} />} title="No escalations" hint="Ask a senior technician from inside a repair session." action={<Link to="/history" className="btn btn-primary">View active repairs</Link>} />}
       <ul className="space-y-2.5">
         {data?.map(e => (
           <li key={e.id} className="card px-5 py-4">

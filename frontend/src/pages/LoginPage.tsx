@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 import { Emblem, Wordmark } from '../components/common/Logo'
 import { LockDemo } from '../components/repair/LockDemo'
 import { useAuth } from '../context/AuthContext'
@@ -16,6 +16,14 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false)
   const [showPw, setShowPw] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [wakingServer, setWakingServer] = useState(false)
+
+  useEffect(() => {
+    let live = true
+    const slow = setTimeout(() => { if (live) setWakingServer(true) }, 1400)
+    fetch('/health').catch(() => undefined).finally(() => { clearTimeout(slow); if (live) setWakingServer(false) })
+    return () => { live = false; clearTimeout(slow) }
+  }, [])
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null)
     try {
@@ -51,9 +59,23 @@ export default function LoginPage() {
         <p className="relative text-xs text-ink-3">Built on Google Gemini by Team Tensor Trailblazers, BMS College of Engineering</p>
       </aside>
 
-      <main className="flex items-center justify-center px-5 py-10">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-[400px]">
-          <div className="mb-8 flex flex-col items-center gap-3 lg:hidden"><Emblem height={64} /><Wordmark height={24} /><p className="text-sm text-ink-2">AI repair copilot for field technicians</p></div>
+      <main className="flex items-center justify-center px-5 py-8">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="w-full max-w-[420px]">
+          <div className="mb-6 flex flex-col items-center gap-2.5 text-center lg:hidden">
+            <Emblem height={54} />
+            <Wordmark height={22} />
+            <p className="text-sm font-medium text-ink-2">The repair copilot that won&apos;t let you open a live appliance.</p>
+            <div className="mt-1 grid w-full grid-cols-3 gap-2 rounded-xl border border-line bg-surface p-2.5 text-center">
+              <div><span className="num font-display block text-base">94.4%</span><span className="text-[11px] text-ink-3">Top-1 match</span></div>
+              <div><span className="num font-display block text-base">12/12</span><span className="text-[11px] text-ink-3">Unsafe locked</span></div>
+              <div><span className="num font-display block text-base">377</span><span className="text-[11px] text-ink-3">Repair records</span></div>
+            </div>
+          </div>
+          {wakingServer && (
+            <p role="status" className="mb-4 flex items-center gap-2 rounded-xl border border-accent/35 bg-accent/10 px-3.5 py-2.5 text-xs text-ink-2">
+              <Loader2 size={14} className="shrink-0 animate-spin text-accent" />Waking up the server… sign-in will be ready in a few seconds.
+            </p>
+          )}
           <div className="card card-pad !p-7 shadow-[var(--shadow-lift)]">
             <form onSubmit={submit} className="space-y-4">
               <div>
@@ -85,7 +107,7 @@ export default function LoginPage() {
               </button>
             </form>
           </div>
-          <p className="mt-6 text-center text-xs text-ink-3">AI suggestions are estimates. Always verify isolation with your own tester.</p>
+          <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-ink-3"><ShieldCheck size={13} className="shrink-0 text-accent" aria-hidden />AI suggestions are estimates. Always verify isolation with your own tester.</p>
         </motion.div>
       </main>
     </div>

@@ -34,14 +34,18 @@ def test_feedback_and_escalation(client, tech, session_id):
     assert client.get(f'/api/v1/sessions/{session_id}', headers=tech['h']).json()['status'] == 'active'
 
 
-def test_dashboard_real_data_and_roles(client, tech, session_id):
+def test_dashboard_real_data_and_roles(client, tech, session_id, fake):
     assert client.get('/api/v1/dashboard/overview', headers=tech['h']).status_code == 403
     m = register(client, org='Acme Service'); make_role(m['user']['id'], 'manager')
     o = client.get('/api/v1/dashboard/overview', headers=m['h']).json()
     assert o['total_sessions'] == 1 and o['active'] == 1 and o['first_time_fix_rate'] is None and o['ai_cost_per_repair'] is None
+    assert o['funnel'] == {'sessions': 1, 'diagnosed': 0, 'isolated': 0, 'fixed_first_time': 0}
+    client.post(f'/api/v1/sessions/{session_id}/diagnose', headers=tech['h'])
+    client.post(f'/api/v1/sessions/{session_id}/safety/confirm', json={'power_off_confirmed': True, 'tester_checked': True}, headers=tech['h'])
     client.post(f'/api/v1/sessions/{session_id}/reports', json={'outcome': 'resolved', 'first_time_fix': True}, headers=tech['h'])
     o = client.get('/api/v1/dashboard/overview', headers=m['h']).json()
     assert o['completed'] == 1 and o['first_time_fix_rate'] == 1.0 and o['first_time_fix_sample'] == 1
+    assert o['funnel'] == {'sessions': 1, 'diagnosed': 1, 'isolated': 1, 'fixed_first_time': 1}
     t = client.get('/api/v1/dashboard/repairs', headers=m['h']).json()
     assert len(t) == 7 and sum(x['sessions'] for x in t) == 1
     assert client.get('/api/v1/dashboard/technicians', headers=m['h']).json()[0]['sessions'] == 1

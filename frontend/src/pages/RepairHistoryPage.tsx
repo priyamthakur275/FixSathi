@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { ChevronRight, History, Search } from 'lucide-react'
-import { EmptyState, ErrorState, PageHeader, Skeleton, StatusPill } from '../components/common/ui'
+import { DemoBadge, EmptyState, ErrorState, PageHeader, Skeleton, StatusPill } from '../components/common/ui'
 import { historyService } from '../services'
 import { useAsync } from '../hooks/useAsync'
+import { useAuth } from '../context/AuthContext'
 import { when } from '../utils/when'
 
 export default function RepairHistoryPage({ mine = false }: { mine?: boolean }) {
+  const { user } = useAuth()
+  const isManager = user?.role === 'manager' || user?.role === 'admin'
   const { data, loading, error, retry } = useAsync(() => historyService.list(mine), [mine])
   const [q, setQ] = useState('')
   const nav = useNavigate()
@@ -14,10 +17,10 @@ export default function RepairHistoryPage({ mine = false }: { mine?: boolean }) 
     const t = q.trim().toLowerCase()
     return (data?.items ?? []).filter(r => !t || [r.title, r.reference, r.appliance_label, r.technician_name ?? ''].some(v => v.toLowerCase().includes(t)))
   }, [data, q])
-  const tab = ({ isActive }: { isActive: boolean }) => `rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-surface-3 text-ink shadow-[inset_0_0_0_1px_var(--color-line-2)]' : 'text-ink-2 hover:text-ink'}`
+  const tab = ({ isActive }: { isActive: boolean }) => `min-h-[44px] inline-flex items-center rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${isActive ? 'bg-surface-3 text-ink shadow-[inset_0_0_0_1px_var(--color-line-2)]' : 'text-ink-2 hover:text-ink'}`
   return (
     <div className="page">
-      <PageHeader eyebrow="Workspace" title={mine ? 'My repairs' : 'Repair history'} subtitle={mine ? 'Repairs that are still open or escalated.' : 'Repair sessions you are allowed to see.'}
+      <PageHeader eyebrow="Workspace" title={mine ? 'My repairs' : isManager ? 'Team repairs' : 'Repair history'} subtitle={mine ? 'Repairs that are still open or escalated.' : 'Repair sessions you are allowed to see.'}
         right={<div className="flex rounded-xl border border-line bg-surface/60 p-1"><NavLink to="/history" className={tab}>All</NavLink><NavLink to="/repairs" className={tab}>Open</NavLink></div>} />
       {data && data.items.length > 0 && (
         <div className="relative mb-4 max-w-sm">
@@ -41,7 +44,7 @@ export default function RepairHistoryPage({ mine = false }: { mine?: boolean }) 
                   <td className="px-4 py-3.5 num text-xs text-ink-2"><Link className="hover:text-teal" to={`/session/${r.id}`}>{r.reference}</Link></td>
                   <td className="whitespace-nowrap px-4 py-3.5 text-ink-2">{when(r.started_at)}</td>
                   <td className="px-4 py-3.5 text-ink-2">{r.technician_name}</td>
-                  <td className="max-w-[280px] truncate px-4 py-3.5 text-ink-2" title={r.title}>{r.title}</td>
+                  <td className="max-w-[280px] truncate px-4 py-3.5 text-ink-2" title={r.title}><span className="inline-flex items-center gap-2">{r.title}{r.demo && <DemoBadge>Demo</DemoBadge>}</span></td>
                   <td className="px-4 py-3.5"><StatusPill status={r.status} /></td>
                   <td className="px-4 py-3.5 text-right">{r.report_id ? <Link to={`/reports/${r.report_id}`} className="inline-flex items-center gap-1 font-medium text-teal hover:underline">Report<ChevronRight size={14} /></Link> : <Link to={`/session/${r.id}`} className="inline-flex items-center gap-1 font-medium text-teal hover:underline">Open<ChevronRight size={14} /></Link>}</td>
                 </tr>

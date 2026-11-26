@@ -5,6 +5,8 @@ import { AppProvider } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { PrefsProvider } from './context/PrefsContext'
 import { AppLayout } from './components/sidebar/AppLayout'
+import { Emblem } from './components/common/Logo'
+import { Skeleton } from './components/common/ui'
 import WelcomePage from './pages/WelcomePage'
 import LoginPage from './pages/LoginPage'
 import ChatPage from './pages/ChatPage'
@@ -45,9 +47,16 @@ function Protected({ children }: { children: ReactNode }) {
   const { user, loading, waking } = useAuth()
   const loc = useLocation()
   if (loading) return (
-    <div className="flex h-dvh flex-col items-center justify-center gap-3 px-6 text-center text-ink-2" role="status" aria-live="polite">
+    <div className="flex h-dvh flex-col items-center justify-center gap-4 px-6 text-center text-ink-2" role="status" aria-live="polite">
+      <Emblem height={44} />
       <Loader2 className="animate-spin text-accent" />
-      {waking && <><p className="font-medium text-ink">Waking up the server...</p><p className="max-w-xs text-sm">The free server sleeps when idle and takes up to a minute to start. You stay signed in.</p></>}
+      {waking ? (
+        <div className="w-full max-w-xs space-y-2.5">
+          <p className="font-semibold text-ink">Waking up the server…</p>
+          <p className="text-sm">The free server sleeps when idle and takes up to a minute to start. You stay signed in.</p>
+          <Skeleton className="h-10 w-full" />
+        </div>
+      ) : <p className="text-sm text-ink-3">Loading your workspace…</p>}
     </div>
   )
   if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname + loc.search }} />
