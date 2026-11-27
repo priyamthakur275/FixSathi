@@ -154,7 +154,7 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
 
         sess = await client.post(
             '/api/v1/sessions',
-            json={'appliance_type': 'split_ac', 'issue_description': 'LG split AC showing CH38 and not cooling'},
+            json={'appliance_type': 'ceiling_fan', 'issue_description': 'Ceiling fan hums and runs slow'},
             headers=headers,
         )
         if sess.status_code != 201:
@@ -163,16 +163,17 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
         sid = sess.json()['id']
         _step('Create repair session', True, sid)
 
+        np_sid = None
         try:
             # (a) Real streamed chat reply (and verify locked safety withholding on capacitor step)
             locked_prompt = (
-                'My LG inverter split AC shows CH38. Give numbered step-by-step repair instructions '
-                'to test the outdoor run capacitor with a multimeter and discharge or replace it.'
+                'My ceiling fan hums and runs slow. Give numbered repair steps to remove the canopy cover, '
+                'disconnect the capacitor wiring, and measure capacitor capacitance with a multimeter.'
             )
             deltas, done = await _stream_chat(client, headers, sid, locked_prompt)
             streamed_text = ''.join(deltas)
             msg = done.get('assistant_message') or {}
-            saved_text = msg.get('content', '')
+            saved_text = msg.get('message', '')
             withheld_count = (msg.get('meta') or {}).get('safety_withheld', 0)
             stream_ok = bool(deltas) and bool(saved_text) and streamed_text == saved_text
             _step('(a) SSE streamed reply arrived (locked session)', stream_ok, f'{len(deltas)} deltas, {len(saved_text)} chars')
@@ -190,40 +191,50 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
                 print('       ', streamed_text[:280].replace('\n', ' '))
                 failures += 1
 
-            # (b) Gemini Vision nameplate & error display extraction
-            with open(image_path, 'rb') as fh:
-                up = await client.post(
-                    f'/api/v1/sessions/{sid}/files?source=capture',
-                    files={'file': (image_path.name, fh.read(), 'image/png')},
-                    headers=headers,
-                )
-            if up.status_code != 201:
-                _step('(b) Upload nameplate image', False, f'HTTP {up.status_code}: {up.text[:200]}')
+            # (b) Gemini Vision nameplate & error display extraction on a split AC session
+            np_sess = await client.post(
+                '/api/v1/sessions',
+                json={'appliance_type': 'unknown', 'issue_description': 'Split AC not cooling, reading nameplate and LED code'},
+                headers=headers,
+            )
+            if np_sess.status_code != 201:
+                _step('(b) Create nameplate session', False, f'HTTP {np_sess.status_code}: {np_sess.text[:200]}')
                 failures += 1
             else:
-                mid = up.json()['id']
-                np_res = await client.post(
-                    f'/api/v1/sessions/{sid}/read-nameplate',
-                    json={'media_id': mid},
-                    headers=headers,
-                    timeout=90.0,
-                )
-                if np_res.status_code != 200:
-                    _step('(b) Gemini Vision read-nameplate', False, f'HTTP {np_res.status_code}: {np_res.text[:200]}')
+                np_sid = np_sess.json()['id']
+                with open(image_path, 'rb') as fh:
+                    up = await client.post(
+                        f'/api/v1/sessions/{np_sid}/files?source=capture',
+                        files={'file': (image_path.name, fh.read(), 'image/png')},
+                        headers=headers,
+                    )
+                if up.status_code != 201:
+                    _step('(b) Upload nameplate image', False, f'HTTP {up.status_code}: {up.text[:200]}')
                     failures += 1
                 else:
-                    np_data = np_res.json()
-                    ex = np_data.get('extracted') or {}
-                    ret = np_data.get('retrieval') or {}
-                    ok_np = np_data.get('status') == 'ok' and bool(ex.get('brand') or ex.get('model') or ex.get('error_code'))
-                    _step(
-                        '(b) Gemini Vision read-nameplate',
-                        ok_np,
-                        f"status={np_data.get('status')} brand={ex.get('brand')} model={ex.get('model')} error_code={ex.get('error_code')} hits={len(ret.get('hits') or [])}",
+                    mid = up.json()['id']
+                    np_res = await client.post(
+                        f'/api/v1/sessions/{np_sid}/read-nameplate',
+                        json={'media_id': mid},
+                        headers=headers,
+                        timeout=90.0,
                     )
-                    if not ok_np:
-                        print('        ai_error:', np_data.get('ai_error'))
+                    if np_res.status_code != 200:
+                        _step('(b) Gemini Vision read-nameplate', False, f'HTTP {np_res.status_code}: {np_res.text[:200]}')
                         failures += 1
+                    else:
+                        np_data = np_res.json()
+                        ex = np_data.get('extracted') or {}
+                        ret = np_data.get('retrieval') or {}
+                        ok_np = np_data.get('status') == 'ok' and bool(ex.get('brand') or ex.get('model') or ex.get('error_code'))
+                        _step(
+                            '(b) Gemini Vision read-nameplate',
+                            ok_np,
+                            f"status={np_data.get('status')} brand={ex.get('brand')} model={ex.get('model')} error_code={ex.get('error_code')} hits={len(ret.get('hits') or [])}",
+                        )
+                        if not ok_np:
+                            print('        ai_error:', np_data.get('ai_error'))
+                            failures += 1
 
             # (c2) Record both technician safety statements -> confirm power-sensitive steps appear via stream
             conf = await client.post(
@@ -237,14 +248,15 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
                 failures += 1
 
             unlocked_prompt = (
-                'Power is isolated and verified with my tester. Now give the exact numbered steps '
-                'to safely check and test the outdoor run capacitor and PCB terminals.'
+                'Power is isolated at the MCB and verified with my tester. Now give the numbered repair steps '
+                'to remove the ceiling fan canopy cover, disconnect the capacitor leads, test it, and fit a new one.'
             )
             deltas2, done2 = await _stream_chat(client, headers, sid, unlocked_prompt)
             streamed2 = ''.join(deltas2)
             msg2 = done2.get('assistant_message') or {}
+            saved2 = msg2.get('message', '')
             withheld2 = (msg2.get('meta') or {}).get('safety_withheld', 0)
-            unlocked_ok = bool(deltas2) and withheld2 == 0 and WITHHELD_MARK not in streamed2
+            unlocked_ok = bool(deltas2) and bool(saved2) and streamed2 == saved2 and withheld2 == 0 and WITHHELD_MARK not in streamed2
             _step(
                 '(c2) Power-sensitive steps stream when unlocked',
                 unlocked_ok,
@@ -254,6 +266,8 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
                 failures += 1
         finally:
             await client.delete(f'/api/v1/sessions/{sid}', headers=headers)
+            if np_sid:
+                await client.delete(f'/api/v1/sessions/{np_sid}', headers=headers)
 
     print('\nSmoke result:', 'ALL PASSED' if failures == 0 else f'{failures} CHECK(S) FAILED')
     return 1 if failures else 0

@@ -117,6 +117,22 @@ flowchart TD
 3. **Screen.** `app/core/power_rules.py` is the single definition of "power-sensitive", shared by repair steps, chat, Live voice and the dataset importer, including Hindi verbs (*khol*, *nikal*, *badal*). `SafetyService.guard` is the only code path that can permit a power-sensitive action, and the AI has no tool that can record a safety statement. Every blocked attempt is logged.
 4. **Fail safely.** Every Gemini failure is classified (bad key, quota, timeout, blocked...) and shown with a fix; the technician's message is saved either way. Rate limits fall back to the next model. Live audio that cannot be screened is not played.
 
+## Gemini usage
+
+Default configuration (verified live via `scripts/check_gemini.py --call --live` and `scripts/smoke_live.py` with no mocks):
+
+| Role | Configured model | Fallback / notes |
+|---|---|---|
+| Chat, SSE streaming, structured diagnosis & repair steps (`GEMINI_AGENT_MODEL`) | `gemini-4-hydrogen` | `gemini-3.5-flash-lite, gemini-3.1-flash-lite` (`GEMINI_AGENT_FALLBACK_MODELS`; fast ~1.1s fallback on timeout/overload; `gemini-4-argon`, `gemini-4-carbon`, and `gemini-4-neon` returned quota-0 `429` on our key tier) |
+| Vision & nameplate / LED error-code reading | `gemini-4-hydrogen` | `gemini-3.5-flash-lite` fallback; extracts brand, model & error code into retrieval |
+| Response safety screening | Server-side `StreamScreener` + `power_rules.py` | Runs deterministically on every streamed sentence before it reaches the client; optional fallback models above handle fast JSON/text duties |
+| Knowledge & session embeddings (`GEMINI_EMBED_MODEL`) | `gemini-embedding-2` | 3072-dim hybrid retrieval alongside PostgreSQL full-text search |
+| Real-time voice & video relay (`GEMINI_LIVE_MODEL`) | `gemini-3.8-live` | Bidirectional WebSocket via `v1beta` (`raw_beta`); tool calls guarded on server |
+| Spoken replies (`GEMINI_TTS_MODEL`) | `gemini-3.8-flash-tts` | Prebuilt `Charon` voice on `v1beta` (`gemini-2.5-flash-preview-tts` also supported); device browser voice fallback |
+| Step illustrations (`NANO_BANANA_MODEL`) | `gemini-3.1-flash-image` | Generates flat safety-first step diagrams on demand |
+
+Scripted demo scenarios are no longer placed in the primary workspace navigation and live solely behind the clearly labelled **Offline backup** footer link (`/demo`).
+
 ## Engineering
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.

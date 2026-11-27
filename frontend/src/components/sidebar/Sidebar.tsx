@@ -128,7 +128,7 @@ function ProfileMenu({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
   )
 }
 
-/** The rest of the app, one click away: repairs, reports, the team dashboard for managers, and the labelled demos. */
+/** The rest of the app, one click away: repairs, reports, the team dashboard for managers, plus an offline backup link. */
 function WorkspaceLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const t = useT()
   const { user } = useAuth()
@@ -139,23 +139,32 @@ function WorkspaceLinks({ collapsed, onNavigate }: { collapsed: boolean; onNavig
     { to: '/lookup', label: t('nav.lookup'), Icon: FileSearch },
     { to: isManager ? '/history' : '/repairs', label: isManager ? t('nav.teamRepairs') : t('nav.repairs'), Icon: Wrench },
     { to: '/reports', label: t('nav.reports'), Icon: FileText },
-    { to: '/demo', label: t('nav.demo'), Icon: PlayCircle },
   ]
   const cls = ({ isActive }: { isActive: boolean }) => collapsed
     ? `icon-btn ${isActive ? 'bg-surface-2 text-ink' : ''}`
     : `flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] transition-colors hover:bg-surface hover:text-ink ${isActive ? 'bg-surface-2 text-ink' : 'text-ink-2'}`
   return (
-    <nav aria-label={t('nav.workspace')} className={`mt-3 space-y-0.5 border-t border-line pt-3 ${collapsed ? 'flex flex-col items-center' : ''}`}>
-      <button type="button" onClick={() => { onNavigate?.(); openPalette() }} title="Go to (Ctrl K)" aria-label={collapsed ? 'Go to' : undefined}
-        className={collapsed ? 'icon-btn' : 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] text-ink-2 transition-colors hover:bg-surface hover:text-ink'}>
-        <Command size={17} />{!collapsed && <><span className="flex-1 text-left">Go to</span><span className="kbd hidden md:inline-flex">{isMac() ? '⌘' : 'Ctrl'} K</span></>}
-      </button>
-      {links.map(({ to, label, Icon }) => (
-        <NavLink key={to} to={to} onClick={() => { speech.stop(); onNavigate?.() }} title={label} aria-label={collapsed ? label : undefined} className={cls}>
-          <Icon size={17} />{!collapsed && label}
+    <>
+      <nav aria-label={t('nav.workspace')} className={`mt-3 space-y-0.5 border-t border-line pt-3 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <button type="button" onClick={() => { onNavigate?.(); openPalette() }} title="Go to (Ctrl K)" aria-label={collapsed ? 'Go to' : undefined}
+          className={collapsed ? 'icon-btn' : 'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] text-ink-2 transition-colors hover:bg-surface hover:text-ink'}>
+          <Command size={17} />{!collapsed && <><span className="flex-1 text-left">Go to</span><span className="kbd hidden md:inline-flex">{isMac() ? '⌘' : 'Ctrl'} K</span></>}
+        </button>
+        {links.map(({ to, label, Icon }) => (
+          <NavLink key={to} to={to} onClick={() => { speech.stop(); onNavigate?.() }} title={label} aria-label={collapsed ? label : undefined} className={cls}>
+            <Icon size={17} />{!collapsed && label}
+          </NavLink>
+        ))}
+      </nav>
+      <div className={`mt-2 border-t border-line/60 pt-2 ${collapsed ? 'flex justify-center' : ''}`}>
+        <NavLink to="/demo" onClick={() => { speech.stop(); onNavigate?.() }} title={`${t('nav.demo')} (scripted, not live AI)`} aria-label={collapsed ? t('nav.demo') : undefined}
+          className={({ isActive }) => collapsed
+            ? `icon-btn text-ink-3 ${isActive ? 'bg-surface-2 text-ink' : ''}`
+            : `flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-[12px] text-ink-3 transition-colors hover:bg-surface hover:text-ink-2 ${isActive ? 'bg-surface-2 text-ink-2' : ''}`}>
+          <PlayCircle size={14} />{!collapsed && <span>{t('nav.demo')}</span>}
         </NavLink>
-      ))}
-    </nav>
+      </div>
+    </>
   )
 }
 

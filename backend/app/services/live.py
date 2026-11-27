@@ -56,7 +56,7 @@ class LiveContext:
 
 
 def default_connector(model: str, config: types.LiveConnectConfig):
-    return get_gemini().raw.aio.live.connect(model=model, config=config)
+    return get_gemini().raw_beta.aio.live.connect(model=model, config=config)
 
 
 Connector = Callable[[str, types.LiveConnectConfig], Any]
