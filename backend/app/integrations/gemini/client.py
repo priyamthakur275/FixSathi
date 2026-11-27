@@ -194,6 +194,8 @@ class GeminiClient:
                     provider_status=c.provider_status, provider_message=c.provider_message, ms=int((time.perf_counter() - t0) * 1000))
                 LAST_STATUS.update(ok=False, op=op, model=model, code=c.code, hint=c.hint, at=time.time())
                 self._record_failure(model, c.code, c.retry_after)
+                if c.code in QUOTA_CODES:
+                    LAST_429[model] = time.time()
                 if c.code in FAILOVER_CODES and not last_resort:
                     pass  # fall through to raise: a fallback model is available
                 elif c.code == 'QUOTA_EXCEEDED' and (c.retry_after or 0) > QUOTA_RETRY_MAX_WAIT:
@@ -242,6 +244,10 @@ class GeminiClient:
         ready = [m for m in configured if COOLDOWN.get(m, 0) <= now]
         cooling = sorted((m for m in configured if m not in ready), key=lambda m: COOLDOWN[m])
         models = ready + cooling  # cooling models stay as a last resort
+        skipped = [m for m in models if m in SKIP_AFTER_429_MODELS and now - LAST_429.get(m, 0.0) < SKIP_AFTER_429_SECONDS]
+        if skipped and len(skipped) < len(models):
+            models = [m for m in models if m not in skipped]
+            log(logger, 'gemini_models_skipped_recent_429', op=op, models=skipped)
         if cooling:
             log(logger, 'gemini_models_cooling', op=op, skipped=cooling)
         hedge = get_settings().gemini_hedge_seconds if op in HEDGED_OPS else 0
