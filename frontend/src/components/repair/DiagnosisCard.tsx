@@ -16,7 +16,7 @@ const EVIDENCE_LABEL: Record<string, string> = {
 }
 
 const VERIFICATION_LABEL: Record<string, string> = {
-  verified_source: 'Manufacturer / verified source',
+  verified_source: 'Manufacturer documentation',
   technician_reviewed: 'Technician reviewed',
   unverified: 'Sourced record (unverified)',
   synthetic_demo: 'Demo sample',

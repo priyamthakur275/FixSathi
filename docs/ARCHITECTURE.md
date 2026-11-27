@@ -3,14 +3,14 @@
 ```mermaid
 flowchart LR
   subgraph Browser
-    UI[React app] -- REST JSON + multipart --> API
+    UI[React app] -- REST / SSE + multipart --> API
     UI -- WebSocket /api/v1/live/:id --> LIVE
   end
   subgraph FastAPI
     API[REST routers] --> SVC[Services]
     LIVE[Live relay] --> SVC
-    SVC --> SAFE[SafetyService.guard]
-    SVC --> AG[Agents: diagnosis, guidance, part locator, step image]
+    SVC --> SAFE[SafetyService + StreamScreener]
+    SVC --> AG[Agents: chat, nameplate, diagnosis, guidance, part locator, step image]
     SVC --> RET[Retrieval: embeddings or keyword]
     SVC --> ST[Local storage adapter]
   end
@@ -42,7 +42,7 @@ erDiagram
   repair_sessions ||--o| service_reports : has
   repair_sessions ||--o{ feedback : has
   repair_sessions ||--o{ ai_usage : logs
-  repair_knowledge ||--o{ repair_embeddings : indexed_as
+  repair_records ||--o{ repair_embeddings : indexed_as
 ```
 
 ## Session states

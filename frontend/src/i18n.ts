@@ -38,7 +38,7 @@ const en = {
   'voice.err.unsupported': 'Voice input needs Chrome, Edge or Safari.', 'voice.err.mic-denied': 'Microphone permission was denied. Allow it in your browser settings and try again.',
   'voice.err.no-mic': 'No microphone was found, or another app is using it.', 'voice.err.network': 'Speech recognition needs an internet connection.',
   'voice.err.empty': 'I did not catch that. Tap the microphone and try again.',
-  'settings.title': 'Settings', 'settings.language': 'Language', 'settings.languageHint': 'Menus and FixSaathi’s replies use this language. Typing in Hinglish always works.',
+  'settings.title': 'Settings', 'settings.language': 'Language', 'settings.languageHint': 'Menus and FixSaathi’s replies use this language. Typing in Hinglish is also supported.',
   'settings.appearance': 'Appearance', 'settings.dark': 'Dark', 'settings.light': 'Light', 'settings.sunlight': 'Sunlight', 'settings.sunlightHint': 'High contrast and larger text for bright outdoor work.', 'settings.system': 'System',
   'settings.hindiFirst': 'Hindi-first greeting on Home', 'settings.hindiFirstHint': 'Show a Hindi greeting on the home screen even when menus are in English.',
   'settings.voiceDiagnostics': 'Voice diagnostics',

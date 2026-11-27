@@ -72,7 +72,6 @@
 
 :root, :root[data-theme=dark] {
   color-scheme: dark;
-  --fs-gradient: linear-gradient(120deg, #4c8fd6 0%, #5b8ef0 100%);
   --fs-accent: linear-gradient(135deg, #3f7fe8 0%, #2a6ec4 100%);
   --fs-stage: var(--color-bg);
   --fs-card: var(--color-surface);
@@ -107,7 +106,6 @@
   --shadow-card: 0 1px 2px 0 rgb(14 21 32 / 0.05), 0 0 0 1px rgb(14 21 32 / 0.01);
   --shadow-lift: 0 14px 34px -20px rgb(14 21 32 / 0.28), 0 1px 2px 0 rgb(14 21 32 / 0.05);
   --shadow-pop: 0 24px 56px -22px rgb(14 21 32 / 0.35), 0 0 0 1px rgb(14 21 32 / 0.04);
-  --fs-gradient: linear-gradient(120deg, #1d5fa7 0%, #2f6fdf 100%);
   --fs-accent: linear-gradient(135deg, #2f6fdf 0%, #1d5fa7 100%);
   --fs-field: var(--color-surface);
   --fs-scroll: #c9d1dc;
@@ -142,7 +140,6 @@
   --shadow-card: 0 0 0 1px #111827;
   --shadow-lift: 0 4px 12px rgb(0 0 0 / 0.18), 0 0 0 1.5px #111827;
   --shadow-pop: 0 12px 28px rgb(0 0 0 / 0.25), 0 0 0 2px #111827;
-  --fs-gradient: linear-gradient(120deg, #0b4ec9 0%, #08589c 100%);
   --fs-accent: linear-gradient(135deg, #0b4ec9 0%, #08589c 100%);
   --fs-field: #ffffff;
   --fs-scroll: #4b5563;

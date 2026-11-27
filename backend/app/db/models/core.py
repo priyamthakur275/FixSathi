@@ -190,19 +190,6 @@ class AIUsage(IdMixin, CreatedMixin, Base):
     error_code: Mapped[str | None] = mapped_column(String(40))
 
 
-class RepairKnowledge(IdMixin, CreatedMixin, Base):
-    __tablename__ = 'repair_knowledge'
-    key: Mapped[str] = mapped_column(String(80), unique=True)
-    appliance_type: Mapped[str] = mapped_column(String(40), index=True)
-    fault_category: Mapped[str] = mapped_column(String(80))
-    symptoms: Mapped[list] = mapped_column(JSONType, default=list)
-    possible_causes: Mapped[list] = mapped_column(JSONType, default=list)
-    troubleshooting_steps: Mapped[list] = mapped_column(JSONType, default=list)
-    safety_requirements: Mapped[list] = mapped_column(JSONType, default=list)
-    escalation_conditions: Mapped[list] = mapped_column(JSONType, default=list)
-    meta: Mapped[dict] = mapped_column('metadata', JSONType, default=dict)
-
-
 class RepairEmbedding(IdMixin, CreatedMixin, Base):
     """Portable vector store: vectors kept as JSON arrays, compared in application code.
     On AlloyDB, migrate this column to `vector(n)` with a ScaNN index once the extension is verified there."""
