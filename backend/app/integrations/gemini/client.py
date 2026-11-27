@@ -35,6 +35,17 @@ FAILOVER_CODES = ('QUOTA_EXCEEDED', 'BILLING_REQUIRED', 'MODEL_NOT_FOUND', 'SCHE
 # whichever answers first is used. Live log 21 Nov: the same prompt took 11 s to 60 s on Google's side, and a single slow
 # attempt plus its retry kept "Writing the answer" on screen for 90 s. JSON outputs (diagnosis, guidance) are never hedged.
 HEDGED_OPS = ('chat',)
+# Streaming chat only: the first two models get one retry after a 503 or timeout, with 400-800 ms jitter, before moving on.
+STREAM_RETRY_CODES = frozenset({'PROVIDER_UNAVAILABLE', 'AI_TIMEOUT'})
+STREAM_RETRY_JITTER = (0.4, 0.8)
+STREAM_RETRY_MODELS = 2
+# Models with no quota on the current key (live 27 Nov: gemini-4-neon always 429) are skipped for 5 minutes after a 429,
+# so their rate-limit message no longer replaces the real error from the other models.
+SKIP_AFTER_429_MODELS = frozenset({'gemini-4-neon'})
+SKIP_AFTER_429_SECONDS = 300.0
+QUOTA_CODES = frozenset({'QUOTA_EXCEEDED', 'BILLING_REQUIRED'})
+LAST_429: dict[str, float] = {}
+GEMINI_BUSY_MESSAGE = "Google's Gemini service is busy right now. Please press Retry in a few seconds."
 TEXT_OUTPUT_CAP = {'chat': 2048}  # output tokens, thinking included; chat answers are a few short paragraphs
 MODEL_SETTINGS = {'agent': 'gemini_agent_model', 'live': 'gemini_live_model', 'embed': 'gemini_embed_model', 'image': 'nano_banana_model', 'tts': 'gemini_tts_model'}
 # Prebuilt Gemini TTS voices offered in Settings: each was generated and measured (21-22 Nov; docs/VOICE.md).
@@ -319,53 +330,72 @@ class GeminiClient:
         ready = [m for m in configured if COOLDOWN.get(m, 0) <= now]
         cooling = sorted((m for m in configured if m not in ready), key=lambda m: COOLDOWN[m])
         models = ready + cooling
+        skipped = [m for m in models if m in SKIP_AFTER_429_MODELS and now - LAST_429.get(m, 0.0) < SKIP_AFTER_429_SECONDS]
+        if skipped and len(skipped) < len(models):
+            models = [m for m in models if m not in skipped]
+            log(logger, 'gemini_models_skipped_recent_429', op=op, models=skipped)
         cap = TEXT_OUTPUT_CAP.get(op)
         kw = dict(system_instruction=system, temperature=temperature, **({'max_output_tokens': cap} if cap else {}))
         timeout_s = self._op_timeout(op)
         last: Exception | None = None
+        failures: list[tuple[str, str]] = []
         for i, model in enumerate(models):
-            t0 = time.perf_counter()
-            sent_any = False
-            in_tok = out_tok = None
-            try:
-                stream = await asyncio.wait_for(
-                    self.raw.aio.models.generate_content_stream(model=model, contents=contents, config=self._cfg(**kw)),
-                    timeout=timeout_s,
-                )
-                async for chunk in stream:
-                    um = getattr(chunk, 'usage_metadata', None)
-                    if um is not None:
-                        in_tok = getattr(um, 'prompt_token_count', in_tok)
-                        out_tok = getattr(um, 'candidates_token_count', out_tok)
-                    txt = getattr(chunk, 'text', None) or ''
-                    if txt:
-                        sent_any = True
-                        yield txt, None
-                if not sent_any:
-                    raise AIError('The AI model returned an empty response.', code='AI_EMPTY', details={'op': op})
-                ms = int((time.perf_counter() - t0) * 1000)
-                meta = CallResult(model=model, latency_ms=ms, input_tokens=in_tok, output_tokens=out_tok)
-                log(logger, 'gemini_call', op=op, model=model, ms=ms, attempt=0, stream=True, input_tokens=in_tok, output_tokens=out_tok)
-                LAST_STATUS.update(ok=True, op=op, model=model, code=None, at=time.time())
-                self._record_success(model)
-                if model != configured[0]:
-                    log(logger, 'gemini_fallback_used', logging.WARNING, op=op, primary=configured[0], used=model)
-                yield '', meta
-                return
-            except Exception as e:  # noqa: BLE001
-                if isinstance(e, AIError) and e.code == 'AI_EMPTY' and i == len(models) - 1:
-                    raise
-                c = classify(e, model)
-                log(logger, 'gemini_call_failed', logging.WARNING, op=op, model=model, error_code=c.code, stream=True,
-                    provider_http=c.provider_http, provider_status=c.provider_status, provider_message=c.provider_message,
-                    ms=int((time.perf_counter() - t0) * 1000))
-                LAST_STATUS.update(ok=False, op=op, model=model, code=c.code, hint=c.hint, at=time.time())
-                self._record_failure(model, c.code, c.retry_after)
-                err_cls = AIUnavailable if c.http_status == 503 else AIError
-                last = err_cls(c.message, code=c.code, status=c.http_status, details=c.details(model))
-                if not sent_any and c.code in FAILOVER_CODES and i < len(models) - 1:
-                    continue
-                raise last from e
+            attempts = 2 if i < STREAM_RETRY_MODELS else 1
+            for attempt in range(attempts):
+                t0 = time.perf_counter()
+                sent_any = False
+                in_tok = out_tok = None
+                try:
+                    stream = await asyncio.wait_for(
+                        self.raw.aio.models.generate_content_stream(model=model, contents=contents, config=self._cfg(**kw)),
+                        timeout=timeout_s,
+                    )
+                    async for chunk in stream:
+                        um = getattr(chunk, 'usage_metadata', None)
+                        if um is not None:
+                            in_tok = getattr(um, 'prompt_token_count', in_tok)
+                            out_tok = getattr(um, 'candidates_token_count', out_tok)
+                        txt = getattr(chunk, 'text', None) or ''
+                        if txt:
+                            sent_any = True
+                            yield txt, None
+                    if not sent_any:
+                        raise AIError('The AI model returned an empty response.', code='AI_EMPTY', details={'op': op})
+                    ms = int((time.perf_counter() - t0) * 1000)
+                    meta = CallResult(model=model, latency_ms=ms, input_tokens=in_tok, output_tokens=out_tok)
+                    log(logger, 'gemini_call', op=op, model=model, ms=ms, attempt=attempt, stream=True, input_tokens=in_tok, output_tokens=out_tok)
+                    LAST_STATUS.update(ok=True, op=op, model=model, code=None, at=time.time())
+                    self._record_success(model)
+                    if model != configured[0]:
+                        log(logger, 'gemini_fallback_used', logging.WARNING, op=op, primary=configured[0], used=model)
+                    yield '', meta
+                    return
+                except Exception as e:  # noqa: BLE001
+                    if isinstance(e, AIError) and e.code == 'AI_EMPTY' and i == len(models) - 1:
+                        raise
+                    c = classify(e, model)
+                    log(logger, 'gemini_call_failed', logging.WARNING, op=op, model=model, error_code=c.code, stream=True, attempt=attempt,
+                        provider_http=c.provider_http, provider_status=c.provider_status, provider_message=c.provider_message,
+                        ms=int((time.perf_counter() - t0) * 1000))
+                    LAST_STATUS.update(ok=False, op=op, model=model, code=c.code, hint=c.hint, at=time.time())
+                    self._record_failure(model, c.code, c.retry_after)
+                    if c.code in QUOTA_CODES:
+                        LAST_429[model] = time.time()
+                    err_cls = AIUnavailable if c.http_status == 503 else AIError
+                    last = err_cls(c.message, code=c.code, status=c.http_status, details=c.details(model))
+                    if sent_any:
+                        raise last from e
+                    failures.append((model, c.code))
+                    if c.code in STREAM_RETRY_CODES and attempt + 1 < attempts:
+                        await asyncio.sleep(random.uniform(*STREAM_RETRY_JITTER))
+                        continue
+                    if c.code in FAILOVER_CODES and i < len(models) - 1:
+                        break  # next model
+                    # A known no-quota model's 429 does not count: the real cause is what the other models answered.
+                    relevant = [code for m, code in failures if not (m in SKIP_AFTER_429_MODELS and code in QUOTA_CODES)]
+                    if relevant and all(code == 'PROVIDER_UNAVAILABLE' for code in relevant):
+                        raise AIUnavailable(GEMINI_BUSY_MESSAGE, code='PROVIDER_UNAVAILABLE', status=503, details=c.details(model)) from e
+                    raise last from e
         if last:  # pragma: no cover
             raise last
 
