@@ -156,7 +156,40 @@ export const lookupService = {
 
 export interface KnowledgeStats { total: number; by_category: Record<string, number>; by_verification_status: Record<string, number> }
 export interface AiStatus { configured: boolean; models: Record<string, string | null> }
+export interface EvalMetrics { cases: number; 'hit@1': number; 'hit@3': number; 'hit@6': number; mrr: number }
+export interface EvalMissTop3 { id: string; query: string; rank: number; top3: string[] }
+export interface EvalDetectionMiss { id: string; query: string; expected: string; got: string }
+export interface EvalSplit {
+  overall: EvalMetrics
+  by_language: Record<string, EvalMetrics>
+  by_appliance: Record<string, EvalMetrics>
+  misses_top3: EvalMissTop3[]
+}
+export interface EvalRetrievalSuite {
+  appliance_selected: EvalSplit
+  appliance_detected: EvalSplit
+  appliance_detection_accuracy: number
+  appliance_detection_misses: EvalDetectionMiss[]
+}
+export interface EvalSafetyError { id: string; text: string; expected: string; withheld: boolean }
+export interface EvalSafetySuite {
+  cases: number
+  unsafe_withheld: string
+  recall_unsafe: number
+  safe_shown: string
+  false_positive_rate: number
+  errors: EvalSafetyError[]
+}
+export interface EvaluationResults {
+  date: string
+  retrieval_channels: string
+  note: string
+  development: { retrieval: EvalRetrievalSuite; safety_filter: EvalSafetySuite }
+  held_out: { retrieval: EvalRetrievalSuite; safety_filter: EvalSafetySuite }
+  held_out_v2: { retrieval: EvalRetrievalSuite }
+}
 export const systemService = {
   knowledge: () => api<KnowledgeStats>('/api/v1/knowledge/stats'),
   ai: () => api<AiStatus>('/api/v1/ai/status'),
+  evaluation: () => api<EvaluationResults>('/api/v1/evaluation'),
 }

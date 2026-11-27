@@ -15,6 +15,7 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
 COPY data/ /app/data/
+COPY docs/EVALUATION_RESULTS.json /app/docs/EVALUATION_RESULTS.json
 COPY --from=web /web/dist /app/web
 RUN useradd -m app && mkdir -p /app/uploads && chown -R app /app
 USER app

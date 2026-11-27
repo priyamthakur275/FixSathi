@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 import { Emblem, Wordmark } from '../components/common/Logo'
@@ -56,6 +56,7 @@ export default function LoginPage() {
             <div><dt className="text-xs text-ink-3">Unsafe steps withheld</dt><dd className="num font-display mt-1 text-[22px]">12 of 12</dd></div>
             <div><dt className="text-xs text-ink-3">Sourced repair records</dt><dd className="num font-display mt-1 text-[22px]">377</dd></div>
           </dl>
+          <p className="mt-3"><Link to="/evaluation" className="text-xs font-medium text-accent hover:underline">View full evaluation results →</Link></p>
         </div>
         <p className="relative text-xs text-ink-3">Built on Google Gemini by Team Tensor Trailblazers, BMS College of Engineering</p>
       </aside>
@@ -71,6 +72,7 @@ export default function LoginPage() {
               <div><span className="num font-display block text-base">12/12</span><span className="text-[11px] text-ink-3">Unsafe locked</span></div>
               <div><span className="num font-display block text-base">377</span><span className="text-[11px] text-ink-3">Repair records</span></div>
             </div>
+            <Link to="/evaluation" className="inline-flex min-h-[44px] items-center text-xs font-medium text-accent hover:underline">View full evaluation results →</Link>
           </div>
           {wakingServer && (
             <p role="status" className="mb-4 flex items-center gap-2 rounded-xl border border-accent/35 bg-accent/10 px-3.5 py-2.5 text-xs text-ink-2">

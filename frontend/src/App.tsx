@@ -16,6 +16,7 @@ const load = {
   session: () => import('./pages/RepairSessionPage'), history: () => import('./pages/RepairHistoryPage'),
   reports: () => import('./pages/ReportsPage'), settings: () => import('./pages/SettingsPage'),
   info: () => import('./pages/InfoPages'), demo: () => import('./pages/DemoPage'), lookup: () => import('./pages/FaultFinderPage'),
+  evaluation: () => import('./pages/EvaluationPage'),
 }
 const RepairSessionPage = lazy(load.session)
 const RepairHistoryPage = lazy(load.history)
@@ -24,6 +25,7 @@ const ReportDetailPage = lazy(() => load.reports().then(m => ({ default: m.Repor
 const SettingsPage = lazy(load.settings)
 const DemoPage = lazy(load.demo)
 const FaultFinderPage = lazy(load.lookup)
+const EvaluationPage = lazy(load.evaluation)
 const SavedDiagnoses = lazy(() => load.info().then(m => ({ default: m.SavedDiagnoses })))
 const SeniorSupport = lazy(() => load.info().then(m => ({ default: m.SeniorSupport })))
 const HelpPage = lazy(() => load.info().then(m => ({ default: m.HelpPage })))
@@ -72,6 +74,7 @@ export default function App() {
             <Suspense fallback={<PageFallback />}>
             <Routes>
               <Route path="login" element={<LoginPage />} />
+              <Route path="evaluation" element={<EvaluationPage />} />
               <Route element={<Protected><AppLayout /></Protected>}>
                 <Route index element={<WelcomePage />} />
                 <Route path="chat" element={<ChatPage />} />

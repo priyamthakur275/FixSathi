@@ -84,7 +84,10 @@ export function HelpPage() {
     <div className="page page-read">
       <PageHeader eyebrow="Support" title="Help and support" subtitle="How FixSaathi works, what it can and cannot do, and how your data is handled." />
       <div className="space-y-2">{faq.map(([q, a]) => <details key={q} className="card group px-5 py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium marker:hidden">{q}<span className="text-ink-3 transition-transform group-open:rotate-45" aria-hidden>+</span></summary><p className="mt-2 text-sm leading-relaxed text-ink-2">{a}</p></details>)}</div>
-      <button onClick={() => { newSession(); nav('/chat') }} className="btn btn-brand mt-6"><MessageSquareText size={16} />Ask the assistant</button>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button onClick={() => { newSession(); nav('/chat') }} className="btn btn-brand"><MessageSquareText size={16} />Ask the assistant</button>
+        <Link to="/evaluation" className="btn">View evaluation results</Link>
+      </div>
     </div>
   )
 }
