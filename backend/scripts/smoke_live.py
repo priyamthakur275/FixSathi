@@ -281,6 +281,48 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
             )
             if not unlocked_ok:
                 failures += 1
+            # (d) Public sample nameplate endpoint check
+            samp = await client.get('/api/v1/samples/nameplate')
+            samp_ok = samp.status_code == 200 and samp.headers.get('content-type', '').startswith('image/png') and samp.content.startswith(b'\x89PNG')
+            _step('GET /api/v1/samples/nameplate', samp_ok, f'HTTP {samp.status_code}, {len(samp.content)} bytes')
+            if not samp_ok:
+                failures += 1
+
+            # (e) Hindi (Devanagari) & Hinglish language matching check
+            hi_uid = uuid.uuid4().hex[:8]
+            hi_reg = await client.post(
+                '/api/v1/auth/register',
+                json={'full_name': 'Hindi Smoke', 'email': f'smoke+hi+{hi_uid}@example.com', 'password': f'SmokePass-{hi_uid}!', 'preferred_language': 'Hindi'},
+            )
+            if hi_reg.status_code != 201:
+                _step('(e) Hindi smoke registration', False, f'HTTP {hi_reg.status_code}')
+                failures += 1
+            else:
+                hi_hdr = {'Authorization': f"Bearer {hi_reg.json()['access_token']}"}
+                hi_sess = await client.post('/api/v1/sessions', json={'appliance_type': 'split_ac', 'issue_description': 'एसी ठंडा नहीं कर रहा CH38'}, headers=hi_hdr)
+                if hi_sess.status_code != 201:
+                    _step('(e) Hindi session create', False, f'HTTP {hi_sess.status_code}')
+                    failures += 1
+                else:
+                    hi_sid = hi_sess.json()['id']
+                    try:
+                        d_hi, dn_hi = await _stream_chat(client, hi_hdr, hi_sid, 'एसी ठंडा नहीं कर रहा, इनडोर यूनिट में CH38 दिख रहा है, पहले क्या चेक करूँ?')
+                        txt_hi = ''.join(d_hi)
+                        has_devanagari = any('\u0900' <= ch <= '\u097f' for ch in txt_hi)
+                        hi_ok = bool(txt_hi) and has_devanagari
+                        _step('(e1) Devanagari Hindi reply', hi_ok, f'{len(txt_hi)} chars, devanagari={has_devanagari}, model={(dn_hi.get("assistant_message") or {}).get("meta", {}).get("model")}')
+                        if not hi_ok:
+                            print('        Hindi reply excerpt:', txt_hi[:200])
+                            failures += 1
+
+                        d_hg, dn_hg = await _stream_chat(client, hi_hdr, hi_sid, 'Ceiling fan slow chal raha hai aur humming aa rahi hai, bina khole kya check karun?')
+                        txt_hg = ''.join(d_hg)
+                        hg_ok = bool(txt_hg)
+                        _step('(e2) Hinglish reply', hg_ok, f'{len(txt_hg)} chars, model={(dn_hg.get("assistant_message") or {}).get("meta", {}).get("model")}')
+                        if not hg_ok:
+                            failures += 1
+                    finally:
+                        await client.delete(f'/api/v1/sessions/{hi_sid}', headers=hi_hdr)
         finally:
             await client.delete(f'/api/v1/sessions/{sid}', headers=headers)
             if np_sid:

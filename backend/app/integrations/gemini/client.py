@@ -3,7 +3,7 @@
 - No silent model substitution: if a model ID is not configured the call raises AIUnavailable.
   Fallbacks happen only through GEMINI_AGENT_FALLBACK_MODELS, which the operator sets explicitly; every switch is logged.
 """
-import asyncio, json, logging, time
+import asyncio, json, logging, random, time
 from typing import Any, TypeVar
 from google import genai
 from google.genai import types
@@ -18,8 +18,13 @@ T = TypeVar('T', bound=BaseModel)
 LAST_STATUS: dict = {'ok': None}
 # Models that just answered quota / billing / not-found are skipped for a while, so every message doesn't wait on them again.
 COOLDOWN: dict[str, float] = {}
+CONSECUTIVE_FAILURES: dict[str, int] = {}
+CIRCUIT_BREAKER_THRESHOLD = 2
+CIRCUIT_BREAKER_SECONDS = 300.0  # 5 minutes after 2 consecutive timeouts or 429s
+CIRCUIT_BREAKER_CODES = frozenset({'QUOTA_EXCEEDED', 'BILLING_REQUIRED', 'AI_TIMEOUT', 'PROVIDER_UNAVAILABLE'})
+MODELS_CHECK_CACHE: dict[str, Any] = {'at': 0.0, 'models': []}
 # A model that is not found stays unavailable (retired or not in the key's tier), so it is skipped for hours, not minutes.
-COOL_CODES = {'QUOTA_EXCEEDED': 60.0, 'BILLING_REQUIRED': 900.0, 'MODEL_NOT_FOUND': 6 * 3600.0, 'PROVIDER_UNAVAILABLE': 30.0}
+COOL_CODES = {'QUOTA_EXCEEDED': 60.0, 'BILLING_REQUIRED': CIRCUIT_BREAKER_SECONDS, 'MODEL_NOT_FOUND': 6 * 3600.0, 'PROVIDER_UNAVAILABLE': 60.0, 'AI_TIMEOUT': 60.0}
 # Models that rejected the full JSON schema (SCHEMA_UNSUPPORTED): later calls send the relaxed schema at once instead of
 # spending a failed call first. Live log 21 Nov: every diagnosis on gemini-3.1-flash-lite cost two calls.
 RELAXED_SCHEMA: set[str] = set()
@@ -131,34 +136,61 @@ class GeminiClient:
             log(logger, 'tts_empty_audio', logging.WARNING, model=model, attempt=attempt, finish=str(getattr(cands[0], 'finish_reason', None)) if cands else 'NO_CANDIDATES')
         raise AIError('The voice model returned no audio.', code='AI_EMPTY', details={'op': 'tts'})
 
+    @staticmethod
+    def _op_timeout(op: str) -> float:
+        s = get_settings()
+        if op == 'chat':
+            return float(s.gemini_chat_timeout_seconds)
+        if op in ('diagnosis', 'guidance', 'nameplate', 'part_locator'):
+            return float(s.gemini_diagnosis_timeout_seconds)
+        return float(s.gemini_timeout_seconds)
+
+    @staticmethod
+    def _record_success(model: str) -> None:
+        CONSECUTIVE_FAILURES.pop(model, None)
+        COOLDOWN.pop(model, None)
+
+    @staticmethod
+    def _record_failure(model: str, code: str, retry_after: float | None) -> None:
+        if code in CIRCUIT_BREAKER_CODES or code == 'MODEL_NOT_FOUND':
+            n = CONSECUTIVE_FAILURES.get(model, 0) + 1
+            CONSECUTIVE_FAILURES[model] = n
+            base = COOL_CODES.get(code, 60.0)
+            if code in CIRCUIT_BREAKER_CODES and n >= CIRCUIT_BREAKER_THRESHOLD:
+                base = max(base, CIRCUIT_BREAKER_SECONDS)
+            wait_s = max(retry_after or 0.0, base)
+            COOLDOWN[model] = time.time() + min(wait_s, max(3600.0, base))
+
     async def _call(self, op: str, model: str, fn, last_resort: bool = True):
-        """Bounded retries with exponential backoff, only for transient categories. Never retries bad keys, permissions or unknown models.
+        """Bounded retries with jittered backoff, only for transient categories. Never retries bad keys, permissions or unknown models.
         With last_resort=False a quota, overload or timeout error is raised at once, so the caller moves to a fallback model instead of waiting."""
         s = get_settings()
+        timeout_s = self._op_timeout(op)
         for attempt in range(s.gemini_max_retries + 1):
             t0 = time.perf_counter()
             try:
-                resp = await asyncio.wait_for(fn(), timeout=s.gemini_timeout_seconds)
+                resp = await asyncio.wait_for(fn(), timeout=timeout_s)
                 ms = int((time.perf_counter() - t0) * 1000)
                 um = getattr(resp, 'usage_metadata', None)
                 meta = CallResult(model=model, latency_ms=ms, input_tokens=getattr(um, 'prompt_token_count', None), output_tokens=getattr(um, 'candidates_token_count', None))
                 log(logger, 'gemini_call', op=op, model=model, ms=ms, attempt=attempt, input_tokens=meta.input_tokens, output_tokens=meta.output_tokens)
                 LAST_STATUS.update(ok=True, op=op, model=model, code=None, at=time.time())
-                COOLDOWN.pop(model, None)
+                self._record_success(model)
                 return resp, meta
             except Exception as e:  # noqa: BLE001 - every failure is classified below
                 c = classify(e, model)
                 log(logger, 'gemini_call_failed', logging.WARNING, op=op, model=model, attempt=attempt, error_code=c.code, provider_http=c.provider_http,
                     provider_status=c.provider_status, provider_message=c.provider_message, ms=int((time.perf_counter() - t0) * 1000))
                 LAST_STATUS.update(ok=False, op=op, model=model, code=c.code, hint=c.hint, at=time.time())
-                if c.code in COOL_CODES:
-                    COOLDOWN[model] = time.time() + min(max(c.retry_after or 0, COOL_CODES[c.code]), max(3600, COOL_CODES[c.code]))
+                self._record_failure(model, c.code, c.retry_after)
                 if c.code in FAILOVER_CODES and not last_resort:
                     pass  # fall through to raise: a fallback model is available
                 elif c.code == 'QUOTA_EXCEEDED' and (c.retry_after or 0) > QUOTA_RETRY_MAX_WAIT:
                     pass  # e.g. "retry in 58084s" on a free-tier daily limit
                 elif c.retryable and attempt < s.gemini_max_retries:
-                    await asyncio.sleep(min(c.retry_after or 0.5 * 2 ** attempt, 6)); continue
+                    jitter = random.uniform(0.05, 0.35)
+                    base_wait = c.retry_after if c.retry_after is not None else 0.35 * (2 ** attempt)
+                    await asyncio.sleep(min(base_wait + jitter, 4.0)); continue
                 err_cls = AIUnavailable if c.http_status == 503 else AIError
                 raise err_cls(c.message, code=c.code, status=c.http_status, details=c.details(model)) from e
 
@@ -289,7 +321,7 @@ class GeminiClient:
         models = ready + cooling
         cap = TEXT_OUTPUT_CAP.get(op)
         kw = dict(system_instruction=system, temperature=temperature, **({'max_output_tokens': cap} if cap else {}))
-        s = get_settings()
+        timeout_s = self._op_timeout(op)
         last: Exception | None = None
         for i, model in enumerate(models):
             t0 = time.perf_counter()
@@ -298,7 +330,7 @@ class GeminiClient:
             try:
                 stream = await asyncio.wait_for(
                     self.raw.aio.models.generate_content_stream(model=model, contents=contents, config=self._cfg(**kw)),
-                    timeout=s.gemini_timeout_seconds,
+                    timeout=timeout_s,
                 )
                 async for chunk in stream:
                     um = getattr(chunk, 'usage_metadata', None)
@@ -315,7 +347,7 @@ class GeminiClient:
                 meta = CallResult(model=model, latency_ms=ms, input_tokens=in_tok, output_tokens=out_tok)
                 log(logger, 'gemini_call', op=op, model=model, ms=ms, attempt=0, stream=True, input_tokens=in_tok, output_tokens=out_tok)
                 LAST_STATUS.update(ok=True, op=op, model=model, code=None, at=time.time())
-                COOLDOWN.pop(model, None)
+                self._record_success(model)
                 if model != configured[0]:
                     log(logger, 'gemini_fallback_used', logging.WARNING, op=op, primary=configured[0], used=model)
                 yield '', meta
@@ -328,8 +360,7 @@ class GeminiClient:
                     provider_http=c.provider_http, provider_status=c.provider_status, provider_message=c.provider_message,
                     ms=int((time.perf_counter() - t0) * 1000))
                 LAST_STATUS.update(ok=False, op=op, model=model, code=c.code, hint=c.hint, at=time.time())
-                if c.code in COOL_CODES:
-                    COOLDOWN[model] = time.time() + min(max(c.retry_after or 0, COOL_CODES[c.code]), max(3600, COOL_CODES[c.code]))
+                self._record_failure(model, c.code, c.retry_after)
                 err_cls = AIUnavailable if c.http_status == 503 else AIError
                 last = err_cls(c.message, code=c.code, status=c.http_status, details=c.details(model))
                 if not sent_any and c.code in FAILOVER_CODES and i < len(models) - 1:
@@ -370,6 +401,44 @@ def get_gemini() -> GeminiClient:
     if _singleton is None:
         _singleton = GeminiClient()
     return _singleton
+
+
+def get_cached_models_available() -> list[str]:
+    return list(MODELS_CHECK_CACHE.get('models') or [])
+
+
+async def probe_available_models(force: bool = False) -> list[str]:
+    """Cheap cached startup self-check listing which configured models are visible/callable (names only, no keys)."""
+    now = time.time()
+    if not force and MODELS_CHECK_CACHE.get('at') and now - float(MODELS_CHECK_CACHE['at']) < 300.0:
+        return get_cached_models_available()
+    s = get_settings()
+    if not s.ai_configured:
+        MODELS_CHECK_CACHE.update(at=now, models=[])
+        return []
+    candidates = [m for m in dict.fromkeys([
+        s.gemini_fast_model or '',
+        s.gemini_agent_model or '',
+        *[x.strip() for x in (s.gemini_agent_fallback_models or '').split(',') if x.strip()],
+        s.gemini_embed_model or '',
+        s.gemini_live_model or '',
+        s.gemini_tts_model or '',
+        s.nano_banana_model or '',
+    ]) if m]
+    g = get_gemini()
+    visible: set[str] = set()
+    try:
+        async for m in await asyncio.wait_for(g.raw.aio.models.list(config={'page_size': 200}), timeout=5.0):
+            visible.add((m.name or '').removeprefix('models/'))
+        async for m in await asyncio.wait_for(g.raw_beta.aio.models.list(config={'page_size': 200}), timeout=5.0):
+            visible.add((m.name or '').removeprefix('models/'))
+    except Exception as e:  # noqa: BLE001
+        log(logger, 'startup_models_check_failed', logging.WARNING, error=classify(e).code)
+        return get_cached_models_available()
+    found = [m for m in candidates if m in visible]
+    MODELS_CHECK_CACHE.update(at=now, models=found)
+    log(logger, 'startup_models_check', models=found)
+    return found
 
 
 def set_gemini(c: GeminiClient | None) -> None:

@@ -63,4 +63,30 @@ describe('SSE streaming and non-streaming fallback', () => {
     expect(await screen.findByText('Fallback reply from server.')).toBeTruthy()
     expect(sendSpy).toHaveBeenCalledTimes(1)
   })
+
+  it('shows friendly error notice with a Retry button when all models fail', async () => {
+    vi.spyOn(services.sessionService, 'create').mockResolvedValue({ id: 's1', title: 'Fan' } as never)
+    vi.spyOn(services.sessionService, 'get').mockResolvedValue({ id: 's1', title: 'Fan' } as never)
+    let attempt = 0
+    vi.spyOn(services.chatService, 'stream').mockImplementation(async (_sid, _text, _media, _ch, cb) => {
+      attempt += 1
+      const now = new Date().toISOString()
+      cb.onUserMessage?.({ id: `u-${attempt}`, role: 'user', message: 'fan hums', message_type: 'text', meta: {}, created_at: now })
+      if (attempt === 1) {
+        cb.onAiError?.('unavailable', { code: 'PROVIDER_UNAVAILABLE', message: 'Gemini is temporarily unavailable.', hint: 'Try again shortly.' })
+        return
+      }
+      cb.onDelta?.('Retry succeeded.')
+      cb.onDone?.({ id: 'a2', role: 'assistant', message: 'Retry succeeded.', message_type: 'text', meta: { ai_generated: true }, created_at: now })
+    })
+
+    wrap()
+    await act(async () => { screen.getByRole('button', { name: 'Send' }).click() })
+    const retryBtn = await screen.findByRole('button', { name: 'Retry' })
+    expect(screen.getByText(/Gemini is temporarily unavailable/)).toBeTruthy()
+
+    await act(async () => { retryBtn.click() })
+    expect(await screen.findByText('Retry succeeded.')).toBeTruthy()
+    expect(attempt).toBe(2)
+  })
 })

@@ -92,6 +92,7 @@ class DiagnosisOut(BaseModel):
     knowledge_coverage: str = 'none'
     sources: list[dict] = []
     model_identifier: str
+    latency_ms: int | None = None
     created_at: datetime
     confidence_note: str = 'Confidence values are model estimates, not calibrated probabilities.'
 

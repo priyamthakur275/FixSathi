@@ -135,3 +135,12 @@ def test_stream_gemini_error_mid_stream_emits_clean_error_and_no_partial_message
     with SessionLocal() as db:
         rows = db.query(AIUsage).filter(AIUsage.operation == 'chat').all()
         assert any(row.ok is False and row.error_code == 'PROVIDER_UNAVAILABLE' for row in rows)
+
+
+def test_stream_emits_working_heartbeat_events(client, tech, session_id, fake):
+    fake.stream_chunks = ['Safe check complete.']
+    with client.stream('POST', f'/api/v1/sessions/{session_id}/messages/stream', json={'text': 'fan hums'}, headers=tech['h']) as r:
+        assert r.status_code == 200
+        events = _parse_sse(r.read().decode('utf-8'))
+    ev_names = [ev for ev, _ in events]
+    assert 'user_message' in ev_names and 'working' in ev_names and 'done' in ev_names

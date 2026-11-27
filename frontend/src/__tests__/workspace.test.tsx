@@ -126,6 +126,8 @@ describe('Phase 2 UI redesign', () => {
     render(<AuthProvider><PrefsProvider><AppProvider><MemoryRouter initialEntries={['/session/s1']}><Routes><Route path="/session/:id" element={<Gate />} /></Routes></MemoryRouter></AppProvider></PrefsProvider></AuthProvider>)
     const bar = await screen.findByRole('region', { name: 'Power safety status' })
     expect(within(bar).getByText('Live · Power steps locked')).toBeTruthy()
+    expect(screen.getByText('Withheld until you confirm: MCB off + tester reading')).toBeTruthy()
+    expect(screen.getByText('How this answer was made')).toBeTruthy()
     expect(screen.getByRole('button', { name: /Isolate the power to unlock/ })).toBeTruthy()
     expect(screen.queryByText(/Schematic diagram/)).toBeNull() // locked step shows no part card
   })
@@ -217,17 +219,17 @@ describe('Phase 2 UI redesign', () => {
     const readBtn = await screen.findByRole('button', { name: /Read nameplate \/ code/i })
     await u.click(readBtn)
     expect(await screen.findByText('LG split ac: code CH38')).toBeTruthy()
-    expect(screen.getByText('AI estimate · check & edit')).toBeTruthy()
+    expect(screen.getByText(/92% confidence/i)).toBeTruthy()
 
     const codeInput = screen.getByLabelText('Error code') as HTMLInputElement
     expect(codeInput.value).toBe('CH38')
     await u.clear(codeInput)
     await u.type(codeInput, 'CH05')
-    await u.click(screen.getByRole('button', { name: /Save & search records/i }))
+    await u.click(screen.getByRole('button', { name: /Confirm & use model/i }))
 
     expect(patchSpy).toHaveBeenCalledWith('s1', expect.objectContaining({ brand: 'LG', model: 'LS-Q18YNZA', error_code: 'CH05' }))
     expect(await screen.findByText('LG split ac: code CH05')).toBeTruthy()
-    expect(screen.getByText('Checked by technician')).toBeTruthy()
+    expect(screen.getByText('Confirmed by technician')).toBeTruthy()
   })
 
   it('shows graceful fallback message and empty manual inputs when Gemini Vision is unavailable', async () => {
@@ -276,5 +278,32 @@ describe('Phase 2 UI redesign', () => {
     expect(screen.getByText('Reference only · Not live-work guidance')).toBeTruthy()
     expect(screen.getByText(/2.0 µF – 2.5 µF/)).toBeTruthy()
     expect(screen.getByText(/never instructions to work on or probe live circuits/)).toBeTruthy()
+  })
+
+  it('requires technician confirmation of extracted nameplate model before running diagnosis', async () => {
+    signedInAs('technician', 'u1')
+    vi.spyOn(services.sessionService, 'get').mockResolvedValue({
+      id: 's1', reference: 'FS-104', title: 'AC error', appliance_type: 'split_ac', appliance_label: 'Split AC',
+      nameplate: {
+        readable: true, appliance_type: 'split_ac', brand: 'LG', model: 'LS-Q18YNZA', error_code: 'CH38',
+        serial_number: null, raw_text: 'LG LS-Q18YNZA CH38', confidence: 0.88, notes: null,
+        verified_by_technician: false, source: 'gemini_vision',
+      },
+      issue_description: 'indoor display shows CH38', status: 'active', technician_id: 'u1', technician_name: 'Asha Rao',
+      first_time_fix: null, started_at: new Date().toISOString(), completed_at: null, report_id: null,
+    })
+    vi.spyOn(services.fileService, 'list').mockResolvedValue([])
+    vi.spyOn(services.repairService, 'diagnosis').mockResolvedValue(null)
+    vi.spyOn(services.repairService, 'steps').mockResolvedValue([])
+    vi.spyOn(services.repairService, 'safety').mockResolvedValue({ power_off_confirmed: false, tester_checked: false, unlocked: false, missing: ['power_off_confirmed', 'tester_checked'], expired: false, confirmed_at: null, expires_at: null, disclaimer: '' })
+    vi.spyOn(services.repairService, 'similar').mockResolvedValue({ mode: 'keyword', fallback_reason: null, results: [] })
+
+    const Gate = () => (useAuth().loading ? null : <RepairSessionPage />)
+    render(<AuthProvider><PrefsProvider><AppProvider><MemoryRouter initialEntries={['/session/s1']}><Routes><Route path="/session/:id" element={<Gate />} /></Routes></MemoryRouter></AppProvider></PrefsProvider></AuthProvider>)
+
+    const diagBtn = await screen.findByRole('button', { name: /Run diagnosis/i }) as HTMLButtonElement
+    expect(diagBtn.disabled).toBe(true)
+    expect(screen.getByText(/Confirm the read model number under/i)).toBeTruthy()
+    expect(screen.getByRole('button', { name: /Try a sample nameplate/i })).toBeTruthy()
   })
 })

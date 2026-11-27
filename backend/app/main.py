@@ -1,4 +1,4 @@
-import logging, time
+import asyncio, logging, sys, time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +26,9 @@ async def lifespan(_: FastAPI):
         log(logger, 'knowledge_seeded', added=n)
     except Exception as e:
         log(logger, 'knowledge_seed_skipped', logging.WARNING, error=type(e).__name__)
+    if s.ai_configured and 'pytest' not in sys.modules:
+        from .integrations.gemini.client import probe_available_models
+        asyncio.create_task(probe_available_models())
     yield
     log(logger, 'shutdown')
 
@@ -52,10 +55,12 @@ def create_app() -> FastAPI:
             db_ok = True
         except Exception:
             db_ok = False
+        from .integrations.gemini.client import get_cached_models_available
         body = {'status': 'ok' if db_ok else 'unhealthy', 'env': st.app_env, 'database': 'ok' if db_ok else 'unreachable',
                 'db_ms': int((time.perf_counter() - t0) * 1000), 'storage': st.storage_provider,
                 'ai': {'configured': st.ai_configured,
-                       'models': {'agent': bool(st.gemini_agent_model), 'live': bool(st.gemini_live_model), 'embed': bool(st.gemini_embed_model), 'image': bool(st.nano_banana_model)}},
+                       'models': {'agent': bool(st.gemini_agent_model), 'live': bool(st.gemini_live_model), 'embed': bool(st.gemini_embed_model), 'image': bool(st.nano_banana_model)},
+                       'models_available': get_cached_models_available()},
                 'mode': 'ai' if st.ai_configured else 'no AI key set: AI endpoints return AI_NOT_CONFIGURED; demo scenarios still work'}
         return JSONResponse(body, status_code=200 if db_ok else 503, headers={'Cache-Control': 'no-store'})
 

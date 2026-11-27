@@ -52,6 +52,8 @@ export interface ChatMessage {
   helpful?: boolean
   /** True while SSE chunks are actively arriving. */
   streaming?: boolean
+  /** Saved user text to allow one-tap retry after a transient AI failure. */
+  retryText?: string
 }
 
 export type VoiceState = 'idle' | 'connecting' | 'listening' | 'processing' | 'responding' | 'error'
@@ -132,7 +134,7 @@ export interface Fault { fault: string; explanation: string; confidence: number;
 export interface SourceRef { record_id: string; source_name: string; source_url: string | null; license: string; verification_status: string; match: string; related_category: boolean }
 export interface Diagnosis {
   id: string; problem_summary: string; faults: Fault[]; recommended_checks: string[]; follow_up_questions: string[]; safety_requirements: string[]
-  requires_escalation: boolean; model_identifier: string; created_at: string; confidence_note: string
+  requires_escalation: boolean; model_identifier: string; latency_ms?: number | null; created_at: string; confidence_note: string
   confirmed_findings: string[]; missing_information: string[]; required_tools?: string[]; escalation_reason?: string | null; knowledge_coverage: 'grounded' | 'partial' | 'none'; sources: SourceRef[]
 }
 

@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     gemini_embed_model: str | None = None
     nano_banana_model: str | None = None
     gemini_timeout_seconds: float = 45
+    gemini_chat_timeout_seconds: float = 8.0
+    gemini_diagnosis_timeout_seconds: float = 20.0
     gemini_max_retries: int = 1
     # Chat replies only: seconds before the first fallback model is also asked (0 disables). See HEDGED_OPS in the Gemini client.
     gemini_hedge_seconds: float = 12

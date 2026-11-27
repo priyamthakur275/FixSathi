@@ -56,6 +56,7 @@ export class StreamFallbackError extends Error {
 
 export interface ChatStreamCallbacks {
   onUserMessage?: (m: ServerMessage) => void
+  onWorking?: (stage: string) => void
   onDelta?: (chunk: string) => void
   onDone?: (m: ServerMessage) => void
   onAiError?: (status: 'unavailable' | 'error', err: { code: string; message: string; hint?: string | null }) => void
@@ -99,6 +100,7 @@ export const chatService = {
       if (!dataLines.length) return
       const payload = JSON.parse(dataLines.join('\n')) as Record<string, unknown>
       if (ev === 'user_message' && payload.user_message) cb.onUserMessage?.(payload.user_message as ServerMessage)
+      else if (ev === 'working') cb.onWorking?.(typeof payload.stage === 'string' ? payload.stage : 'working')
       else if (ev === 'delta' && typeof payload.text === 'string') cb.onDelta?.(payload.text)
       else if (ev === 'done' && payload.assistant_message) { gotDoneOrError = true; cb.onDone?.(payload.assistant_message as ServerMessage) }
       else if (ev === 'error') {
@@ -159,6 +161,11 @@ export const fileService = {
     return api<MediaItem>(`/api/v1/sessions/${sid}/files?source=${source}`, { form: f, timeoutMs: 90000 })
   },
   list: (sid: string) => api<MediaItem[]>(`/api/v1/sessions/${sid}/images`),
+  async sampleNameplate(): Promise<Blob> {
+    const r = await fetch(`${apiBase}/api/v1/samples/nameplate`)
+    if (!r.ok) throw new Error('Sample nameplate image could not be loaded.')
+    return r.blob()
+  },
 }
 
 /** Kept for older call sites: photo-only validation and upload. */

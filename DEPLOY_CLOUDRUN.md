@@ -122,7 +122,37 @@ python backend/scripts/smoke_live.py --base-url "$SERVICE_URL"
 
 ---
 
-## 5. After the Demo: Scale to Zero
+## 5. Safe Rollout (`--no-traffic`) & Rollback Target
+
+- **Known good rollback revision:** `fixsaathi-00002-56b` (`https://fixsaathi-915991223959.us-east4.run.app`)
+- **Emergency rollback command (100% instant traffic shift):**
+
+```bash
+gcloud run services update-traffic fixsaathi \
+  --region us-east4 \
+  --to-revisions fixsaathi-00002-56b=100
+```
+
+Deploy any change as an untagged/candidate revision with `--no-traffic`, verify `smoke_live.py` on its tagged URL first, and shift traffic only if every check passes:
+
+```bash
+gcloud run deploy fixsaathi \
+  --source . \
+  --region us-east4 \
+  --no-traffic \
+  --tag candidate \
+  --quiet
+
+CANDIDATE_URL="https://candidate---fixsaathi-915991223959.us-east4.run.app"
+python backend/scripts/smoke_live.py --base-url "$CANDIDATE_URL"
+
+# Shift 100% traffic only after smoke_live.py passes:
+gcloud run services update-traffic fixsaathi --region us-east4 --to-latest
+```
+
+---
+
+## 6. After the Demo: Scale to Zero
 
 ```bash
 gcloud run services update fixsaathi --region "$REGION" --min-instances 0

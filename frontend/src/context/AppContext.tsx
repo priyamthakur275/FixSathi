@@ -154,6 +154,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             })
             setFreshReply(streamedDone)
           },
+          onWorking: () => { if (live()) setThinking(true) },
           onAiError: (status, aiErr) => {
             streamedErr = { status, err: aiErr }
             if (!live()) return
@@ -161,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setMessages(m => [
               ...m.filter(x => x.id !== streamId),
               { id: uid(), role: 'system', at: Date.now(), notice: status === 'unavailable' ? 'ai_unavailable' : 'ai_error',
-                text: aiErr.message || 'The AI could not reply.', hint: aiErr.hint, errorCode: aiErr.code },
+                text: aiErr.message || 'The AI could not reply.', hint: aiErr.hint, errorCode: aiErr.code, retryText: text.trim() || undefined },
             ])
           },
         }, ctl.signal)
@@ -186,7 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           const next = m.map(x => x.id === localId ? { ...toChat(r.user_message), attachments: x.attachments } : x)
           if (reply) next.push(reply)
           else next.push({ id: uid(), role: 'system', at: Date.now(), notice: r.ai_status === 'unavailable' ? 'ai_unavailable' : 'ai_error',
-            text: r.ai_error?.message || 'The AI could not reply.', hint: r.ai_error?.hint, errorCode: r.ai_error?.code })
+            text: r.ai_error?.message || 'The AI could not reply.', hint: r.ai_error?.hint, errorCode: r.ai_error?.code, retryText: text.trim() || undefined })
           return next
         })
         if (reply) setFreshReply(reply)

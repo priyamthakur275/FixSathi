@@ -80,12 +80,20 @@ export function NameplateCard({ initialNameplate, response, sessionAppliance, ca
           <p className="font-semibold text-ink">Nameplate &amp; error display</p>
         </div>
         {active && (
-          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${active.verified_by_technician ? 'border-accent/40 bg-accent/10 text-accent' : 'border-teal/40 bg-teal/10 text-teal'}`}>
+          <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${active.verified_by_technician ? 'border-accent/40 bg-accent/10 text-accent' : 'border-warn/45 bg-warn/10 text-warn'}`}>
             {active.verified_by_technician && <CheckCircle2 size={12} aria-hidden />}
-            {active.verified_by_technician ? 'Checked by technician' : 'AI estimate · check & edit'}
+            {active.verified_by_technician
+              ? 'Confirmed by technician'
+              : `AI estimate (${Math.round((active.confidence ?? 0) * 100)}% confidence) · verify on device`}
           </span>
         )}
       </div>
+
+      {active && !active.verified_by_technician && (
+        <p role="note" className="mt-2.5 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-xs text-ink-2">
+          Verify on the physical label or display on the device, edit any field if needed, then click <strong className="font-semibold text-ink">Confirm &amp; use model</strong> before running diagnosis.
+        </p>
+      )}
 
       {aiError && (
         <div role="alert" className="mt-3 flex items-start gap-2.5 rounded-xl border border-warn/45 bg-warn/10 px-3.5 py-2.5 text-xs leading-relaxed text-ink">
@@ -139,9 +147,9 @@ export function NameplateCard({ initialNameplate, response, sessionAppliance, ca
           <div className="flex flex-wrap items-center gap-2 pt-1 sm:col-span-2">
             <button type="submit" disabled={busy} className="btn btn-primary btn-sm !min-h-[44px]">
               {busy ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
-              Save &amp; search records
+              {active && !active.verified_by_technician ? 'Confirm & use model' : 'Save & search records'}
             </button>
-            <span className="text-xs text-ink-3">Saved brand, model and code ground the diagnosis.</span>
+            <span className="text-xs text-ink-3">Confirmed brand, model and code ground the diagnosis.</span>
           </div>
         )}
       </form>

@@ -201,55 +201,82 @@ async def stream_message(request: Request, session_id: uuid.UUID, body: MessageI
             yield _sse('done', {'assistant_message': am_json, 'ai_status': 'ok'})
             return
 
-        with SessionLocal() as sdb:
-            sess = sdb.get(RepairSession, sid)
-            usr = sdb.get(User, uid)
-            try:
-                g, res, contents, system, allowed = await ai.prepare_chat_stream(sdb, sess, usr, text, media_ids, exclude_id=um_id, channel=channel)
-                used_cites: list[str] = []
-                invented_cites: list[str] = []
+        yield _sse('working', {'stage': 'preparing'})
+        q: asyncio.Queue[tuple[str, dict | None]] = asyncio.Queue()
 
-                def clean_fn(txt: str) -> str:
-                    cleaned, u_ids, inv_ids = ai._clean_citations(txt, allowed)
-                    used_cites.extend(u_ids)
-                    invented_cites.extend(inv_ids)
-                    return cleaned
+        async def _produce():
+            with SessionLocal() as sdb:
+                sess = sdb.get(RepairSession, sid)
+                usr = sdb.get(User, uid)
+                try:
+                    g, res, contents, system, allowed = await ai.prepare_chat_stream(sdb, sess, usr, text, media_ids, exclude_id=um_id, channel=channel)
+                    used_cites: list[str] = []
+                    invented_cites: list[str] = []
 
-                screener = safety.StreamScreener(sdb, sess, usr, actor='chat', voice=channel == 'voice', cite_fn=clean_fn)
-                meta = None
-                async for chunk, call_meta in g.stream_text('chat', contents, system):
+                    def clean_fn(txt: str) -> str:
+                        cleaned, u_ids, inv_ids = ai._clean_citations(txt, allowed)
+                        used_cites.extend(u_ids)
+                        invented_cites.extend(inv_ids)
+                        return cleaned
+
+                    screener = safety.StreamScreener(sdb, sess, usr, actor='chat', voice=channel == 'voice', cite_fn=clean_fn)
+                    meta = None
+                    await q.put(('working', {'stage': 'generating'}))
+                    async for chunk, call_meta in g.stream_text('chat', contents, system):
+                        if await request.is_disconnected():
+                            sdb.rollback()
+                            return
+                        if chunk:
+                            for part in screener.feed(chunk):
+                                await q.put(('delta', {'text': part}))
+                        if call_meta is not None:
+                            meta = call_meta
                     if await request.is_disconnected():
                         sdb.rollback()
                         return
-                    if chunk:
-                        for part in screener.feed(chunk):
-                            yield _sse('delta', {'text': part})
-                    if call_meta is not None:
-                        meta = call_meta
-                if await request.is_disconnected():
+                    for part in screener.finish():
+                        await q.put(('delta', {'text': part}))
+                    if await request.is_disconnected():
+                        sdb.rollback()
+                        return
+                    am = ai.finalize_stream_message(sdb, sess, meta, res, list(dict.fromkeys(used_cites)), invented_cites, screener, channel)
+                    sdb.commit()
+                    am_json = MessageOut.model_validate(am).model_dump(mode='json')
+                    await q.put(('done', {'assistant_message': am_json, 'ai_status': 'ok'}))
+                except asyncio.CancelledError:
                     sdb.rollback()
-                    return
-                for part in screener.finish():
-                    yield _sse('delta', {'text': part})
-                if await request.is_disconnected():
+                    raise
+                except AppError as e:
                     sdb.rollback()
-                    return
-                am = ai.finalize_stream_message(sdb, sess, meta, res, list(dict.fromkeys(used_cites)), invented_cites, screener, channel)
-                sdb.commit()
-                am_json = MessageOut.model_validate(am).model_dump(mode='json')
-                yield _sse('done', {'assistant_message': am_json, 'ai_status': 'ok'})
-            except asyncio.CancelledError:
-                sdb.rollback()
-                return
-            except AppError as e:
-                sdb.rollback()
-                sess_err = sdb.get(RepairSession, sid)
-                ai.record_usage(sdb, sess_err, 'chat', None, ok=False, code=e.code, model='agent')
-                sdb.commit()
-                yield _sse('error', {
-                    'ai_status': 'unavailable' if e.status == 503 else 'error',
-                    'ai_error': {'code': e.code, 'message': e.message, 'hint': e.details.get('hint'), 'provider_status': e.details.get('provider_status')},
-                })
+                    sess_err = sdb.get(RepairSession, sid)
+                    ai.record_usage(sdb, sess_err, 'chat', None, ok=False, code=e.code, model='agent')
+                    sdb.commit()
+                    await q.put(('error', {
+                        'ai_status': 'unavailable' if e.status == 503 else 'error',
+                        'ai_error': {'code': e.code, 'message': e.message, 'hint': e.details.get('hint'), 'provider_status': e.details.get('provider_status')},
+                    }))
+                finally:
+                    await q.put(('_eof', None))
+
+        task = asyncio.create_task(_produce())
+        try:
+            while True:
+                if await request.is_disconnected():
+                    task.cancel()
+                    break
+                try:
+                    ev, payload = await asyncio.wait_for(q.get(), timeout=2.5)
+                except asyncio.TimeoutError:
+                    yield _sse('working', {'stage': 'waiting'})
+                    continue
+                if ev == '_eof':
+                    break
+                yield _sse(ev, payload or {})
+        finally:
+            if not task.done():
+                task.cancel()
+                with __import__('contextlib').suppress(BaseException):
+                    await task
 
     return StreamingResponse(event_stream(), media_type='text/event-stream', headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
 
@@ -402,3 +429,16 @@ def get_media(media_id: uuid.UUID, u: User = Depends(current_user), db: Session 
                 return Response((HERE / photo).read_bytes(), media_type=media_type, headers=headers)
         raise
     return Response(data, media_type=media_type, headers=headers)
+
+
+@router.get('/samples/nameplate')
+def sample_nameplate():
+    """Serves the bundled synthetic AC rating-label diagram so anyone can run live Vision without hunting for a photo."""
+    from pathlib import Path
+    for p in (
+        Path(__file__).resolve().parents[4] / 'docs' / 'samples' / 'sample_nameplate.png',
+        Path('/app/docs/samples/sample_nameplate.png'),
+    ):
+        if p.is_file():
+            return Response(p.read_bytes(), media_type='image/png', headers={'Cache-Control': 'public, max-age=3600'})
+    raise NotFound('Sample nameplate image not found.')

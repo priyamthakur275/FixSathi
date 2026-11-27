@@ -141,6 +141,17 @@ export default function RepairSessionPage() {
     await refreshSession()
     repairService.similar(id).then(setSimilar).catch(() => undefined)
   })
+  const trySampleNameplate = () => run('np-sample', async () => {
+    const blob = await fileService.sampleNameplate()
+    const m = await fileService.upload(id, blob, 'upload', 'sample_nameplate.png')
+    setMedia(x => [...x, m])
+    const res = await repairService.readNameplate(id, m.id)
+    setNameplateRes(res)
+    if (res.status === 'ok') {
+      await refreshSession()
+      repairService.similar(id).then(setSimilar).catch(() => undefined)
+    }
+  })
   const escalate = () => run('esc', async () => { await repairService.escalate(id, escReason); setShowEsc(false); setEscReason(''); await refreshSession(); setMsg({ kind: 'info', text: 'Senior technician support requested. A manager will see it under Senior support.' }) })
   const report = () => run('report', async () => {
     if (rating) await repairService.feedback(id, rating, causeRight)
@@ -222,7 +233,15 @@ export default function RepairSessionPage() {
             {photos.length === 0 ? (
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line-2 bg-surface/40 px-6 py-10 text-center">
                 <Camera className="text-ink-3" /><p className="text-sm text-ink-2">No photos yet. Show the appliance or nameplate with your camera.</p>
-                {owner && open && <button onClick={() => setCamera(true)} className="btn btn-primary"><ImagePlus size={16} />Show me the appliance</button>}
+                {owner && open && (
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button onClick={() => setCamera(true)} className="btn btn-primary"><ImagePlus size={16} />Show me the appliance</button>
+                    <button type="button" onClick={trySampleNameplate} disabled={!!busy} className="btn">
+                      {busy === 'np-sample' ? <Loader2 size={15} className="animate-spin" /> : <Cpu size={15} />}
+                      Try a sample nameplate
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-3">
@@ -240,6 +259,12 @@ export default function RepairSessionPage() {
                   ))}
                   {owner && open && <button onClick={() => setCamera(true)} aria-label="Add another photo" className="flex h-32 w-32 items-center justify-center rounded-2xl border border-dashed border-line-2 text-ink-2 transition-colors hover:border-accent/60 hover:bg-surface-2 hover:text-accent"><ImagePlus /></button>}
                 </div>
+                {owner && open && (
+                  <button type="button" onClick={trySampleNameplate} disabled={!!busy} className="btn btn-sm">
+                    {busy === 'np-sample' ? <Loader2 size={13} className="animate-spin" /> : <Cpu size={13} />}
+                    Try a sample nameplate
+                  </button>
+                )}
                 {comp && <div className="rounded-2xl border border-accent/25 bg-accent/[0.05] p-3.5 text-sm"><p className="font-medium">{comp.found ? comp.component_name : 'Not identified'}</p><p className="text-ink-2">{comp.explanation}</p>{comp.uncertainty && <p className="mt-1 text-xs text-ink-3">{comp.uncertainty}</p>}<p className="mt-1 text-xs text-ink-3">{comp.note}</p></div>}
               </div>
             )}
@@ -265,11 +290,26 @@ export default function RepairSessionPage() {
           </section>
 
           {/* Stage 1: Diagnose */}
+          {(() => {
+            const np = nameplateRes?.extracted ?? s.nameplate
+            const nameplateNeedsConfirm = !!np && !np.verified_by_technician && !!(np.model || np.brand || np.error_code)
+            const lockedCount = steps.filter(x => x.locked).length
+            return (
           <section aria-labelledby="diag-h" className={`card card-pad ${visStage(1)}`}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <h2 id="diag-h" className={h2}><span className={ico}><Stethoscope size={16} /></span>2. Suspected faults</h2>
-              {owner && open && <button onClick={diagnose} disabled={!!busy} className={btn}>{busy === 'diagnose' ? <Loader2 size={15} className="animate-spin" /> : <Stethoscope size={15} />}{diag ? 'Re-run diagnosis' : 'Run diagnosis'}</button>}
+              {owner && open && (
+                <button onClick={diagnose} disabled={!!busy || nameplateNeedsConfirm} className={btn}>
+                  {busy === 'diagnose' ? <Loader2 size={15} className="animate-spin" /> : <Stethoscope size={15} />}
+                  {diag ? 'Re-run diagnosis' : 'Run diagnosis'}
+                </button>
+              )}
             </div>
+            {nameplateNeedsConfirm && owner && open && (
+              <p role="note" className="mb-3 rounded-xl border border-warn/45 bg-warn/10 px-3.5 py-2.5 text-xs text-ink-2">
+                Confirm the read model number under <strong className="font-semibold text-ink">Nameplate &amp; error display</strong> (<strong className="font-semibold text-ink">Confirm &amp; use model</strong>) before running diagnosis.
+              </p>
+            )}
             {!diag && <p className="text-sm text-ink-2">No diagnosis yet. Describe the issue in chat or add a photo, then run the diagnosis.</p>}
             {diag && (<>
               <p className="mb-2.5 text-sm text-ink-2">{diag.problem_summary}</p>
@@ -285,10 +325,51 @@ export default function RepairSessionPage() {
               {(diag.required_tools?.length ?? 0) > 0 && <p className="mt-3 text-sm"><span className="text-ink-2">Tools needed:</span> {diag.required_tools!.join(', ')}</p>}
               {diag.sources?.length > 0 && <SourceList sources={diag.sources} />}
               {diag.requires_escalation && <p className="mt-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">The AI recommends a senior technician for this fault.{diag.escalation_reason ? ` ${diag.escalation_reason}` : ''}</p>}
-              <p className="mt-3 text-xs text-ink-3" title={`Model: ${diag.model_identifier}`}>{diag.confidence_note}</p>
+              <details className="mt-3 rounded-xl border border-line bg-surface-2/40 px-3.5 py-2.5 text-xs text-ink-2">
+                <summary className="cursor-pointer font-semibold text-ink select-none">How this answer was made</summary>
+                <dl className="mt-2.5 space-y-1.5">
+                  {diag.model_identifier && (
+                    <div className="flex flex-wrap justify-between gap-2"><dt className="text-ink-3">Model</dt><dd className="font-mono text-ink">{diag.model_identifier}</dd></div>
+                  )}
+                  {typeof diag.latency_ms === 'number' && (
+                    <div className="flex flex-wrap justify-between gap-2"><dt className="text-ink-3">Latency</dt><dd className="num text-ink">{diag.latency_ms} ms</dd></div>
+                  )}
+                  <div className="flex flex-wrap justify-between gap-2">
+                    <dt className="text-ink-3">Repair records retrieved</dt>
+                    <dd className="num text-ink">{diag.sources?.length ?? 0}</dd>
+                  </div>
+                  {diag.sources && diag.sources.length > 0 && (
+                    <div>
+                      <dt className="text-ink-3">RAG sources</dt>
+                      <dd className="mt-1 flex flex-wrap gap-1.5">
+                        {diag.sources.map(src => (
+                          <span key={src.record_id} className="rounded-md border border-line bg-surface px-2 py-0.5 font-mono text-[11px] text-ink-2">
+                            {src.record_id} · {src.source_name}
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
+                  )}
+                  {(lockedCount > 0 || safety) && (
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <dt className="text-ink-3">Safety guardrail</dt>
+                      <dd className="text-ink">
+                        {lockedCount > 0
+                          ? `Withheld ${lockedCount} power-sensitive step(s) until MCB off + tester confirmed`
+                          : safety?.unlocked
+                            ? 'Unlocked after MCB off + tester statements'
+                            : 'Active (locks power-sensitive steps)'}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </details>
+              <p className="mt-3 text-xs text-ink-3">{diag.confidence_note}</p>
             </>)}
             <ExpectedReadingsCard appliance={s.appliance_type} />
           </section>
+            )
+          })()}
 
           {similar && similar.results.length > 0 && (
             <section aria-labelledby="sim-h" className={`card card-pad ${visStage(1)}`}>
@@ -332,9 +413,12 @@ export default function RepairSessionPage() {
                       <div className="min-w-0 flex-1">
                         <p className={`font-medium ${isDone ? 'text-ink-2 line-through' : ''}`}>{x.step_number}. {x.title}{x.requires_power_off && !x.locked && <span className="ml-2 rounded-full border border-ok/40 bg-ok/10 px-2 py-px text-[12px] font-normal text-ok">isolated</span>}</p>
                         {x.locked ? (
-                          <button type="button" onClick={() => selectStage(2)} className="mt-1 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-crit hover:underline">
-                            <Lock size={14} aria-hidden />Isolate the power to unlock
-                          </button>
+                          <div className="mt-1 space-y-1">
+                            <p className="text-xs font-medium text-crit/90">Withheld until you confirm: MCB off + tester reading</p>
+                            <button type="button" onClick={() => selectStage(2)} className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-crit hover:underline">
+                              <Lock size={14} aria-hidden />Isolate the power to unlock
+                            </button>
+                          </div>
                         ) : (
                           <>
                             <p className="mt-1 text-sm leading-relaxed text-ink-2">{x.instruction}</p>
