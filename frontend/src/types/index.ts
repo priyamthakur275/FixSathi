@@ -50,6 +50,8 @@ export interface ChatMessage {
   channel?: 'text' | 'voice'
   /** The technician's thumbs up (true) or down (false) on this AI answer; undefined when not rated. */
   helpful?: boolean
+  /** True while SSE chunks are actively arriving. */
+  streaming?: boolean
 }
 
 export type VoiceState = 'idle' | 'connecting' | 'listening' | 'processing' | 'responding' | 'error'

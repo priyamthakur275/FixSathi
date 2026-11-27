@@ -159,7 +159,7 @@ def _photo_still_relevant(db: Session, s: RepairSession, text: str, exclude_id=N
     return bool(PHOTO_REF.search(text or ''))
 
 
-async def chat_reply(db: Session, s: RepairSession, user: User, text: str, media_ids: list, exclude_id=None, channel: str = 'text') -> Conversation:
+async def prepare_chat_stream(db: Session, s: RepairSession, user: User, text: str, media_ids: list, exclude_id=None, channel: str = 'text'):
     g = _ai(db, s)
     attached, doc_text = _attachments(db, s, media_ids) if media_ids else ([], '')
     res = await _retrieve(db, s, text, exclude_id, doc_text)
@@ -175,12 +175,30 @@ async def chat_reply(db: Session, s: RepairSession, user: User, text: str, media
     if channel == 'voice':
         final.append(types.Part(text=prompts.VOICE_CHANNEL_NOTE))
     contents = [*_turns(db, s, exclude_id), types.Content(role='user', parts=final)]
+    system = prompts.CHAT_SYSTEM.format(language=user.preferred_language)
+    allowed = {h.record_id for h in res['hits']}
+    return g, res, contents, system, allowed
+
+
+def finalize_stream_message(db: Session, s: RepairSession, meta: CallResult, res: dict, used: list[str], invented: list[str],
+                            sc: safety.StreamScreener, channel: str = 'text') -> Conversation:
+    record_usage(db, s, 'chat', meta)
+    sources = [h.citation() for h in res['hits'] if h.record_id in used]
+    return add_message(db, s, 'assistant', sc.final_text, meta={
+        'channel': channel, 'model': meta.model, 'latency_ms': meta.latency_ms,
+        'ai_generated': meta.model != 'demo-scenario', 'demo': meta.model == 'demo-scenario', 'sources': sources,
+        'knowledge_coverage': res['coverage'], 'removed_invalid_citations': len(dict.fromkeys(invented)),
+        'safety_withheld': sc.withheld, 'safety_reason': sc.reason, 'microwave_escalated': sc.microwave_escalated,
+    })
+
+
+async def chat_reply(db: Session, s: RepairSession, user: User, text: str, media_ids: list, exclude_id=None, channel: str = 'text') -> Conversation:
+    g, res, contents, system, allowed = await prepare_chat_stream(db, s, user, text, media_ids, exclude_id, channel)
     try:
-        reply, meta = await g.generate_text('chat', contents, prompts.CHAT_SYSTEM.format(language=user.preferred_language))
+        reply, meta = await g.generate_text('chat', contents, system)
     except AppError as e:
         record_usage(db, s, 'chat', None, ok=False, code=e.code, model='agent'); raise
     record_usage(db, s, 'chat', meta)
-    allowed = {h.record_id for h in res['hits']}
     reply, used, invented = _clean_citations(reply, allowed)
     # Enforced by the server, not left to the prompt: only the screened text is stored or shown.
     sc = safety.screen_text(db, s, user, reply, actor='chat', voice=channel == 'voice')

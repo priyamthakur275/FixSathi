@@ -2,7 +2,7 @@
  * Service layer. Every UI screen talks to the FastAPI backend only through these functions.
  * There are no mock implementations: when AI is not configured on the server the API returns AI_NOT_CONFIGURED and the UI says so.
  */
-import { api, tokens } from './api'
+import { api, apiBase, refreshDetailed, tokens } from './api'
 import type {
   ChatResult, ComponentResult, Diagnosis, Escalation, FileKind, Language, MediaItem, NameplateResponse, Overview, Page, RepairSession, RepairStep, Report, SafetyState,
   SavedDiagnosis, ServerMessage, SimilarResult, TechRow, Tokens, TrendPoint, User,
@@ -50,9 +50,81 @@ export const demoService = {
   start: (scenario: string) => api<RepairSession>('/api/v1/demo/sessions', { body: { scenario }, timeoutMs: 30000 }),
 }
 
+export class StreamFallbackError extends Error {
+  constructor(message = 'Streaming unavailable') { super(message); this.name = 'StreamFallbackError' }
+}
+
+export interface ChatStreamCallbacks {
+  onUserMessage?: (m: ServerMessage) => void
+  onDelta?: (chunk: string) => void
+  onDone?: (m: ServerMessage) => void
+  onAiError?: (status: 'unavailable' | 'error', err: { code: string; message: string; hint?: string | null }) => void
+}
+
 export const chatService = {
   history: (sid: string) => api<Page<ServerMessage>>(`/api/v1/sessions/${sid}/messages?limit=200`),
   send: (sid: string, text: string, media_ids: string[], channel: 'text' | 'voice' = 'text') => api<ChatResult>(`/api/v1/sessions/${sid}/messages`, { body: { text, media_ids, channel }, timeoutMs: 90000 }),
+  async stream(sid: string, text: string, media_ids: string[], channel: 'text' | 'voice', cb: ChatStreamCallbacks, signal?: AbortSignal): Promise<void> {
+    const runFetch = () => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'text/event-stream' }
+      const access = tokens.access()
+      if (access) headers.Authorization = `Bearer ${access}`
+      return fetch(`${apiBase}/api/v1/sessions/${sid}/messages/stream`, {
+        method: 'POST', headers, body: JSON.stringify({ text, media_ids, channel }), signal,
+      })
+    }
+    let res: Response
+    try {
+      res = await runFetch()
+      if (res.status === 401 && (await refreshDetailed()) === 'ok') res = await runFetch()
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') throw e
+      throw new StreamFallbackError((e as Error)?.message || 'Network stream error')
+    }
+    const ct = res.headers.get('content-type') || ''
+    if (!res.ok || !ct.includes('text/event-stream') || !res.body) {
+      throw new StreamFallbackError(`Stream HTTP ${res.status}`)
+    }
+    const reader = res.body.getReader()
+    const dec = new TextDecoder()
+    let buf = ''
+    let gotDoneOrError = false
+    const handleEvent = (raw: string) => {
+      let ev = 'message'
+      const dataLines: string[] = []
+      for (const line of raw.split('\n')) {
+        if (line.startsWith('event:')) ev = line.slice(6).trim()
+        else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart())
+      }
+      if (!dataLines.length) return
+      const payload = JSON.parse(dataLines.join('\n')) as Record<string, unknown>
+      if (ev === 'user_message' && payload.user_message) cb.onUserMessage?.(payload.user_message as ServerMessage)
+      else if (ev === 'delta' && typeof payload.text === 'string') cb.onDelta?.(payload.text)
+      else if (ev === 'done' && payload.assistant_message) { gotDoneOrError = true; cb.onDone?.(payload.assistant_message as ServerMessage) }
+      else if (ev === 'error') {
+        gotDoneOrError = true
+        cb.onAiError?.((payload.ai_status as 'unavailable' | 'error') || 'error', (payload.ai_error as { code: string; message: string; hint?: string | null }) || { code: 'AI_ERROR', message: 'The AI could not reply.' })
+      }
+    }
+    while (true) {
+      const { value, done } = await reader.read()
+      if (value) buf += dec.decode(value, { stream: !done })
+      else if (done) buf += dec.decode()
+      buf = buf.replace(/\r\n/g, '\n')
+      let sep = buf.indexOf('\n\n')
+      while (sep !== -1) {
+        const block = buf.slice(0, sep)
+        buf = buf.slice(sep + 2)
+        if (block.trim()) handleEvent(block)
+        sep = buf.indexOf('\n\n')
+      }
+      if (done) {
+        if (buf.trim()) handleEvent(buf)
+        break
+      }
+    }
+    if (!gotDoneOrError) throw new Error('Stream ended unexpectedly before finishing.')
+  },
 }
 
 /** Every file the technician can attach. The server checks the real bytes again; this check gives a fast, clear message. */

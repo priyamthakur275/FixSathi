@@ -276,6 +276,64 @@ class GeminiClient:
         resp, meta = await self._agent_call(op, contents, system_instruction=system, temperature=temperature, **({'max_output_tokens': cap} if cap else {}))
         return self._text_or_raise(resp, op), meta
 
+    async def stream_text(self, op: str, contents: Any, system: str, temperature: float = 0.4):
+        """Stream text chunks from Gemini, failing over between configured models only before the first chunk."""
+        configured = self._agent_models()
+        now = time.time()
+        ready = [m for m in configured if COOLDOWN.get(m, 0) <= now]
+        cooling = sorted((m for m in configured if m not in ready), key=lambda m: COOLDOWN[m])
+        models = ready + cooling
+        cap = TEXT_OUTPUT_CAP.get(op)
+        kw = dict(system_instruction=system, temperature=temperature, **({'max_output_tokens': cap} if cap else {}))
+        s = get_settings()
+        last: Exception | None = None
+        for i, model in enumerate(models):
+            t0 = time.perf_counter()
+            sent_any = False
+            in_tok = out_tok = None
+            try:
+                stream = await asyncio.wait_for(
+                    self.raw.aio.models.generate_content_stream(model=model, contents=contents, config=self._cfg(**kw)),
+                    timeout=s.gemini_timeout_seconds,
+                )
+                async for chunk in stream:
+                    um = getattr(chunk, 'usage_metadata', None)
+                    if um is not None:
+                        in_tok = getattr(um, 'prompt_token_count', in_tok)
+                        out_tok = getattr(um, 'candidates_token_count', out_tok)
+                    txt = getattr(chunk, 'text', None) or ''
+                    if txt:
+                        sent_any = True
+                        yield txt, None
+                if not sent_any:
+                    raise AIError('The AI model returned an empty response.', code='AI_EMPTY', details={'op': op})
+                ms = int((time.perf_counter() - t0) * 1000)
+                meta = CallResult(model=model, latency_ms=ms, input_tokens=in_tok, output_tokens=out_tok)
+                log(logger, 'gemini_call', op=op, model=model, ms=ms, attempt=0, stream=True, input_tokens=in_tok, output_tokens=out_tok)
+                LAST_STATUS.update(ok=True, op=op, model=model, code=None, at=time.time())
+                COOLDOWN.pop(model, None)
+                if model != configured[0]:
+                    log(logger, 'gemini_fallback_used', logging.WARNING, op=op, primary=configured[0], used=model)
+                yield '', meta
+                return
+            except Exception as e:  # noqa: BLE001
+                if isinstance(e, AIError) and e.code == 'AI_EMPTY' and i == len(models) - 1:
+                    raise
+                c = classify(e, model)
+                log(logger, 'gemini_call_failed', logging.WARNING, op=op, model=model, error_code=c.code, stream=True,
+                    provider_http=c.provider_http, provider_status=c.provider_status, provider_message=c.provider_message,
+                    ms=int((time.perf_counter() - t0) * 1000))
+                LAST_STATUS.update(ok=False, op=op, model=model, code=c.code, hint=c.hint, at=time.time())
+                if c.code in COOL_CODES:
+                    COOLDOWN[model] = time.time() + min(max(c.retry_after or 0, COOL_CODES[c.code]), max(3600, COOL_CODES[c.code]))
+                err_cls = AIUnavailable if c.http_status == 503 else AIError
+                last = err_cls(c.message, code=c.code, status=c.http_status, details=c.details(model))
+                if not sent_any and c.code in FAILOVER_CODES and i < len(models) - 1:
+                    continue
+                raise last from e
+        if last:  # pragma: no cover
+            raise last
+
     async def generate_image(self, prompt: str, reference: tuple[bytes, str] | None = None) -> tuple[bytes, str, CallResult]:
         model = self.model('image')
         parts: list[Any] = [prompt]

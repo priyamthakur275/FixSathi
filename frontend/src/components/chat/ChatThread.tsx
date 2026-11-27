@@ -148,14 +148,17 @@ function Bubble({ m }: { m: ChatMessage }) {
           </div>
         )}
         {body && <Markdown text={body} sources={m.sources} />}
+        {m.streaming && <span className="mt-1 inline-block h-3.5 w-1.5 animate-pulse rounded-sm bg-accent" aria-label="Streaming response" />}
         {m.action === 'pdf_report' && <PdfCard />}
         {m.sources && m.sources.length > 0 && <SourceList sources={m.sources} />}
-        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[12.5px] text-ink-3">
-          {m.text && m.action !== 'pdf_report' && <ReadAloud text={m.text} id={m.id} />}
-          {m.text && <CopyButton text={m.text} />}
-          {m.aiGenerated && !m.demo && m.action !== 'pdf_report' && <RateAnswer m={m} />}
-          <span className="ml-1.5">{time(m.at)}</span>
-        </div>
+        {!m.streaming && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[12.5px] text-ink-3">
+            {m.text && m.action !== 'pdf_report' && <ReadAloud text={m.text} id={m.id} />}
+            {m.text && <CopyButton text={m.text} />}
+            {m.aiGenerated && !m.demo && m.action !== 'pdf_report' && <RateAnswer m={m} />}
+            <span className="ml-1.5">{time(m.at)}</span>
+          </div>
+        )}
       </div>
     </motion.div>
   )
@@ -174,7 +177,7 @@ function ThinkingLabel({ progress }: { progress: string | null }) {
 export function ChatThread() {
   const { messages, thinking, progress, error } = useApp()
   const end = useRef<HTMLDivElement>(null)
-  useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }) }, [messages.length, thinking])
+  useEffect(() => { end.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' }) }, [messages.length, thinking])
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-4 pt-8 md:px-6" role="log" aria-live="polite" aria-label="Conversation">
       {messages.map(m => <Bubble key={m.id} m={m} />)}

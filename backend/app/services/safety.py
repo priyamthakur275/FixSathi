@@ -10,6 +10,7 @@ Rules:
   withheld while the gate is locked, and microwave internal work is always replaced by a hand-over to authorised service.
 """
 import logging, re
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 from sqlalchemy import select
@@ -200,3 +201,217 @@ def screen_text(db: Session, s: RepairSession, user: User | None, text: str, act
     if withheld:
         body = f'{body} {LOCK_NOTE_VOICE}'.strip() if voice else f'{body}\n\n{LOCK_NOTE}'.strip()
     return Screened(body, withheld, int(mw_done), None if allowed.allowed else allowed.reason)
+
+
+_SENTENCE_KEEP_SEP = re.compile(r'((?<=[.!?।])\s+)')
+_MAYBE_PREFIX = re.compile(r'^\s*(?:[-*•#]|\*\*|\d{1,3}[.)]|$)')
+
+
+class StreamScreener:
+    """Incremental server-side safety screener for SSE streaming.
+
+    Every complete line and every complete prose sentence is screened BEFORE being emitted to the client.
+    Any bulleted/numbered step or heading is buffered until newline/finish so a power-sensitive step is
+    never partially streamed before the isolation gate runs.
+    """
+
+    def __init__(self, db: Session, s: RepairSession, user: User | None, actor: str, appliance: str | None = None,
+                 voice: bool = False, cite_fn: Callable[[str], str] | None = None):
+        from ..datasets.normalize import detect_appliance
+        self._detect_appliance = detect_appliance
+        self.db = db
+        self.s = s
+        self.user = user
+        self.actor = actor
+        self.voice = voice
+        self.cite_fn = cite_fn
+        self._microwave = (appliance or s.appliance_type) == 'microwave_oven'
+        self._buf = ''
+        self._in_causes = False
+        self._line_prose_started = False
+        self._guarded = False
+        self._guard_allowed = True
+        self._mw_recorded = False
+        self._mw_done = False
+        self._last_was_withheld_line = False
+        self._emitted: list[str] = []
+        self._started_output = False
+        self._pending_nl = ''
+        self.withheld = 0
+        self.microwave_escalated = 0
+        self.reason: str | None = None
+
+    @property
+    def final_text(self) -> str:
+        return ''.join(self._emitted)
+
+    def _check_guard(self) -> bool:
+        if not self._guarded:
+            self._guarded = True
+            d = guard(self.db, self.s, self.user, f'{self.actor}_reply', True, actor=self.actor)
+            self._guard_allowed = d.allowed
+            if not d.allowed:
+                self.reason = d.reason
+        return self._guard_allowed
+
+    def _record_mw(self) -> None:
+        if not self._mw_recorded:
+            self._mw_recorded = True
+            record_block(self.db, self.s, self.user, f'{self.actor}_reply:microwave_internal', 'MICROWAVE_INTERNAL', self.actor)
+
+    def _clean(self, txt: str) -> str:
+        return self.cite_fn(txt) if self.cite_fn else txt
+
+    def _classify_part(self, part: str, is_step: bool, cause: bool) -> str:
+        if self._detect_appliance(part) == 'microwave_oven':
+            self._microwave = True
+        if self._microwave and mentions_microwave_internals(part):
+            self._record_mw()
+            return 'microwave'
+        if is_step or (cause and IMPERATIVE.match(re.sub(r'^\W*\*\*[^*]*\*\*:?', '', part))):
+            needs = step_text_needs_power_off(part)
+        else:
+            needs = instructs_power_work(part)
+        if needs and not self._check_guard():
+            return 'power'
+        return 'ok'
+
+    def _emit_raw(self, chunk: str, out: list[str]) -> None:
+        if not chunk:
+            return
+        # Hold trailing newlines so trailing whitespace is never emitted before knowing whether more text or LOCK_NOTE follows.
+        lead = chunk
+        trail_len = len(lead) - len(lead.rstrip('\r\n'))
+        if trail_len:
+            next_nl = lead[len(lead) - trail_len:]
+            lead = lead[:len(lead) - trail_len]
+        else:
+            next_nl = ''
+        if not lead:
+            if self._started_output:
+                self._pending_nl += next_nl
+            return
+        if not self._started_output:
+            lead = lead.lstrip('\r\n')
+            if not lead:
+                return
+            self._started_output = True
+            full = lead
+        else:
+            full = self._pending_nl + lead
+        self._pending_nl = next_nl
+        self._emitted.append(full)
+        out.append(full)
+
+    def _screen_complete_line(self, line: str, trailing_nl: str, out: list[str]) -> None:
+        line = self._clean(line)
+        head = _heading(line)
+        if head is not None:
+            self._in_causes = bool(_CAUSE_HEAD.search(head))
+        prefix, body = _BULLET.match(line).groups()
+        cause = bool(prefix) and (self._in_causes or bool(FAULT_LEAD.match(re.sub(r'^\W*\*\*', '', body))))
+        cause = cause and not prefix.startswith((' ', '\t'))
+        parts = [c for p in _SENTENCE.split(body) if p for c in (_CLAUSE.split(p) if cause else [p]) if c]
+        is_step = bool(prefix) and not cause
+        kinds = [(p, self._classify_part(p, is_step=is_step, cause=cause)) for p in parts]
+        if is_step and any(k == 'power' for _, k in kinds):
+            kinds = [(p, 'power' if k == 'ok' else k) for p, k in kinds]
+
+        kept: list[str] = []
+        for p, k in kinds:
+            if k == 'microwave':
+                if not self._mw_done:
+                    kept.append(MICROWAVE_ESCALATION)
+                    self._mw_done = True
+                    self.microwave_escalated = 1
+            elif k == 'power':
+                self.withheld += 1
+                if not self.voice and (not kept or kept[-1] != WITHHELD_MARK):
+                    kept.append(WITHHELD_MARK)
+            else:
+                kept.append(p)
+
+        if kept or not parts:
+            rendered = ((prefix or '') + ' '.join(kept)) if kept else line
+            is_withheld_only = rendered.strip().endswith(WITHHELD_MARK) and (_BULLET.match(rendered).group(2).strip() == WITHHELD_MARK)
+            if is_withheld_only:
+                rendered = WITHHELD_MARK
+                if self._last_was_withheld_line:
+                    return
+                self._last_was_withheld_line = True
+            else:
+                self._last_was_withheld_line = False
+            self._emit_raw(rendered + trailing_nl, out)
+
+    def _can_stream_prose_midline(self) -> bool:
+        if self._line_prose_started:
+            return True
+        if not self._buf or _MAYBE_PREFIX.match(self._buf):
+            return False
+        return len(self._buf.strip()) >= 8
+
+    def _screen_prose_segment(self, seg: str, sep: str, out: list[str]) -> None:
+        cleaned = self._clean(seg)
+        if not cleaned:
+            return
+        k = self._classify_part(cleaned, is_step=False, cause=False)
+        if k == 'microwave':
+            if not self._mw_done:
+                self._mw_done = True
+                self.microwave_escalated = 1
+                self._last_was_withheld_line = False
+                self._emit_raw(MICROWAVE_ESCALATION + sep, out)
+            return
+        if k == 'power':
+            self.withheld += 1
+            if not self.voice:
+                self._last_was_withheld_line = True
+                self._emit_raw(WITHHELD_MARK + sep, out)
+            return
+        self._last_was_withheld_line = False
+        self._emit_raw(cleaned + sep, out)
+
+    def feed(self, chunk: str) -> list[str]:
+        """Consume a model text chunk and return 0+ screened pieces safe to send to the client."""
+        if not chunk:
+            return []
+        self._buf += chunk
+        out: list[str] = []
+
+        while '\n' in self._buf:
+            line, rest = self._buf.split('\n', 1)
+            self._buf = rest
+            if self._line_prose_started:
+                self._screen_prose_segment(line, '\n', out)
+                self._line_prose_started = False
+            else:
+                self._screen_complete_line(line, '\n', out)
+
+        if self._buf and self._can_stream_prose_midline():
+            tokens = _SENTENCE_KEEP_SEP.split(self._buf)
+            if len(tokens) >= 3:
+                for idx in range(0, len(tokens) - 2, 2):
+                    self._line_prose_started = True
+                    self._screen_prose_segment(tokens[idx], tokens[idx + 1], out)
+                self._buf = tokens[-1]
+        return out
+
+    def finish(self) -> list[str]:
+        """Flush any buffered tail cleanly and append the lock note when anything was withheld."""
+        out: list[str] = []
+        tail = self._buf
+        self._buf = ''
+        if tail.strip():
+            if self._line_prose_started:
+                self._screen_prose_segment(tail.rstrip(), '', out)
+            else:
+                self._screen_complete_line(tail.rstrip(), '', out)
+        self._line_prose_started = False
+        self._pending_nl = ''
+
+        if self.withheld:
+            has_body = bool(''.join(self._emitted).strip())
+            note = (f' {LOCK_NOTE_VOICE}' if has_body else LOCK_NOTE_VOICE) if self.voice else (f'\n\n{LOCK_NOTE}' if has_body else LOCK_NOTE)
+            self._emitted.append(note)
+            out.append(note)
+        return [p for p in out if p]
