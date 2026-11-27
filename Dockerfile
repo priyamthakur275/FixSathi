@@ -9,7 +9,7 @@ ENV VITE_API_BASE_URL=""
 RUN npm run build
 
 FROM python:3.12-slim
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=10000 FRONTEND_DIST=/app/web FIXSAATHI_DATA_DIR=/app/data
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8080 FRONTEND_DIST=/app/web FIXSAATHI_DATA_DIR=/app/data
 WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -19,6 +19,6 @@ COPY docs/EVALUATION_RESULTS.json /app/docs/EVALUATION_RESULTS.json
 COPY --from=web /web/dist /app/web
 RUN useradd -m app && mkdir -p /app/uploads && chown -R app /app
 USER app
-EXPOSE 10000
+EXPOSE 8080
 # Migrations, the repair records, the embedding index in the background (when a Gemini key is set), then the server on $PORT.
 CMD ["sh", "scripts/render_start.sh"]

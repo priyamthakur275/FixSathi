@@ -251,7 +251,7 @@ async def stream_message(request: Request, session_id: uuid.UUID, body: MessageI
                     'ai_error': {'code': e.code, 'message': e.message, 'hint': e.details.get('hint'), 'provider_status': e.details.get('provider_status')},
                 })
 
-    return StreamingResponse(event_stream(), media_type='text/event-stream', headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
+    return StreamingResponse(event_stream(), media_type='text/event-stream', headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
 
 
 @router.put('/sessions/{session_id}/messages/{message_id}/feedback', response_model=MessageOut)

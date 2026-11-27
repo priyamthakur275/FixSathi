@@ -134,23 +134,38 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
             print('        Cannot run live Gemini smoke check without GEMINI_API_KEY.')
             return 1
 
-        # Create short-lived technician session for isolated verification
+        # Create short-lived technician session and verify login + public evaluation endpoint
         uid = uuid.uuid4().hex[:10]
+        email = f'smoke+{uid}@example.com'
+        password = f'SmokePass-{uid}!'
         reg = await client.post(
             '/api/v1/auth/register',
             json={
                 'full_name': 'Smoke Technician',
-                'email': f'smoke+{uid}@example.com',
-                'password': f'SmokePass-{uid}!',
+                'email': email,
+                'password': password,
                 'preferred_language': 'English',
             },
         )
         if reg.status_code != 201:
             _step('Register smoke technician', False, f'HTTP {reg.status_code}: {reg.text[:200]}')
             return 1
-        token = reg.json()['access_token']
-        headers = {'Authorization': f'Bearer {token}'}
         _step('Register smoke technician', True)
+
+        login_res = await client.post('/api/v1/auth/login', json={'email': email, 'password': password})
+        if login_res.status_code != 200:
+            _step('Login via POST /api/v1/auth/login', False, f'HTTP {login_res.status_code}: {login_res.text[:200]}')
+            return 1
+        token = login_res.json()['access_token']
+        headers = {'Authorization': f'Bearer {token}'}
+        _step('Login via POST /api/v1/auth/login', True)
+
+        eval_res = await client.get('/api/v1/evaluation')
+        eval_json = eval_res.json() if eval_res.status_code == 200 else {}
+        eval_ok = eval_res.status_code == 200 and bool(eval_json.get('held_out') or eval_json.get('safety'))
+        _step('Public GET /api/v1/evaluation', eval_ok, f'HTTP {eval_res.status_code}')
+        if not eval_ok:
+            failures += 1
 
         sess = await client.post(
             '/api/v1/sessions',
@@ -175,8 +190,9 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
             msg = done.get('assistant_message') or {}
             saved_text = msg.get('message', '')
             withheld_count = (msg.get('meta') or {}).get('safety_withheld', 0)
+            used_model = (msg.get('meta') or {}).get('model')
             stream_ok = bool(deltas) and bool(saved_text) and streamed_text == saved_text
-            _step('(a) SSE streamed reply arrived (locked session)', stream_ok, f'{len(deltas)} deltas, {len(saved_text)} chars')
+            _step('(a) SSE streamed reply arrived (locked session)', stream_ok, f'{len(deltas)} deltas, {len(saved_text)} chars, model={used_model}')
             if not stream_ok:
                 failures += 1
 
@@ -256,11 +272,12 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
             msg2 = done2.get('assistant_message') or {}
             saved2 = msg2.get('message', '')
             withheld2 = (msg2.get('meta') or {}).get('safety_withheld', 0)
+            used_model2 = (msg2.get('meta') or {}).get('model')
             unlocked_ok = bool(deltas2) and bool(saved2) and streamed2 == saved2 and withheld2 == 0 and WITHHELD_MARK not in streamed2
             _step(
                 '(c2) Power-sensitive steps stream when unlocked',
                 unlocked_ok,
-                f'{len(deltas2)} deltas, safety_withheld={withheld2}, {len(streamed2)} chars',
+                f'{len(deltas2)} deltas, safety_withheld={withheld2}, {len(saved2)} chars, model={used_model2}',
             )
             if not unlocked_ok:
                 failures += 1

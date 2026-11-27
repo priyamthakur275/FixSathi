@@ -176,11 +176,15 @@ class GeminiClient:
             raise AIError('The AI model returned an empty response.', code='AI_EMPTY', details={'reason': reason, 'op': op})
         return text
 
-    def _agent_models(self) -> list[str]:
+    def _agent_models(self, op: str | None = None) -> list[str]:
         s = get_settings()
         extra = [m.strip() for m in (s.gemini_agent_fallback_models or '').split(',') if m.strip()]
         first = self.model('agent')
-        return [first] + [m for m in extra if m != first]
+        ordered = [first] + [m for m in extra if m != first]
+        if op == 'chat' and s.gemini_fast_model:
+            fast = s.gemini_fast_model
+            return [fast] + [m for m in ordered if m != fast]
+        return ordered
 
     def _cfg(self, **kw) -> types.GenerateContentConfig:
         lvl = (get_settings().gemini_thinking_level or '').strip().lower()
@@ -190,7 +194,7 @@ class GeminiClient:
 
     async def _agent_call(self, op: str, contents: Any, **cfg_kw):
         """Try the agent model, then each configured fallback, on rate-limit/tier/overload/timeout errors. Each switch is logged."""
-        configured = self._agent_models()
+        configured = self._agent_models(op)
         now = time.time()
         ready = [m for m in configured if COOLDOWN.get(m, 0) <= now]
         cooling = sorted((m for m in configured if m not in ready), key=lambda m: COOLDOWN[m])
@@ -278,7 +282,7 @@ class GeminiClient:
 
     async def stream_text(self, op: str, contents: Any, system: str, temperature: float = 0.4):
         """Stream text chunks from Gemini, failing over between configured models only before the first chunk."""
-        configured = self._agent_models()
+        configured = self._agent_models(op)
         now = time.time()
         ready = [m for m in configured if COOLDOWN.get(m, 0) <= now]
         cooling = sorted((m for m in configured if m not in ready), key=lambda m: COOLDOWN[m])
