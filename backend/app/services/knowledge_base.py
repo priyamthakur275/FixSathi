@@ -4,7 +4,8 @@ retrieve(): structured filters (category, brand, model, error code) → PostgreS
 optional Gemini-embedding re-ranking. Synthetic demo records are excluded unless include_synthetic=True.
 Every hit carries its record_id, source, licence and verification status so answers can cite it.
 """
-import logging, math, re
+import copy, logging, math, re, threading, time
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from sqlalchemy import func, or_, select, text, true
 from sqlalchemy.orm import Session
@@ -45,6 +46,29 @@ DEVANAGARI = {'पंखा': 'fan', 'पंखे': 'fan', 'ठंडा': 'coo
               'बंद': 'stops', 'चालू': 'start', 'स्वाद': 'taste', 'दरवाजा': 'door', 'दरवाज़ा': 'door', 'लाइट': 'light',
               'एसी': 'ac', 'फ्रिज': 'fridge', 'फ्रीज': 'fridge', 'मशीन': 'machine', 'माइक्रोवेव': 'microwave', 'प्यूरीफायर': 'purifier'}
 DEV_WORD = re.compile(r'[\u0900-\u097F]+')
+
+_CACHE_MAX = 256
+_CACHE_TTL_S = 300.0
+_CACHE_LOCK = threading.RLock()
+_BRANDS_CACHE: tuple[float, list[str]] | None = None
+_RETRIEVE_CACHE: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
+_CACHE_STATS = {'hits': 0, 'misses': 0}
+
+
+def clear_cache() -> None:
+    """Drop cached brand lists and retrieval hits (called on ingest, re-index, and in tests)."""
+    global _BRANDS_CACHE
+    with _CACHE_LOCK:
+        _BRANDS_CACHE = None
+        _RETRIEVE_CACHE.clear()
+        _CACHE_STATS['hits'] = 0
+        _CACHE_STATS['misses'] = 0
+
+
+def cache_stats() -> dict[str, int]:
+    """Return a snapshot of knowledge-lookup cache hits and misses."""
+    with _CACHE_LOCK:
+        return dict(_CACHE_STATS)
 
 
 def _lexemes(expr):
@@ -139,6 +163,7 @@ def ingest(db: Session, records: list[RepairRecord]) -> dict:
         else:
             db.add(RepairRecordRow(record_id=r.record_id, **cols)); added += 1
     db.flush()
+    clear_cache()
     return {'added': added, 'updated': updated, 'unchanged': len(records) - added - updated}
 
 
@@ -158,7 +183,15 @@ def _tsquery(q: str) -> str | None:
 
 
 def known_brands(db: Session) -> list[str]:
-    return [b for (b,) in db.execute(select(RepairRecordRow.appliance_brand).where(RepairRecordRow.appliance_brand.is_not(None)).distinct())]
+    global _BRANDS_CACHE
+    now = time.monotonic()
+    with _CACHE_LOCK:
+        if _BRANDS_CACHE and now - _BRANDS_CACHE[0] < _CACHE_TTL_S:
+            return list(_BRANDS_CACHE[1])
+    vals = [b for (b,) in db.execute(select(RepairRecordRow.appliance_brand).where(RepairRecordRow.appliance_brand.is_not(None)).distinct())]
+    with _CACHE_LOCK:
+        _BRANDS_CACHE = (now, list(vals))
+    return vals
 
 
 def detect_brand(db: Session, text_: str) -> str | None:
@@ -171,6 +204,30 @@ def detect_brand(db: Session, text_: str) -> str | None:
 
 async def retrieve(db: Session, query: str, category: str | None = None, brand: str | None = None, model: str | None = None,
                    error_codes: list[str] | None = None, k: int = 6, include_synthetic: bool = False, use_embeddings: bool = True) -> dict:
+    st = get_settings()
+    cache_key = (
+        ' '.join((query or '').strip().lower().split()),
+        category or '',
+        (brand or '').strip().lower(),
+        (model or '').strip().lower(),
+        tuple(error_codes) if error_codes is not None else None,
+        k,
+        include_synthetic,
+        use_embeddings,
+        st.vector_search_mode,
+        bool(get_gemini().configured and st.gemini_embed_model),
+    )
+    now = time.monotonic()
+    with _CACHE_LOCK:
+        cached = _RETRIEVE_CACHE.get(cache_key)
+        if cached and now - cached[0] < _CACHE_TTL_S:
+            _RETRIEVE_CACHE.move_to_end(cache_key)
+            _CACHE_STATS['hits'] += 1
+            return copy.deepcopy(cached[1])
+        if cached:
+            del _RETRIEVE_CACHE[cache_key]
+        _CACHE_STATS['misses'] += 1
+
     detected = None
     if not category or category == 'unknown':  # appliance-aware even when the session has no appliance yet
         detected = N.detect_appliance(query)
@@ -218,7 +275,6 @@ async def retrieve(db: Session, query: str, category: str | None = None, brand: 
             add(row, 'kw', score)
 
     mode, reason = 'keyword', None
-    st = get_settings()
     if use_embeddings and st.vector_search_mode != 'keyword' and get_gemini().configured and st.gemini_embed_model:
         mdl_cfg = get_gemini().model('embed')
         indexed = db.scalar(select(func.count()).select_from(RepairEmbedding).where(RepairEmbedding.source_type == 'record', RepairEmbedding.model_identifier == mdl_cfg)) if mdl_cfg else 0
@@ -255,8 +311,14 @@ async def retrieve(db: Session, query: str, category: str | None = None, brand: 
     if codes and code_missing and not code_found:
         coverage = 'partial' if ranked else 'none'
     log(logger, 'retrieve', category=category, detected=detected, brand=brand, codes=codes, hits=len(ranked), mode=mode, coverage=coverage)
-    return {'mode': mode, 'fallback_reason': reason, 'coverage': coverage, 'brand': brand, 'category': category, 'category_detected': detected, 'error_codes_found': code_found,
-            'error_codes_unknown': code_missing, 'hits': ranked}
+    out = {'mode': mode, 'fallback_reason': reason, 'coverage': coverage, 'brand': brand, 'category': category, 'category_detected': detected, 'error_codes_found': code_found,
+           'error_codes_unknown': code_missing, 'hits': ranked}
+    with _CACHE_LOCK:
+        _RETRIEVE_CACHE[cache_key] = (time.monotonic(), copy.deepcopy(out))
+        _RETRIEVE_CACHE.move_to_end(cache_key)
+        while len(_RETRIEVE_CACHE) > _CACHE_MAX:
+            _RETRIEVE_CACHE.popitem(last=False)
+    return out
 
 
 def context_block(res: dict) -> str:
@@ -315,6 +377,8 @@ async def index_records(db: Session, batch: int = 50, commit_each_batch: bool = 
         db.flush(); n += len(chunk)
         if commit_each_batch:
             db.commit()
+    if n > 0:
+        clear_cache()
     return n
 
 

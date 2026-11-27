@@ -23,3 +23,31 @@ def test_lookup_reports_codes_it_has_no_record_for(client, tech):
 
 def test_lookup_needs_sign_in(client):
     assert client.get('/api/v1/lookup?q=CH38').status_code == 401
+
+
+def test_repeated_knowledge_lookup_uses_cache_and_ingest_invalidates_it(client, tech):
+    from app.services import knowledge_base as kb
+
+    _ingest(rec(record_id='t:cache1', appliance_category='split_ac', appliance_brand='LG', error_code='CH38',
+                reported_symptoms=['CH38 shown'], possible_faults=['Low refrigerant']))
+    before = kb.cache_stats()
+    assert before == {'hits': 0, 'misses': 0}
+
+    r1 = client.get('/api/v1/lookup?q=LG CH38', headers=tech['h'])
+    assert r1.status_code == 200
+    assert kb.cache_stats() == {'hits': 0, 'misses': 1}
+
+    r2 = client.get('/api/v1/lookup?q=LG CH38', headers=tech['h'])
+    assert r2.status_code == 200
+    assert r2.json() == r1.json()
+    assert kb.cache_stats() == {'hits': 1, 'misses': 1}
+
+    # Ingesting new records must invalidate the cache so newly added records appear immediately.
+    _ingest(rec(record_id='t:cache2', appliance_category='washing_machine', appliance_brand='Bosch', error_code='E18',
+                reported_symptoms=['E18 drain error'], possible_faults=['Blocked drain pump filter']))
+    assert kb.cache_stats() == {'hits': 0, 'misses': 0}
+
+    r3 = client.get('/api/v1/lookup?q=Bosch E18', headers=tech['h'])
+    assert r3.status_code == 200
+    assert r3.json()['results'][0]['record_id'] == 't:cache2'
+    assert kb.cache_stats() == {'hits': 0, 'misses': 1}

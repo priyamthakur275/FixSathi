@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 import { Emblem, Wordmark } from '../components/common/Logo'
 import { LockDemo } from '../components/repair/LockDemo'
 import { useAuth } from '../context/AuthContext'
-import type { ApiError } from '../services/api'
+import { apiBase, type ApiError } from '../services/api'
 
 
 export default function LoginPage() {
@@ -20,9 +20,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     let live = true
+    const ctl = new AbortController()
     const slow = setTimeout(() => { if (live) setWakingServer(true) }, 1400)
-    fetch('/health').catch(() => undefined).finally(() => { clearTimeout(slow); if (live) setWakingServer(false) })
-    return () => { live = false; clearTimeout(slow) }
+    fetch(`${apiBase}/health`, { signal: ctl.signal }).catch(() => undefined).finally(() => { clearTimeout(slow); if (live) setWakingServer(false) })
+    return () => { live = false; clearTimeout(slow); ctl.abort() }
   }, [])
   const submit = async (e: FormEvent) => {
     e.preventDefault(); setBusy(true); setErr(null)
