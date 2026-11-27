@@ -18,7 +18,7 @@
 
 <p align="center">
 <img src="docs/demo/demo.gif" width="860" alt="FixSaathi walkthrough: login, Hindi voice home, server-withheld safety lock, unlock, part schematics, public evaluation, and manager dashboard">
-<br><sub><b><a href="DEMO_SCRIPT.md">Read the 90-second demo script &amp; judge Q&amp;A</a></b> · Captured from a local run against the updated UI</sub>
+<br><sub><b><a href="DEMO_SCRIPT.md">Read the 90-second demo script &amp; judge Q&amp;A</a></b> · <a href="docs/demo/fixsaathi-demo.mp4">Watch MP4 walkthrough (Demo: scripted sample, not live AI)</a> · Captured from a local run against the updated UI</sub>
 </p>
 
 <table>
