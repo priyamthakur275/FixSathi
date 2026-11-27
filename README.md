@@ -4,14 +4,14 @@
 
 **An AI repair copilot for appliance technicians in India: grounded diagnosis, a safety lock enforced by the server, and voice in English, Hindi and Kannada.**
 
-[**Live app**](https://fixsaathi-vu9s.onrender.com) · [API docs](https://fixsaathi-vu9s.onrender.com/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md)
+[**Live Cloud Run app**](https://fixsaathi-915991223959.us-east4.run.app) · [API docs](https://fixsaathi-915991223959.us-east4.run.app/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md)
 
 ![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-479-2ea44f)
-![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-480-2ea44f)
+![Deploy](https://img.shields.io/badge/deployed_on-Cloud_Run-4285F4?logo=googlecloud&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
@@ -119,13 +119,13 @@ flowchart TD
 
 ## Gemini usage
 
-Default configuration (verified live via `scripts/check_gemini.py --call --live` and `scripts/smoke_live.py` with no mocks):
+Default configuration (verified live against `https://fixsaathi-915991223959.us-east4.run.app` and `scripts/smoke_live.py` with no mocks):
 
 | Role | Configured model | Fallback / notes |
 |---|---|---|
-| Chat, SSE streaming, structured diagnosis & repair steps (`GEMINI_AGENT_MODEL`) | `gemini-4-hydrogen` | `gemini-3.5-flash-lite, gemini-3.1-flash-lite` (`GEMINI_AGENT_FALLBACK_MODELS`; fast ~1.1s fallback on timeout/overload; `gemini-4-argon`, `gemini-4-carbon`, and `gemini-4-neon` returned quota-0 `429` on our key tier) |
-| Vision & nameplate / LED error-code reading | `gemini-4-hydrogen` | `gemini-3.5-flash-lite` fallback; extracts brand, model & error code into retrieval |
-| Response safety screening | Server-side `StreamScreener` + `power_rules.py` | Runs deterministically on every streamed sentence before it reaches the client; optional fallback models above handle fast JSON/text duties |
+| Fast chat & SSE streaming (`GEMINI_FAST_MODEL`) | `gemini-3.5-flash-lite` | Falls back through `gemini-4-hydrogen` -> `gemini-4-neon` |
+| Structured diagnosis, repair steps & vision (`GEMINI_AGENT_MODEL`) | `gemini-4-hydrogen` | `gemini-4-neon, gemini-3.5-flash-lite` (`GEMINI_AGENT_FALLBACK_MODELS`; `gemini-4-neon` returned quota-0 `429` on our key tier, so `gemini-3.5-flash-lite` handles failover seamlessly) |
+| Server-side safety guardrail | `StreamScreener` + `power_rules.py` | Deterministic server check on every streamed sentence and step before anything reaches the client |
 | Knowledge & session embeddings (`GEMINI_EMBED_MODEL`) | `gemini-embedding-2` | 3072-dim hybrid retrieval alongside PostgreSQL full-text search |
 | Real-time voice & video relay (`GEMINI_LIVE_MODEL`) | `gemini-3.8-live` | Bidirectional WebSocket via `v1beta` (`raw_beta`); tool calls guarded on server |
 | Spoken replies (`GEMINI_TTS_MODEL`) | `gemini-3.8-flash-tts` | Prebuilt `Charon` voice on `v1beta` (`gemini-2.5-flash-preview-tts` also supported); device browser voice fallback |
@@ -137,9 +137,9 @@ Scripted demo scenarios are no longer placed in the primary workspace navigation
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 479 automated tests: 390 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 89 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
+- **Tests:** 480 automated tests: 391 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 89 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
-- **Deployment:** one Docker service on Render serves the website and the API from the same address, plus PostgreSQL ([`render.yaml`](render.yaml)); no URL is written into the config, so it deploys to any account. Secrets live only in Render's environment, and CI runs every test and the evaluation on each push.
+- **Deployment:** one single-origin container (`Dockerfile`) deployed to **Google Cloud Run** (`https://fixsaathi-915991223959.us-east4.run.app`, `us-east4`) connected via Unix socket to **Cloud SQL for PostgreSQL 16**, built with Cloud Build / Artifact Registry, with `GEMINI_API_KEY`, `SECRET_KEY`, and `DATABASE_URL` stored in **Secret Manager** ([`DEPLOY_CLOUDRUN.md`](DEPLOY_CLOUDRUN.md)). Also includes [`render.yaml`](render.yaml) for Render deploys.
 
 ```
 frontend/   React app
@@ -193,7 +193,7 @@ cd ../frontend && npm test && npm run build && npm run lint
 
 ## Team
 
-Built by **Prerana P Jois** and **Priyam Thakur** (Team Tensor Trailblazers, BMS College of Engineering, Bengaluru) for the Google Startup Buildathon India 2026, where the project reached the end of Round 2.
+Built by **Prerana P Jois** and **Priyam Thakur** (Team Tensor Trailblazers, BMS College of Engineering, Bengaluru) for the Google Startup Buildathon India 2026, where the project reached the end of Round 2. The Google Cloud Run deployment, live Gemini 4 / 3.5 integration, and UI polish were prototyped with **Antigravity**.
 
 ## Data and licence
 

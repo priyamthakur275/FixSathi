@@ -1,11 +1,13 @@
 # FixSaathi — 90-Second Hackathon Demo Script & Judge Q&A
 
+> **Public Cloud Run URL:** <https://fixsaathi-915991223959.us-east4.run.app> (Public evaluation benchmark: <https://fixsaathi-915991223959.us-east4.run.app/evaluation>)  
 > **Target runtime:** 90 seconds (strictly paced for live stage / screen share).  
+> **Stack:** Prototyped with **Antigravity**; deployed on **Google Cloud Run** (`us-east4`) + **Cloud SQL for PostgreSQL 16** + **Secret Manager**. Uses Google Gemini for chat & SSE streaming, fault & nameplate vision, `gemini-embedding-2` retrieval embeddings, Live voice/video (`gemini-3.8-live`), TTS (`gemini-3.8-flash-tts`), and step diagrams (`gemini-3.1-flash-image`), guarded by a deterministic **server-side safety guardrail**.  
 > **Before you step on stage:**
-> - Sign in as your demo technician on Chrome/Edge (desktop 1280px or phone viewport 390px) with `/login` pre-warmed.
-> - Have a sample rating-label / error-display photo (`CH38` Split AC or `E18` washer) ready in a desktop folder for Step 2.
+> - Sign in as your demo technician on Chrome/Edge (desktop 1280px or phone viewport 390px) at the public Cloud Run URL.
+> - Have [`docs/samples/sample_nameplate.png`](docs/samples/sample_nameplate.png) (`LG Inverter Split AC LS-Q18YNZA / ERROR: CH38`) ready for Step 2.
 > - Keep **Sunlight mode** handy (`Settings` or Home pill) if projector glare or outdoor lighting washes out dark mode.
-> - **Offline / rate-limit backup:** Use `/demo` (**Demo: scripted sample, not live AI** scenarios) and `/lookup` (instant record search, zero AI calls). Both exercise the real server safety lock.
+> - **Offline / rate-limit backup:** Use `/demo` (behind the sidebar **Offline backup** footer link, labelled **Demo: scripted sample, not live AI**) and `/lookup` (instant Postgres search, zero AI calls). Both exercise the real server-side safety guardrail.
 
 ---
 
@@ -26,7 +28,7 @@
 ## 10 Likely Judge Questions & Honest Answers
 
 1. **Q: Couldn't a prompt injection or clever rephrasing trick Gemini into revealing a live electrical step?**  
-   **A:** No model prompt is our security boundary. `backend/app/core/power_rules.py` and `services/safety.py` run deterministically on the server over every structured step, REST lookup, non-streaming reply, and SSE stream (`StreamScreener` holds bullets/lines until `\n` and screens prose sentences before sending deltas). The AI also has zero tools that can record safety statements.
+   **A:** No model prompt is our security boundary — the safety lock is a deterministic **server-side guardrail**. `backend/app/core/power_rules.py` and `services/safety.py` run on the server over every structured step, REST lookup, non-streaming reply, and SSE stream (`StreamScreener` holds bullets/lines until `\n` and screens prose sentences before sending deltas). The AI also has zero tools that can record safety statements.
 
 2. **Q: How do you prove the technician actually turned off the MCB and used a tester?**  
    **A:** We don't — and we never pretend we can. Every checkbox, API response, safety panel, and PDF report carries the explicit disclaimer that these are *technician-entered statements* and FixSaathi cannot measure voltage or verify circuit isolation. Our goal is an intentional friction + audit checkpoint, not hardware interlock emulation.
@@ -49,8 +51,8 @@
 8. **Q: Why build original SVG diagrams instead of pulling part photos from the web?**  
    **A:** Scraping manufacturer photos or Google Images violates licences/branding rules and risks showing the wrong PCB revision. Our 10 original FixSaathi SVG schematics are lightweight on 3G networks, licence-clean, and labelled *"Schematic diagram (FixSaathi SVG) — not a photo of your unit"*.
 
-9. **Q: How is Google Gemini actually used beyond a thin ChatGPT wrapper?**  
-   **A:** Five coordinated Gemini capabilities with strict server grounding and failover: (1) Vision rating-label & error-code extraction (`/read-nameplate`), (2) Vision component bounding-box localization (`/identify-component`), (3) Structured Pydantic JSON outputs for diagnosis & step classification (`DIAGNOSIS_SYSTEM`, `GUIDANCE_SYSTEM`), (4) Retrieval-augmented SSE chat + spoken Hindi guidance + embeddings, and (5) Live bidirectional WebSocket voice + TTS (`LIVE_SYSTEM`, `speech.py`).
+9. **Q: How is Google Gemini actually used beyond a thin wrapper?**  
+   **A:** Six coordinated Gemini capabilities with strict server grounding and failover (`gemini-3.5-flash-lite` fast chat, `gemini-4-hydrogen` primary diagnosis/vision): (1) Vision nameplate & error-display extraction (`/read-nameplate`), (2) Vision component bounding-box localization (`/identify-component`), (3) Structured Pydantic JSON outputs for diagnosis & step classification (`DIAGNOSIS_SYSTEM`, `GUIDANCE_SYSTEM`), (4) Retrieval-augmented SSE chat + `gemini-embedding-2` hybrid search, (5) Live bidirectional WebSocket voice + camera relay (`gemini-3.8-live`), and (6) Spoken TTS (`gemini-3.8-flash-tts`) + flat step diagrams (`gemini-3.1-flash-image`).
 
 10. **Q: What is still missing or weak right now?**  
     **A:** Three honest gaps: (1) ~253 of 377 records are washing-machine error codes, so AC/microwave/solar brand coverage is thinner; (2) full offline IndexedDB sync/service worker and a manager AI-latency observability panel were deferred for time — `/lookup` is zero-AI and fast, but there is no offline repair queue yet; (3) the safety filter has one conservative false positive (`hs08`: *"Make sure the inlet tap is fully open."*).

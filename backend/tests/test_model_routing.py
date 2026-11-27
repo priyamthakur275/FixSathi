@@ -24,3 +24,21 @@ def test_json_formatter_redacts_aq_api_keys():
     out = fmt.format(rec)
     assert 'AQ.Ab8RN6FakeSecretKey' not in out
     assert '[redacted-key]' in out
+
+
+def test_cloudsql_unix_socket_database_url_preserves_host_and_password():
+    import urllib.parse
+    from sqlalchemy.dialects.postgresql.psycopg import dialect
+    from sqlalchemy.engine import make_url
+    from app.config import Settings
+
+    raw_pw = 'p@ss/w:o+r=d'
+    encoded = urllib.parse.quote(raw_pw, safe='')
+    raw_url = f'postgresql://fixsaathi:{encoded}@/fixsaathi?host=/cloudsql/geminisprints26blr-3820:us-east4:fixsaathi-db'
+    rewritten = Settings._db(raw_url)
+    assert rewritten.startswith('postgresql+psycopg://')
+    _, kwargs = dialect().create_connect_args(make_url(rewritten))
+    assert kwargs['host'] == '/cloudsql/geminisprints26blr-3820:us-east4:fixsaathi-db'
+    assert kwargs['dbname'] == 'fixsaathi'
+    assert kwargs['user'] == 'fixsaathi'
+    assert kwargs['password'] == raw_pw
