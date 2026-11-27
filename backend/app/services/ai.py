@@ -4,15 +4,17 @@ from google.genai import types
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ..agents import prompts
-from ..agents.schemas import ComponentOut, DiagnosisOutput, GuidanceOutput
+from ..agents.schemas import ComponentOut, DiagnosisOutput, GuidanceOutput, NameplateOut
 from ..core.exceptions import AppError, Conflict, NotFound
 from ..core.power_rules import MICROWAVE_ESCALATION, MICROWAVE_INTERNAL, step_needs_power_off
+from ..datasets import normalize as _norm
 from ..db.models import (AIUsage, Conversation, DiagnosisResult, IdentifiedComponent, Media, RepairSession, RepairStep, User)
 from ..integrations.gemini.client import CallResult, get_gemini as _live_gemini
 from ..demo.client import DemoClient, is_demo
 from ..integrations.storage.local import get_storage
 from . import knowledge_base as kb, safety
 import re
+from .retrieval import record_title
 from .sessions import add_message, ensure_open, transition
 
 logger = logging.getLogger('ai')
@@ -122,10 +124,21 @@ def _recent_user_text(db: Session, s: RepairSession, exclude_id=None, n: int = 2
     return ' '.join(m for m in db.scalars(q.order_by(Conversation.created_at.desc()).limit(n)) if m)
 
 
+def _nameplate_search_parts(s: RepairSession) -> tuple[str | None, list[str] | None, str]:
+    np = (s.appliance_details or {}).get('nameplate') or {}
+    brand = _norm.brand(np.get('brand'))
+    model = _norm.clean(np.get('model'))
+    code = _norm.error_code(np.get('error_code'))
+    extra = ' '.join(x for x in (brand, model, code) if x)
+    return brand, ([code] if code else None), extra
+
+
 async def _retrieve(db: Session, s: RepairSession, text: str, exclude_id=None, extra: str = '') -> dict:
-    # Follow-ups ("what about the capacitor?") keep the original problem and the last turns in the search.
-    q = ' '.join(dict.fromkeys(p for p in (s.issue_description, _recent_user_text(db, s, exclude_id), text, extra[:800]) if p))
-    return await kb.retrieve(db, q.strip(), category=s.appliance_type)
+    # Follow-ups ("what about the capacitor?") keep the original problem, nameplate details, and the last turns in the search.
+    np_brand, np_codes, np_text = _nameplate_search_parts(s)
+    q = ' '.join(dict.fromkeys(p for p in (s.issue_description, np_text, _recent_user_text(db, s, exclude_id), text, extra[:800]) if p)).strip()
+    codes = list(dict.fromkeys((np_codes or []) + _norm.extract_codes(q))) or None
+    return await kb.retrieve(db, q, category=s.appliance_type, brand=np_brand, error_codes=codes)
 
 
 PHOTO_REF = re.compile(r'\b(photo|image|picture|pic|pics|snap|this|that|these|those|mark|marks|see|seen|visible|look|looks|shown|colour|color|dikh\w*|tasveer|foto)\b', re.I)
@@ -182,9 +195,14 @@ async def diagnose(db: Session, s: RepairSession, media_ids: list | None = None)
     g = _ai(db, s)
     note = prompts.APPLIANCE_NOTES.get(s.appliance_type, prompts.APPLIANCE_NOTES['unknown'])
     prev = db.scalars(select(DiagnosisResult).where(DiagnosisResult.session_id == s.id).order_by(DiagnosisResult.created_at.desc()).limit(1)).first()
-    res = await kb.retrieve(db, f'{s.issue_description} {_history(db, s, 6)}', category=s.appliance_type)
+    np_brand, np_codes, np_text = _nameplate_search_parts(s)
+    q_diag = f'{s.issue_description} {np_text} {_history(db, s, 6)}'.strip()
+    codes = list(dict.fromkeys((np_codes or []) + _norm.extract_codes(q_diag))) or None
+    res = await kb.retrieve(db, q_diag, category=s.appliance_type, brand=np_brand, error_codes=codes)
     contents: list = [f'Appliance type: {s.appliance_type}. Notes: {note}', prompts.wrap('knowledge', kb.context_block(res)), prompts.wrap('history', _history(db, s)),
                       prompts.wrap('technician_input', s.issue_description or '(no description yet)')]
+    if np_text:
+        contents.append(f'Saved nameplate/display details: {np_text}')
     if prev:
         contents.append(f'Previous diagnosis summary: {prev.problem_summary}')
     imgs = _images(db, s, media_ids)
@@ -238,7 +256,10 @@ async def generate_steps(db: Session, s: RepairSession) -> list[RepairStep]:
     if not d:
         raise Conflict('Run a diagnosis before generating repair steps.', code='DIAGNOSIS_REQUIRED')
     top = d.faults[0]['fault'] if d.faults else d.problem_summary
-    res = await kb.retrieve(db, f'{s.issue_description} {top}', category=s.appliance_type)
+    np_brand, np_codes, np_text = _nameplate_search_parts(s)
+    q_steps = f'{s.issue_description} {np_text} {top}'.strip()
+    codes = list(dict.fromkeys((np_codes or []) + _norm.extract_codes(q_steps))) or None
+    res = await kb.retrieve(db, q_steps, category=s.appliance_type, brand=np_brand, error_codes=codes)
     contents = [f'Appliance type: {s.appliance_type}', f'Most likely fault (model estimate): {top}', prompts.wrap('knowledge', kb.context_block(res)),
                 f'Safety requirements from diagnosis: {d.safety_requirements}', f'Escalation suggested: {d.requires_escalation}']
     try:
@@ -280,6 +301,114 @@ async def identify_component(db: Session, s: RepairSession, media_id, query: str
     c = IdentifiedComponent(session_id=s.id, media_id=m.id, query=query, result=out.model_dump(), model_identifier=meta.model)
     db.add(c); record_usage(db, s, 'part_locator', meta); db.flush()
     return c
+
+
+async def _nameplate_retrieval(db: Session, s: RepairSession, np: dict) -> dict:
+    brand = _norm.brand(np.get('brand'))
+    model = _norm.clean(np.get('model'))
+    code = _norm.error_code(np.get('error_code'))
+    q = ' '.join(dict.fromkeys(p for p in (brand, model, code, _norm.clean(s.issue_description)) if p))
+    cat = np.get('appliance_type')
+    if not cat or cat == 'unknown':
+        cat = None if s.appliance_type == 'unknown' else s.appliance_type
+    if not q and not brand and not code:
+        return {'coverage': 'none', 'error_codes_found': [], 'error_codes_unknown': [], 'hits': []}
+    res = await kb.retrieve(db, q, category=cat, brand=brand, error_codes=[code] if code else None, k=5)
+    hits = []
+    for h in res['hits']:
+        r = h.record
+        hits.append({
+            'record_id': h.record_id,
+            'title': record_title(r),
+            'appliance_type': r['appliance_category'],
+            'brand': r.get('appliance_brand'),
+            'model': r.get('appliance_model'),
+            'error_code': r.get('error_code'),
+            'symptoms': (r.get('reported_symptoms') or [])[:3],
+            'possible_faults': (r.get('possible_faults') or [])[:3],
+            'source_name': r['source_name'],
+            'verification_status': r['verification_status'],
+            'match': h.match,
+            'related_category': h.related,
+        })
+    return {
+        'coverage': res['coverage'],
+        'error_codes_found': res['error_codes_found'],
+        'error_codes_unknown': res['error_codes_unknown'],
+        'hits': hits,
+    }
+
+
+async def read_nameplate(db: Session, s: RepairSession, media_id) -> dict:
+    ensure_open(s)
+    m = db.get(Media, media_id)
+    if not m or m.session_id != s.id or m.kind == 'generated':
+        raise NotFound('Image not found in this session.')
+    if not m.mime_type.startswith('image/'):
+        raise AppError('Nameplate reading works on photos, not documents.', code='NOT_AN_IMAGE', status=400)
+    part = types.Part.from_bytes(data=get_storage().get(m.storage_key), mime_type=m.mime_type)
+    ask = (f'Session appliance (may be unknown): {s.appliance_type}. '
+           'Read any clearly visible rating label (nameplate) or digital error display in this photo.')
+    try:
+        out, meta = await _live_gemini().generate_json('nameplate', NameplateOut, [ask, part], prompts.NAMEPLATE_SYSTEM, temperature=0.1)
+    except AppError as e:
+        record_usage(db, s, 'nameplate', None, ok=False, code=e.code, model='agent')
+        return {
+            'status': 'unavailable' if e.code == 'AI_NOT_CONFIGURED' else 'error',
+            'ai_error': {'code': e.code, 'message': e.message, 'hint': 'Enter the brand, model, or error code below to search repair records manually.'},
+            'extracted': None,
+            'retrieval': None,
+        }
+    record_usage(db, s, 'nameplate', meta)
+    extracted = {
+        'media_id': str(m.id),
+        'readable': bool(out.readable),
+        'appliance_type': out.appliance_type,
+        'brand': _norm.brand(out.brand),
+        'model': _norm.clean(out.model),
+        'error_code': _norm.error_code(out.error_code),
+        'serial_number': _norm.clean(out.serial_number),
+        'raw_text': (out.raw_text or '').strip(),
+        'confidence': out.confidence,
+        'notes': _norm.clean(out.notes),
+        'verified_by_technician': False,
+        'source': 'gemini_vision',
+        'model_identifier': meta.model,
+    }
+    s.appliance_details = {**(s.appliance_details or {}), 'nameplate': extracted}
+    if s.appliance_type == 'unknown' and extracted['appliance_type']:
+        s.appliance_type = extracted['appliance_type']
+    ret = await _nameplate_retrieval(db, s, extracted)
+    db.flush()
+    return {'status': 'ok', 'ai_error': None, 'extracted': extracted, 'retrieval': ret}
+
+
+async def update_nameplate(db: Session, s: RepairSession, patch) -> dict:
+    ensure_open(s)
+    existing = dict((s.appliance_details or {}).get('nameplate') or {})
+    fset = getattr(patch, 'model_fields_set', set())
+    app_val = (None if patch.appliance_type == 'unknown' else patch.appliance_type) if 'appliance_type' in fset else existing.get('appliance_type')
+    updated = {
+        'media_id': existing.get('media_id'),
+        'readable': True,
+        'appliance_type': app_val,
+        'brand': _norm.brand(patch.brand) if 'brand' in fset else existing.get('brand'),
+        'model': _norm.clean(patch.model) if 'model' in fset else existing.get('model'),
+        'error_code': _norm.error_code(patch.error_code) if 'error_code' in fset else existing.get('error_code'),
+        'serial_number': _norm.clean(patch.serial_number) if 'serial_number' in fset else existing.get('serial_number'),
+        'raw_text': existing.get('raw_text') or '',
+        'confidence': existing.get('confidence', 1.0),
+        'notes': existing.get('notes'),
+        'verified_by_technician': True,
+        'source': existing.get('source') or 'technician_manual',
+        'model_identifier': existing.get('model_identifier'),
+    }
+    s.appliance_details = {**(s.appliance_details or {}), 'nameplate': updated}
+    if updated['appliance_type']:
+        s.appliance_type = updated['appliance_type']
+    ret = await _nameplate_retrieval(db, s, updated)
+    db.flush()
+    return {'status': 'ok', 'ai_error': None, 'extracted': updated, 'retrieval': ret}
 
 
 async def step_visual(db: Session, s: RepairSession, step: RepairStep) -> Media:

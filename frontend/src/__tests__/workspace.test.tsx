@@ -153,4 +153,110 @@ describe('Phase 2 UI redesign', () => {
     expect(within(funnel).getByText(/4\. Fixed first time/)).toBeTruthy()
     expect(screen.getByText('4 of 5 rated helpful')).toBeTruthy()
   })
+
+  it('reads nameplate with Gemini Vision, feeds retrieval, and saves technician correction', async () => {
+    const u = userEvent.setup()
+    signedInAs('technician', 'u1')
+    vi.spyOn(services.sessionService, 'get').mockResolvedValue({
+      id: 's1', reference: 'FS-102', title: 'AC error', appliance_type: 'split_ac', appliance_label: 'Split AC',
+      issue_description: 'indoor display shows CH38', status: 'active', technician_id: 'u1', technician_name: 'Asha Rao',
+      first_time_fix: null, started_at: new Date().toISOString(), completed_at: null, report_id: null,
+    })
+    vi.spyOn(services.fileService, 'list').mockResolvedValue([
+      { id: 'm1', kind: 'upload', mime_type: 'image/png', size_bytes: 1200, width: 320, height: 240, url: '/api/v1/media/m1', meta: {}, created_at: new Date().toISOString() },
+    ])
+    vi.spyOn(services.repairService, 'diagnosis').mockResolvedValue(null)
+    vi.spyOn(services.repairService, 'steps').mockResolvedValue([])
+    vi.spyOn(services.repairService, 'safety').mockResolvedValue({ power_off_confirmed: false, tester_checked: false, unlocked: false, missing: ['power_off_confirmed', 'tester_checked'], expired: false, confirmed_at: null, expires_at: null, disclaimer: '' })
+    vi.spyOn(services.repairService, 'similar').mockResolvedValue({ mode: 'keyword', fallback_reason: null, results: [] })
+    vi.spyOn(services.repairService, 'readNameplate').mockResolvedValue({
+      status: 'ok',
+      ai_error: null,
+      extracted: {
+        readable: true, appliance_type: 'split_ac', brand: 'LG', model: 'LS-Q18YNZA', error_code: 'CH38',
+        serial_number: null, raw_text: 'LG LS-Q18YNZA CH38', confidence: 0.92, notes: null,
+        verified_by_technician: false, source: 'gemini_vision',
+      },
+      retrieval: {
+        coverage: 'grounded',
+        error_codes_found: ['CH38'],
+        error_codes_unknown: [],
+        hits: [{
+          record_id: 'mfr:lg-ch38', title: 'LG split ac: code CH38', appliance_type: 'split_ac',
+          brand: 'LG', model: 'LS-Q18YNZA', error_code: 'CH38', symptoms: ['CH38 shown'],
+          possible_faults: ['Low refrigerant charge'], source_name: 'LG Manual', verification_status: 'verified_source',
+          match: 'error_code', related_category: false,
+        }],
+      },
+    })
+    const patchSpy = vi.spyOn(services.repairService, 'updateNameplate').mockResolvedValue({
+      status: 'ok',
+      ai_error: null,
+      extracted: {
+        readable: true, appliance_type: 'split_ac', brand: 'LG', model: 'LS-Q18YNZA', error_code: 'CH05',
+        serial_number: null, raw_text: 'LG LS-Q18YNZA CH38', confidence: 0.92, notes: null,
+        verified_by_technician: true, source: 'gemini_vision',
+      },
+      retrieval: {
+        coverage: 'grounded',
+        error_codes_found: ['CH05'],
+        error_codes_unknown: [],
+        hits: [{
+          record_id: 'mfr:lg-ch05', title: 'LG split ac: code CH05', appliance_type: 'split_ac',
+          brand: 'LG', model: null, error_code: 'CH05', symptoms: ['CH05 shown'],
+          possible_faults: ['Communication wiring fault'], source_name: 'LG Manual', verification_status: 'verified_source',
+          match: 'error_code', related_category: false,
+        }],
+      },
+    })
+
+    const Gate = () => (useAuth().loading ? null : <RepairSessionPage />)
+    render(<AuthProvider><PrefsProvider><AppProvider><MemoryRouter initialEntries={['/session/s1']}><Routes><Route path="/session/:id" element={<Gate />} /></Routes></MemoryRouter></AppProvider></PrefsProvider></AuthProvider>)
+
+    const readBtn = await screen.findByRole('button', { name: /Read nameplate \/ code/i })
+    await u.click(readBtn)
+    expect(await screen.findByText('LG split ac: code CH38')).toBeTruthy()
+    expect(screen.getByText('AI estimate · check & edit')).toBeTruthy()
+
+    const codeInput = screen.getByLabelText('Error code') as HTMLInputElement
+    expect(codeInput.value).toBe('CH38')
+    await u.clear(codeInput)
+    await u.type(codeInput, 'CH05')
+    await u.click(screen.getByRole('button', { name: /Save & search records/i }))
+
+    expect(patchSpy).toHaveBeenCalledWith('s1', expect.objectContaining({ brand: 'LG', model: 'LS-Q18YNZA', error_code: 'CH05' }))
+    expect(await screen.findByText('LG split ac: code CH05')).toBeTruthy()
+    expect(screen.getByText('Checked by technician')).toBeTruthy()
+  })
+
+  it('shows graceful fallback message and empty manual inputs when Gemini Vision is unavailable', async () => {
+    const u = userEvent.setup()
+    signedInAs('technician', 'u1')
+    vi.spyOn(services.sessionService, 'get').mockResolvedValue({
+      id: 's1', reference: 'FS-103', title: 'AC error', appliance_type: 'split_ac', appliance_label: 'Split AC',
+      issue_description: 'blinking light', status: 'active', technician_id: 'u1', technician_name: 'Asha Rao',
+      first_time_fix: null, started_at: new Date().toISOString(), completed_at: null, report_id: null,
+    })
+    vi.spyOn(services.fileService, 'list').mockResolvedValue([
+      { id: 'm1', kind: 'upload', mime_type: 'image/png', size_bytes: 1200, width: 320, height: 240, url: '/api/v1/media/m1', meta: {}, created_at: new Date().toISOString() },
+    ])
+    vi.spyOn(services.repairService, 'diagnosis').mockResolvedValue(null)
+    vi.spyOn(services.repairService, 'steps').mockResolvedValue([])
+    vi.spyOn(services.repairService, 'safety').mockResolvedValue({ power_off_confirmed: false, tester_checked: false, unlocked: false, missing: ['power_off_confirmed', 'tester_checked'], expired: false, confirmed_at: null, expires_at: null, disclaimer: '' })
+    vi.spyOn(services.repairService, 'similar').mockResolvedValue({ mode: 'keyword', fallback_reason: null, results: [] })
+    vi.spyOn(services.repairService, 'readNameplate').mockResolvedValue({
+      status: 'unavailable',
+      ai_error: { code: 'AI_NOT_CONFIGURED', message: 'Gemini API key is not configured.', hint: 'Enter the brand, model, or error code below to search repair records manually.' },
+      extracted: null,
+      retrieval: null,
+    })
+
+    const Gate = () => (useAuth().loading ? null : <RepairSessionPage />)
+    render(<AuthProvider><PrefsProvider><AppProvider><MemoryRouter initialEntries={['/session/s1']}><Routes><Route path="/session/:id" element={<Gate />} /></Routes></MemoryRouter></AppProvider></PrefsProvider></AuthProvider>)
+
+    await u.click(await screen.findByRole('button', { name: /Read nameplate \/ code/i }))
+    expect((await screen.findByRole('alert')).textContent).toContain('AI_NOT_CONFIGURED')
+    expect((screen.getByLabelText('Brand') as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText('Error code') as HTMLInputElement).value).toBe('')
+  })
 })

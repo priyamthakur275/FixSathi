@@ -4,7 +4,7 @@
  */
 import { api, tokens } from './api'
 import type {
-  ChatResult, ComponentResult, Diagnosis, Escalation, FileKind, Language, MediaItem, Overview, Page, RepairSession, RepairStep, Report, SafetyState,
+  ChatResult, ComponentResult, Diagnosis, Escalation, FileKind, Language, MediaItem, NameplateResponse, Overview, Page, RepairSession, RepairStep, Report, SafetyState,
   SavedDiagnosis, ServerMessage, SimilarResult, TechRow, Tokens, TrendPoint, User,
 } from '../types'
 
@@ -111,6 +111,9 @@ export const repairService = {
   reopenStep: (sid: string, stepId: string) => api<RepairStep>(`/api/v1/sessions/${sid}/steps/${stepId}/reopen`, { method: 'POST' }),
   stepVisual: (sid: string, stepId: string) => api<MediaItem>(`/api/v1/sessions/${sid}/steps/${stepId}/visual`, { method: 'POST', timeoutMs: 120000 }),
   identify: (sid: string, media_id: string, query?: string) => api<ComponentResult>(`/api/v1/sessions/${sid}/identify-component`, { body: { media_id, query: query || null }, timeoutMs: 90000 }),
+  readNameplate: (sid: string, media_id: string) => api<NameplateResponse>(`/api/v1/sessions/${sid}/read-nameplate`, { body: { media_id }, timeoutMs: 90000 }),
+  updateNameplate: (sid: string, patch: { appliance_type?: string | null; brand?: string | null; model?: string | null; error_code?: string | null; serial_number?: string | null }) =>
+    api<NameplateResponse>(`/api/v1/sessions/${sid}/nameplate`, { method: 'PATCH', body: patch }),
   safety: (sid: string) => api<SafetyState>(`/api/v1/sessions/${sid}/safety`),
   confirmSafety: (sid: string, power_off_confirmed: boolean, tester_checked: boolean) => api<SafetyState>(`/api/v1/sessions/${sid}/safety/confirm`, { body: { power_off_confirmed, tester_checked } }),
   escalate: (sid: string, reason: string, priority = 'normal') => api<Escalation>(`/api/v1/sessions/${sid}/escalate`, { body: { reason, priority } }),

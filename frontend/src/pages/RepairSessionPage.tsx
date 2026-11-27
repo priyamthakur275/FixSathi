@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Camera, Check, ChevronLeft, ChevronRight, Circle, Download, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, ScanSearch, ShieldCheck, Sparkles, Star, Stethoscope, Wand2 } from 'lucide-react'
+import { Camera, Check, ChevronLeft, ChevronRight, Circle, Cpu, Download, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, ScanSearch, ShieldCheck, Sparkles, Star, Stethoscope, Wand2 } from 'lucide-react'
 import { CameraModal } from '../components/camera/CameraModal'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
 import { RepairProgress } from '../components/repair/RepairProgress'
 import { DiagnosisCard } from '../components/repair/DiagnosisCard'
+import { NameplateCard } from '../components/repair/NameplateCard'
 import { PartCard } from '../components/repair/PartCard'
 import { AuthImage } from '../components/common/AuthImage'
 import { ErrorState, Skeleton, StatusPill } from '../components/common/ui'
@@ -15,7 +16,7 @@ import { openFile } from '../utils/openFile'
 import type { ApiError } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useT } from '../i18n'
-import type { Attachment, ComponentResult, Diagnosis, MediaItem, RepairSession, RepairStep, SafetyState, SimilarResult } from '../types'
+import type { Attachment, ComponentResult, Diagnosis, MediaItem, NameplateResponse, RepairSession, RepairStep, SafetyState, SimilarResult } from '../types'
 
 const CLOSED = ['completed', 'cancelled']
 const btn = 'btn'
@@ -37,6 +38,7 @@ export default function RepairSessionPage() {
   const [steps, setSteps] = useState<RepairStep[]>([])
   const [safety, setSafety] = useState<SafetyState | null>(null)
   const [comp, setComp] = useState<ComponentResult | null>(null)
+  const [nameplateRes, setNameplateRes] = useState<NameplateResponse | null>(null)
   const [similar, setSimilar] = useState<SimilarResult | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ kind: 'error' | 'info'; text: string } | null>(null)
@@ -124,6 +126,20 @@ export default function RepairSessionPage() {
   })
   const visual = (x: RepairStep) => run(`vis-${x.id}`, async () => { const m = await repairService.stepVisual(id, x.id); setMedia(v => v.some(y => y.id === m.id) ? v : [...v, m]); setSteps(st => st.map(y => y.id === x.id ? { ...y, visual_media_id: m.id } : y)) })
   const identify = (m: MediaItem) => run(`id-${m.id}`, async () => setComp(await repairService.identify(id, m.id)))
+  const readNameplate = (m: MediaItem) => run(`np-${m.id}`, async () => {
+    const res = await repairService.readNameplate(id, m.id)
+    setNameplateRes(res)
+    if (res.status === 'ok') {
+      await refreshSession()
+      repairService.similar(id).then(setSimilar).catch(() => undefined)
+    }
+  })
+  const saveNameplate = (patch: Parameters<typeof repairService.updateNameplate>[1]) => run('np-save', async () => {
+    const res = await repairService.updateNameplate(id, patch)
+    setNameplateRes(res)
+    await refreshSession()
+    repairService.similar(id).then(setSimilar).catch(() => undefined)
+  })
   const escalate = () => run('esc', async () => { await repairService.escalate(id, escReason); setShowEsc(false); setEscReason(''); await refreshSession(); setMsg({ kind: 'info', text: 'Senior technician support requested. A manager will see it under Senior support.' }) })
   const report = () => run('report', async () => {
     if (rating) await repairService.feedback(id, rating, causeRight)
@@ -213,7 +229,12 @@ export default function RepairSessionPage() {
                   {photos.map(m => (
                     <div key={m.id} className="w-36">
                       <AuthImage src={m.url} alt="Appliance photo" className="h-32 w-36 rounded-2xl border border-line" box={comp?.media_id === m.id ? comp.box : null} label={comp?.media_id === m.id ? comp.component_name : null} />
-                      {owner && open && <button onClick={() => identify(m)} disabled={!!busy} className="mt-1.5 inline-flex min-h-[44px] items-center gap-1 text-xs font-medium text-accent disabled:opacity-50">{busy === `id-${m.id}` ? <Loader2 size={12} className="animate-spin" /> : <ScanSearch size={13} />}Identify component</button>}
+                      {owner && open && (
+                        <div className="mt-1.5 flex flex-col">
+                          <button type="button" onClick={() => identify(m)} disabled={!!busy} className="inline-flex min-h-[44px] items-center gap-1 text-left text-xs font-medium text-accent disabled:opacity-50">{busy === `id-${m.id}` ? <Loader2 size={12} className="animate-spin" /> : <ScanSearch size={13} />}Identify component</button>
+                          <button type="button" onClick={() => readNameplate(m)} disabled={!!busy} className="inline-flex min-h-[44px] items-center gap-1 text-left text-xs font-medium text-teal disabled:opacity-50">{busy === `np-${m.id}` ? <Loader2 size={12} className="animate-spin" /> : <Cpu size={13} />}Read nameplate / code</button>
+                        </div>
+                      )}
                     </div>
                   ))}
                   {owner && open && <button onClick={() => setCamera(true)} aria-label="Add another photo" className="flex h-32 w-32 items-center justify-center rounded-2xl border border-dashed border-line-2 text-ink-2 transition-colors hover:border-accent/60 hover:bg-surface-2 hover:text-accent"><ImagePlus /></button>}
@@ -221,6 +242,14 @@ export default function RepairSessionPage() {
                 {comp && <div className="rounded-2xl border border-accent/25 bg-accent/[0.05] p-3.5 text-sm"><p className="font-medium">{comp.found ? comp.component_name : 'Not identified'}</p><p className="text-ink-2">{comp.explanation}</p>{comp.uncertainty && <p className="mt-1 text-xs text-ink-3">{comp.uncertainty}</p>}<p className="mt-1 text-xs text-ink-3">{comp.note}</p></div>}
               </div>
             )}
+            <NameplateCard
+              initialNameplate={s.nameplate}
+              response={nameplateRes}
+              sessionAppliance={s.appliance_type}
+              canEdit={owner && open}
+              busy={busy === 'np-save' || (busy?.startsWith('np-') ?? false)}
+              onSave={saveNameplate}
+            />
             <div className="mt-5 border-t border-line pt-4">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="section-label">Documents{docs.length ? ` (${docs.length})` : ''}</p>

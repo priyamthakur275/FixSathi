@@ -55,6 +55,51 @@ export interface ChatMessage {
 export type VoiceState = 'idle' | 'connecting' | 'listening' | 'processing' | 'responding' | 'error'
 export type SessionStatus = 'created' | 'active' | 'diagnosing' | 'awaiting_confirmation' | 'guidance_in_progress' | 'escalated' | 'completed' | 'cancelled'
 
+export interface NameplateData {
+  readable: boolean
+  appliance_type: string | null
+  brand: string | null
+  model: string | null
+  error_code: string | null
+  serial_number: string | null
+  raw_text: string
+  confidence: number
+  notes: string | null
+  verified_by_technician: boolean
+  source: string
+  model_identifier?: string | null
+  media_id?: string | null
+}
+
+export interface NameplateHit {
+  record_id: string
+  title: string
+  appliance_type: string
+  brand: string | null
+  model: string | null
+  error_code: string | null
+  symptoms: string[]
+  possible_faults: string[]
+  source_name: string
+  verification_status: string
+  match: string
+  related_category: boolean
+}
+
+export interface NameplateRetrieval {
+  coverage: 'grounded' | 'partial' | 'none'
+  error_codes_found: string[]
+  error_codes_unknown: string[]
+  hits: NameplateHit[]
+}
+
+export interface NameplateResponse {
+  status: 'ok' | 'unavailable' | 'error'
+  ai_error: { code: string; message: string; hint?: string | null } | null
+  extracted: NameplateData | null
+  retrieval: NameplateRetrieval | null
+}
+
 export interface RepairSession {
   id: string
   reference: string
@@ -62,6 +107,7 @@ export interface RepairSession {
   appliance_type: string
   appliance_label: string
   demo?: boolean
+  nameplate?: NameplateData | null
   issue_description: string
   status: SessionStatus
   technician_id: string

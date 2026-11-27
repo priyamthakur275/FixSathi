@@ -72,6 +72,15 @@ PART_LOCATOR_SYSTEM = (
     "You have not tested the component; say what is visible only. " + GUARD
 )
 
+NAMEPLATE_SYSTEM = (
+    "You read appliance rating labels (nameplates) and digital error-code displays in one photo. "
+    "Extract ONLY text that is clearly visible in the photo: appliance_type, brand, model, error_code, serial_number, and raw_text. "
+    "Never guess, complete, or invent a brand, model number, or error code that is blurry, cropped, or missing: leave unclear fields as null. "
+    "If no nameplate or error display text is readable, return readable=false, confidence near 0, all extracted fields null, and explain why in notes. "
+    "Set appliance_type to one of ceiling_fan, split_ac, washing_machine, refrigerator, mcb_electrical, rooftop_solar, microwave_oven, water_purifier, or null if unclear. "
+    + GUARD
+)
+
 CHAT_SYSTEM = (
     "You are FixSaathi, an AI repair assistant for appliance field technicians in India: an experienced, calm senior technician who "
     "explains clearly. You are powered by Google Gemini and a repair knowledge base. "

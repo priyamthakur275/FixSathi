@@ -10,7 +10,7 @@ from ...db.base import utcnow
 from ...db.models import DiagnosisResult, IdentifiedComponent, RepairStep, SafetyEvent, User
 from ...db.session import get_db
 from ...dependencies import current_user
-from ...schemas.repair import DiagnoseIn, DiagnosisOut, IdentifyIn, MediaOut, SafetyIn, SafetyOut, StepOut
+from ...schemas.repair import DiagnoseIn, DiagnosisOut, IdentifyIn, MediaOut, NameplatePatchIn, NameplateReadIn, SafetyIn, SafetyOut, StepOut
 from ...services import ai, retrieval, safety
 from ...services.access import get_owned_session, get_readable_session
 from ...services.sessions import ensure_open, transition
@@ -61,6 +61,19 @@ async def identify(session_id: uuid.UUID, body: IdentifyIn, u: User = Depends(cu
     c: IdentifiedComponent = await ai.identify_component(db, s, body.media_id, body.query)
     return {'id': str(c.id), 'media_id': str(c.media_id), 'coordinate_system': 'normalised 0-1000, origin top-left of the original image',
             **c.result, 'note': 'Visual identification only. The component has not been measured or tested.'}
+
+
+@router.post('/sessions/{session_id}/read-nameplate')
+async def read_nameplate(session_id: uuid.UUID, body: NameplateReadIn, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
+    s = get_owned_session(db, u, session_id)
+    _quota(u, s)
+    return await ai.read_nameplate(db, s, body.media_id)
+
+
+@router.patch('/sessions/{session_id}/nameplate')
+async def update_nameplate(session_id: uuid.UUID, body: NameplatePatchIn, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
+    s = get_owned_session(db, u, session_id)
+    return await ai.update_nameplate(db, s, body)
 
 
 @router.get('/sessions/{session_id}/steps', response_model=list[StepOut])
