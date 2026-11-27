@@ -382,7 +382,7 @@ def get_media(media_id: uuid.UUID, u: User = Depends(current_user), db: Session 
     m = db.get(Media, media_id)
     if not m:
         raise NotFound('File not found.')
-    get_readable_session(db, u, m.session_id)  # authorisation through the owning session
+    s = get_readable_session(db, u, m.session_id)  # authorisation through the owning session
     headers = {'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff'}
     if m.kind == 'document':
         from urllib.parse import quote
@@ -391,4 +391,14 @@ def get_media(media_id: uuid.UUID, u: User = Depends(current_user), db: Session 
         headers['Content-Disposition'] = f"{'inline' if inline else 'attachment'}; filename*=UTF-8''{quote(name)}"
         headers['Content-Security-Policy'] = "default-src 'none'; sandbox"  # nothing in a document can run scripts
     media_type = f'{m.mime_type}; charset=utf-8' if m.mime_type.startswith('text/') else m.mime_type
-    return Response(get_storage().get(m.storage_key), media_type=media_type, headers=headers)
+    try:
+        data = get_storage().get(m.storage_key)
+    except AppError as e:
+        if e.code == 'MEDIA_MISSING' and m.kind != 'generated' and (m.meta or {}).get('demo'):
+            from ...demo.scenarios import HERE, SCENARIOS
+            sc = SCENARIOS.get(is_demo(s) or '')
+            photo = sc and sc.get('photo')
+            if photo and (HERE / photo).is_file():
+                return Response((HERE / photo).read_bytes(), media_type=media_type, headers=headers)
+        raise
+    return Response(data, media_type=media_type, headers=headers)

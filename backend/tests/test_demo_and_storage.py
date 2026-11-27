@@ -85,3 +85,17 @@ def test_health_checks_the_database_and_supports_head(client, monkeypatch):
         def close(self): pass
     monkeypatch.setattr(main, 'SessionLocal', lambda: Broken())
     r = client.get('/health'); assert r.status_code == 503 and r.json()['status'] == 'unhealthy' and r.json()['database'] == 'unreachable'
+
+
+def test_demo_photo_falls_back_to_bundled_asset_when_uploads_cleared(client, tech, other):
+    s = _start(client, tech, 'ceiling_fan_burn')
+    media = client.get(f"/api/v1/sessions/{s['id']}/images", headers=tech['h']).json()
+    assert len(media) == 1
+    url = media[0]['url']
+    import shutil
+    shutil.rmtree(st.get_storage().root, ignore_errors=True)
+    r = client.get(url, headers=tech['h'])
+    assert r.status_code == 200
+    assert r.headers['content-type'].startswith('image/jpeg')
+    assert len(r.content) > 1000
+    assert client.get(url, headers=other['h']).status_code == 404
