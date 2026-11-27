@@ -4,7 +4,7 @@
 
 **An AI repair copilot for appliance technicians in India: grounded diagnosis, a safety lock enforced by the server, and voice in English, Hindi and Kannada.**
 
-[**Live Cloud Run app**](https://fixsaathi-915991223959.us-east4.run.app) · [API docs](https://fixsaathi-915991223959.us-east4.run.app/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md)
+[**Live Cloud Run app**](https://fixsaathi-915991223959.us-east4.run.app) · [API docs](https://fixsaathi-915991223959.us-east4.run.app/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md) · [Model Usage](docs/MODEL_USAGE.md) · [Built During Hackathon](docs/BUILT_DURING_HACKATHON.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md)
 
 ![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
@@ -117,19 +117,22 @@ flowchart TD
 3. **Screen.** `app/core/power_rules.py` is the single definition of "power-sensitive", shared by repair steps, chat, Live voice and the dataset importer, including Hindi verbs (*khol*, *nikal*, *badal*). `SafetyService.guard` is the only code path that can permit a power-sensitive action, and the AI has no tool that can record a safety statement. Every blocked attempt is logged.
 4. **Fail safely.** Every Gemini failure is classified (bad key, quota, timeout, blocked...) and shown with a fix; the technician's message is saved either way. Rate limits fall back to the next model. Live audio that cannot be screened is not played.
 
-## Gemini usage
+## Built with Google (Proven Usage)
 
-Default configuration (verified live against `https://fixsaathi-915991223959.us-east4.run.app` and `scripts/smoke_live.py` with no mocks):
+Only models and Google Cloud services verified with real calls on `https://fixsaathi-915991223959.us-east4.run.app` are claimed below. Full 3x probe measurements and error logs are recorded in [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md).
 
-| Role | Configured model | Fallback / notes |
+| Role | Proven Model / Service | Verified Live Behavior |
 |---|---|---|
-| Fast chat & SSE streaming (`GEMINI_FAST_MODEL`) | `gemini-3.5-flash-lite` | Falls back through `gemini-4-hydrogen` -> `gemini-4-neon` |
-| Structured diagnosis, repair steps & vision (`GEMINI_AGENT_MODEL`) | `gemini-4-hydrogen` | `gemini-4-neon, gemini-3.5-flash-lite` (`GEMINI_AGENT_FALLBACK_MODELS`; `gemini-4-neon` returned quota-0 `429` on our key tier, so `gemini-3.5-flash-lite` handles failover seamlessly) |
+| Streamed chat (English, Hindi, Hinglish) | `gemini-3.5-flash-lite` | 3/3 direct probes OK (505–780 ms); verified on Cloud Run SSE stream with server-side safety lock |
+| Nameplate & error display Vision | `gemini-3.5-flash-lite` (fallback from `gemini-4-hydrogen`) | Extracted `LG LS-Q18YNZA` + `CH38`, matched 5 KB records on Cloud Run |
+| Structured diagnosis | `gemini-3.5-flash-lite` (fallback from `gemini-4-hydrogen`) | HTTP 201 on Cloud Run; UI "How this answer was made" panel shows the exact `model_identifier` and latency |
+| Real-time voice & video relay | `gemini-3.8-live` (`v1beta` WebSocket) | Verified live on Cloud Run `WS /api/v1/live/{id}` (`session_ready`, `transcription`, `audio_chunk` at 24 kHz PCM) |
+| Spoken replies (TTS) | `gemini-3.8-flash-tts` (`v1beta`, `Charon`) | Verified live on Cloud Run `GET /speech` (HTTP 200, `audio/wav`); browser voice fallback |
 | Server-side safety guardrail | `StreamScreener` + `power_rules.py` | Deterministic server check on every streamed sentence and step before anything reaches the client |
-| Knowledge & session embeddings (`GEMINI_EMBED_MODEL`) | `gemini-embedding-2` | 3072-dim hybrid retrieval alongside PostgreSQL full-text search |
-| Real-time voice & video relay (`GEMINI_LIVE_MODEL`) | `gemini-3.8-live` | Bidirectional WebSocket via `v1beta` (`raw_beta`); tool calls guarded on server |
-| Spoken replies (`GEMINI_TTS_MODEL`) | `gemini-3.8-flash-tts` | Prebuilt `Charon` voice on `v1beta` (`gemini-2.5-flash-preview-tts` also supported); device browser voice fallback |
-| Step illustrations (`NANO_BANANA_MODEL`) | `gemini-3.1-flash-image` | Generates flat safety-first step diagrams on demand |
+| Cloud hosting & database | **Google Cloud Run**, **Cloud SQL for PostgreSQL 16**, **Secret Manager**, **Cloud Build / Artifact Registry** | Single-container deploy (`us-east4`) connected via Cloud SQL Unix socket; zero secrets in repo or image |
+| Prototyping | **Antigravity** | Used to prototype the Cloud Run deployment, reliability hardening, and UI polish ([hackathon timeline](docs/BUILT_DURING_HACKATHON.md)) |
+
+**Not claimed (measured honestly in [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md)):** `gemini-4-neon` and `gemini-4-carbon` returned `429 RESOURCE_EXHAUSTED` (0/3) on this API key; `gemini-4-hydrogen` answered 0/3 probes under 8 s (timeouts / `503 UNAVAILABLE`), so diagnosis falls back automatically to `gemini-3.5-flash-lite`; `gemini-decision-1` returned `404 NOT_FOUND` on `v1beta`.
 
 Scripted demo scenarios are no longer placed in the primary workspace navigation and live solely behind the clearly labelled **Offline backup** footer link (`/demo`).
 
@@ -137,7 +140,7 @@ Scripted demo scenarios are no longer placed in the primary workspace navigation
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 480 automated tests: 391 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 89 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
+- **Tests:** 496 automated tests: 405 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 91 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the live Cloud Run smoke script (`backend/scripts/smoke_live.py`).
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
 - **Deployment:** one single-origin container (`Dockerfile`) deployed to **Google Cloud Run** (`https://fixsaathi-915991223959.us-east4.run.app`, `us-east4`) connected via Unix socket to **Cloud SQL for PostgreSQL 16**, built with Cloud Build / Artifact Registry, with `GEMINI_API_KEY`, `SECRET_KEY`, and `DATABASE_URL` stored in **Secret Manager** ([`DEPLOY_CLOUDRUN.md`](DEPLOY_CLOUDRUN.md)). Also includes [`render.yaml`](render.yaml) for Render deploys.
 

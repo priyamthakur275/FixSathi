@@ -329,7 +329,10 @@ export default function RepairSessionPage() {
                 <summary className="cursor-pointer font-semibold text-ink select-none">How this answer was made</summary>
                 <dl className="mt-2.5 space-y-1.5">
                   {diag.model_identifier && (
-                    <div className="flex flex-wrap justify-between gap-2"><dt className="text-ink-3">Model</dt><dd className="font-mono text-ink">{diag.model_identifier}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-2"><dt className="text-ink-3">Diagnosis model</dt><dd className="font-mono text-ink">{diag.model_identifier}</dd></div>
+                  )}
+                  {np?.model_identifier && (
+                    <div className="flex flex-wrap justify-between gap-2"><dt className="text-ink-3">Vision model</dt><dd className="font-mono text-ink">{np.model_identifier}</dd></div>
                   )}
                   {typeof diag.latency_ms === 'number' && (
                     <div className="flex flex-wrap justify-between gap-2"><dt className="text-ink-3">Latency</dt><dd className="num text-ink">{diag.latency_ms} ms</dd></div>

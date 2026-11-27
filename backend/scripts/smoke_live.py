@@ -33,6 +33,10 @@ def _step(label: str, ok: bool, detail: str = '') -> None:
     print(f'  [{tag}] {label}{(": " + detail) if detail else ""}')
 
 
+def _skip(label: str, detail: str = '') -> None:
+    print(f'  [SKIP] {label}{(": " + detail) if detail else ""}')
+
+
 def _parse_sse(raw_lines: list[str]) -> list[tuple[str, dict]]:
     events: list[tuple[str, dict]] = []
     cur_event = 'message'
@@ -246,11 +250,20 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
                         _step(
                             '(b) Gemini Vision read-nameplate',
                             ok_np,
-                            f"status={np_data.get('status')} brand={ex.get('brand')} model={ex.get('model')} error_code={ex.get('error_code')} hits={len(ret.get('hits') or [])}",
+                            f"status={np_data.get('status')} brand={ex.get('brand')} model={ex.get('model')} error_code={ex.get('error_code')} hits={len(ret.get('hits') or [])} ai_model={ex.get('model_identifier')}",
                         )
                         if not ok_np:
                             print('        ai_error:', np_data.get('ai_error'))
                             failures += 1
+
+            # (b2) Structured diagnosis showing real answering model
+            diag_res = await client.post(f'/api/v1/sessions/{sid}/diagnose', json={}, headers=headers, timeout=90.0)
+            if diag_res.status_code == 201:
+                d_json = diag_res.json()
+                _step('(b2) Structured diagnosis', True, f"model={d_json.get('model_identifier')} latency_ms={d_json.get('latency_ms')} faults={len(d_json.get('faults') or [])}")
+            else:
+                _step('(b2) Structured diagnosis', False, f'HTTP {diag_res.status_code}: {diag_res.text[:160]}')
+                failures += 1
 
             # (c2) Record both technician safety statements -> confirm power-sensitive steps appear via stream
             conf = await client.post(
@@ -323,6 +336,49 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
                             failures += 1
                     finally:
                         await client.delete(f'/api/v1/sessions/{hi_sid}', headers=hi_hdr)
+
+            # (f1) Optional Gemini TTS check (skipped if key lacks access or quota)
+            msg2_id = msg2.get('id')
+            if msg2_id:
+                try:
+                    tts_res = await client.get(f'/api/v1/sessions/{sid}/messages/{msg2_id}/speech', headers=headers, timeout=45.0)
+                    if tts_res.status_code == 200 and tts_res.headers.get('content-type', '').startswith('audio/'):
+                        _step('(f1) Optional Gemini TTS', True, f"HTTP 200, {tts_res.headers.get('content-type')}, {len(tts_res.content)} bytes")
+                    elif tts_res.status_code in (403, 404, 429, 503):
+                        _skip('(f1) Optional Gemini TTS', f'HTTP {tts_res.status_code} (key/quota/provider unavailable)')
+                    else:
+                        _skip('(f1) Optional Gemini TTS', f'HTTP {tts_res.status_code}: {tts_res.text[:100]}')
+                except Exception as exc:
+                    _skip('(f1) Optional Gemini TTS', f'{type(exc).__name__}: {exc}')
+
+            # (f2) Optional Gemini Live WebSocket check (when --base-url is given)
+            if base_url:
+                try:
+                    import websockets  # type: ignore
+                    ws_url = base_url.rstrip('/').replace('https://', 'wss://').replace('http://', 'ws://') + f'/api/v1/live/{sid}'
+                    async with websockets.connect(ws_url, open_timeout=15) as ws:
+                        await ws.send(json.dumps({'type': 'auth', 'token': token, 'language': 'English'}))
+                        live_model = None
+                        got_reply = False
+                        for _ in range(12):
+                            ev = json.loads(await asyncio.wait_for(ws.recv(), timeout=15))
+                            et = ev.get('type')
+                            if et == 'session_ready':
+                                live_model = ev.get('model')
+                                await ws.send(json.dumps({'type': 'text_input', 'text': 'Say hello in three words.'}))
+                            elif et in ('transcription', 'audio_chunk'):
+                                got_reply = True
+                                await ws.send(json.dumps({'type': 'end_session'}))
+                                break
+                            elif et == 'error':
+                                _skip('(f2) Optional Gemini Live WS', f"{ev.get('code')}: {ev.get('message')}")
+                                break
+                        if got_reply:
+                            _step('(f2) Optional Gemini Live WS', True, f'model={live_model}, received live transcription/audio')
+                        elif live_model and not got_reply:
+                            _skip('(f2) Optional Gemini Live WS', f'connected ({live_model}) but no turn event before loop end')
+                except Exception as exc:
+                    _skip('(f2) Optional Gemini Live WS', f'{type(exc).__name__}: {exc}')
         finally:
             await client.delete(f'/api/v1/sessions/{sid}', headers=headers)
             if np_sid:

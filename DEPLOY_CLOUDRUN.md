@@ -124,14 +124,14 @@ python backend/scripts/smoke_live.py --base-url "$SERVICE_URL"
 
 ## 5. Safe Rollout (`--no-traffic`) & Rollback Target
 
-- **Currently serving (100% traffic):** `fixsaathi-00003-han`, built from commit `6548c53` (`6548c53e90eafe277a4604d816d87247b77457cd`) on branch `antigravity-v2`. Smoke test `smoke_live.py` passed on the tagged candidate URL and on the public URL on 2026-11-27.
-- **Known good rollback revision:** `fixsaathi-00002-56b` (`https://fixsaathi-915991223959.us-east4.run.app`)
+- **Currently serving (100% traffic):** `fixsaathi-00005-xaq`, built from commit `4501cd4` (`4501cd4867afea9a3025c6653ef58f7d24e00f1e`) on branch `antigravity-v2`. Passed 3/3 consecutive `smoke_live.py` runs on `candidate2` on 2026-11-27.
+- **Known good rollback revision:** `fixsaathi-00005-xaq` (prior rollback targets: `fixsaathi-00003-han`, `fixsaathi-00002-56b`)
 - **Emergency rollback command (100% instant traffic shift):**
 
 ```bash
 gcloud run services update-traffic fixsaathi \
   --region us-east4 \
-  --to-revisions fixsaathi-00002-56b=100
+  --to-revisions fixsaathi-00005-xaq=100
 ```
 
 Deploy any change as an untagged/candidate revision with `--no-traffic`, verify `smoke_live.py` on its tagged URL first, and shift traffic only if every check passes:
