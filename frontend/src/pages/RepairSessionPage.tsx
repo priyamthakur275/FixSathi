@@ -5,6 +5,7 @@ import { CameraModal } from '../components/camera/CameraModal'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
 import { RepairProgress } from '../components/repair/RepairProgress'
 import { DiagnosisCard } from '../components/repair/DiagnosisCard'
+import { ExpectedReadingsCard } from '../components/repair/ExpectedReadingsCard'
 import { NameplateCard } from '../components/repair/NameplateCard'
 import { PartCard } from '../components/repair/PartCard'
 import { AuthImage } from '../components/common/AuthImage'
@@ -286,6 +287,7 @@ export default function RepairSessionPage() {
               {diag.requires_escalation && <p className="mt-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2 text-sm text-warn">The AI recommends a senior technician for this fault.{diag.escalation_reason ? ` ${diag.escalation_reason}` : ''}</p>}
               <p className="mt-3 text-xs text-ink-3" title={`Model: ${diag.model_identifier}`}>{diag.confidence_note}</p>
             </>)}
+            <ExpectedReadingsCard appliance={s.appliance_type} />
           </section>
 
           {similar && similar.results.length > 0 && (

@@ -10,6 +10,7 @@ import WelcomePage from '../pages/WelcomePage'
 import RepairSessionPage from '../pages/RepairSessionPage'
 import ManagerDashboard from '../pages/ManagerDashboard'
 import { DiagnosisCard } from '../components/repair/DiagnosisCard'
+import { ExpectedReadingsCard } from '../components/repair/ExpectedReadingsCard'
 import { PartCard } from '../components/repair/PartCard'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
 import * as services from '../services'
@@ -258,5 +259,22 @@ describe('Phase 2 UI redesign', () => {
     expect((await screen.findByRole('alert')).textContent).toContain('AI_NOT_CONFIGURED')
     expect((screen.getByLabelText('Brand') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('Error code') as HTMLInputElement).value).toBe('')
+  })
+
+  it('renders ExpectedReadingsCard as informational reference without live-work guidance', async () => {
+    vi.spyOn(services.lookupService, 'expectedReadings').mockResolvedValue({
+      appliance_type: 'ceiling_fan',
+      disclaimer: 'Reference values only — never instructions to work on or probe live circuits.',
+      items: [{
+        id: 'cf-cap', appliance_type: 'ceiling_fan', parameter: 'Run capacitor value',
+        hindi_name: 'रन कैपेसिटर', expected_range: '2.0 µF – 2.5 µF',
+        out_of_range_meaning: 'Below 1.5 µF causes weak torque.', condition: 'isolated_and_discharged',
+      }],
+    })
+    render(<ExpectedReadingsCard appliance="ceiling_fan" />)
+    expect(await screen.findByText('Expected readings')).toBeTruthy()
+    expect(screen.getByText('Reference only · Not live-work guidance')).toBeTruthy()
+    expect(screen.getByText(/2.0 µF – 2.5 µF/)).toBeTruthy()
+    expect(screen.getByText(/never instructions to work on or probe live circuits/)).toBeTruthy()
   })
 })

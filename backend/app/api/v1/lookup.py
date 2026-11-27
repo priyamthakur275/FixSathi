@@ -10,7 +10,7 @@ from ...core.power_rules import MICROWAVE_INTERNAL, step_needs_power_off
 from ...db.models import User
 from ...db.session import get_db
 from ...dependencies import current_user
-from ...services import knowledge_base as kb
+from ...services import expected_readings, knowledge_base as kb
 from ...services.retrieval import record_title
 from ...services.sessions import APPLIANCE_LABELS
 
@@ -50,3 +50,9 @@ async def lookup(q: str = Query(..., min_length=1, max_length=200), appliance_ty
     return {'query': q, 'appliance_type': res['category'], 'appliance_detected': res['category_detected'], 'brand': res['brand'],
             'error_codes_found': res['error_codes_found'], 'error_codes_unknown': res['error_codes_unknown'], 'coverage': res['coverage'],
             'results': results}
+
+
+@router.get('/expected-readings')
+def get_expected_readings(appliance_type: str | None = Query(None, max_length=40), u: User = Depends(current_user)):
+    """Informational nominal reference ranges (never guidance to work on live circuits)."""
+    return expected_readings.for_appliance(appliance_type)

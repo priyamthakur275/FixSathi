@@ -221,9 +221,21 @@ export interface LookupResult {
   match: 'error_code' | 'keyword' | 'embedding' | 'filter'; related_category: boolean; source_name: string; source_url: string | null; license: string; verification_status: string
 }
 export interface LookupResponse { query: string; appliance_type: string | null; brand: string | null; error_codes_found: string[]; error_codes_unknown: string[]; coverage: string; results: LookupResult[] }
+export interface ExpectedReading {
+  id: string
+  appliance_type: string
+  parameter: string
+  hindi_name: string
+  expected_range: string
+  out_of_range_meaning: string
+  condition: 'isolated_and_discharged' | 'visual_or_non_contact' | 'authorised_service_only'
+}
+export interface ExpectedReadingsResponse { appliance_type: string; disclaimer: string; items: ExpectedReading[] }
 /** Fault finder: error codes and symptoms looked up in the sourced records, without the AI. */
 export const lookupService = {
   search: (q: string, appliance?: string | null) => api<LookupResponse>(`/api/v1/lookup?q=${encodeURIComponent(q)}${appliance ? `&appliance_type=${appliance}` : ''}`),
+  expectedReadings: (appliance?: string | null) =>
+    api<ExpectedReadingsResponse>(`/api/v1/expected-readings${appliance && appliance !== 'unknown' ? `?appliance_type=${encodeURIComponent(appliance)}` : ''}`),
 }
 
 export interface KnowledgeStats { total: number; by_category: Record<string, number>; by_verification_status: Record<string, number> }
