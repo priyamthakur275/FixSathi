@@ -5,7 +5,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ..agents import prompts
 from ..agents.schemas import ComponentOut, DiagnosisOutput, GuidanceOutput, NameplateOut
+from ..config import get_settings
 from ..core.exceptions import AppError, Conflict, NotFound
+from ..core.logging import log
 from ..core.power_rules import MICROWAVE_ESCALATION, MICROWAVE_INTERNAL, step_needs_power_off
 from ..datasets import normalize as _norm
 from ..db.models import (AIUsage, Conversation, DiagnosisResult, IdentifiedComponent, Media, RepairSession, RepairStep, User)
@@ -339,6 +341,10 @@ async def _nameplate_retrieval(db: Session, s: RepairSession, np: dict) -> dict:
     }
 
 
+NAMEPLATE_ALLOWED_MIMES = frozenset({'image/jpeg', 'image/png', 'image/webp'})
+NAMEPLATE_MAX_BYTES = 8 * 1024 * 1024
+
+
 async def read_nameplate(db: Session, s: RepairSession, media_id) -> dict:
     ensure_open(s)
     m = db.get(Media, media_id)
@@ -346,13 +352,22 @@ async def read_nameplate(db: Session, s: RepairSession, media_id) -> dict:
         raise NotFound('Image not found in this session.')
     if not m.mime_type.startswith('image/'):
         raise AppError('Nameplate reading works on photos, not documents.', code='NOT_AN_IMAGE', status=400)
-    part = types.Part.from_bytes(data=get_storage().get(m.storage_key), mime_type=m.mime_type)
+    if m.mime_type not in NAMEPLATE_ALLOWED_MIMES:
+        raise AppError('Only JPEG, PNG or WebP images are accepted for nameplate reading.', code='UNSUPPORTED_MEDIA_TYPE', status=415)
+    max_bytes = min(NAMEPLATE_MAX_BYTES, get_settings().max_upload_size_mb * 1024 * 1024)
+    if (m.size_bytes or 0) > max_bytes:
+        raise AppError('Image is larger than 8 MB. Upload a smaller photo.', code='UPLOAD_TOO_LARGE', status=413)
+    raw = get_storage().get(m.storage_key)
+    if len(raw) > max_bytes:
+        raise AppError('Image is larger than 8 MB. Upload a smaller photo.', code='UPLOAD_TOO_LARGE', status=413)
+    part = types.Part.from_bytes(data=raw, mime_type=m.mime_type)
     ask = (f'Session appliance (may be unknown): {s.appliance_type}. '
            'Read any clearly visible rating label (nameplate) or digital error display in this photo.')
     try:
         out, meta = await _live_gemini().generate_json('nameplate', NameplateOut, [ask, part], prompts.NAMEPLATE_SYSTEM, temperature=0.1)
     except AppError as e:
         record_usage(db, s, 'nameplate', None, ok=False, code=e.code, model='agent')
+        log(logger, 'nameplate_read_failed', logging.WARNING, session=str(s.id), media_id=str(m.id), mime=m.mime_type, size_bytes=len(raw), code=e.code)
         return {
             'status': 'unavailable' if e.code == 'AI_NOT_CONFIGURED' else 'error',
             'ai_error': {'code': e.code, 'message': e.message, 'hint': 'Enter the brand, model, or error code below to search repair records manually.'},
@@ -360,6 +375,7 @@ async def read_nameplate(db: Session, s: RepairSession, media_id) -> dict:
             'retrieval': None,
         }
     record_usage(db, s, 'nameplate', meta)
+    log(logger, 'nameplate_read', session=str(s.id), media_id=str(m.id), mime=m.mime_type, size_bytes=len(raw), readable=bool(out.readable))
     extracted = {
         'media_id': str(m.id),
         'readable': bool(out.readable),

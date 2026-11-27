@@ -1,8 +1,11 @@
 """Gemini Vision nameplate and error-display reader tests."""
+import base64, io, logging, uuid
+from PIL import Image
 from app.core.exceptions import AIError
-from app.db.models import AIUsage
+from app.core.logging import JsonFormatter
+from app.db.models import AIUsage, Media
 from app.db.session import SessionLocal
-from tests.conftest import register
+from tests.conftest import make_role, register
 from tests.fakes import DIAG, png
 from tests.test_dataset_pipeline import _ingest, rec
 
@@ -149,3 +152,69 @@ def test_read_nameplate_enforces_ownership_and_image_type(client, tech, fake):
     assert doc_r.status_code == 201, doc_r.text
     bad = client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': doc_r.json()['id']}, headers=tech['h'])
     assert bad.status_code == 400 and bad.json()['error']['code'] == 'NOT_AN_IMAGE'
+
+
+def test_read_nameplate_forbids_same_org_manager_ownership(client, tech, fake):
+    sid = client.post('/api/v1/sessions', json={'issue_description': 'ac error', 'appliance_type': 'split_ac'}, headers=tech['h']).json()['id']
+    mid = _upload_photo(client, tech['h'], sid)
+    mgr = register(client, org='Acme Service')
+    make_role(mgr['user']['id'], 'manager')
+
+    assert client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': mid}, headers=mgr['h']).status_code == 403
+    assert client.patch(f'/api/v1/sessions/{sid}/nameplate', json={'brand': 'LG'}, headers=mgr['h']).status_code == 403
+
+
+def test_read_nameplate_enforces_mime_and_8mb_limit_and_allows_jpeg_webp(client, tech, fake):
+    sid = client.post('/api/v1/sessions', json={'issue_description': 'ac error', 'appliance_type': 'split_ac'}, headers=tech['h']).json()['id']
+    fake.json['nameplate'] = {'readable': True, 'appliance_type': 'split_ac', 'brand': 'LG', 'model': 'X1', 'error_code': 'CH38', 'raw_text': 'CH38', 'confidence': 0.9}
+
+    for ext, fmt, mime in (('label.jpg', 'JPEG', 'image/jpeg'), ('label.webp', 'WEBP', 'image/webp')):
+        up = client.post(f'/api/v1/sessions/{sid}/files?source=upload', files={'file': (ext, png(fmt=fmt), mime)}, headers=tech['h'])
+        assert up.status_code == 201, up.text
+        res = client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': up.json()['id']}, headers=tech['h'])
+        assert res.status_code == 200 and res.json()['status'] == 'ok'
+
+    # Even if a legacy/unexpected image MIME or oversized row exists in DB, read_nameplate rejects it.
+    uid = tech['user']['id']
+    with SessionLocal() as db:
+        bad_mime = Media(session_id=uuid.UUID(sid), uploaded_by=uuid.UUID(uid), kind='upload', storage_key='fake/key.gif', mime_type='image/gif', size_bytes=128)
+        too_big = Media(session_id=uuid.UUID(sid), uploaded_by=uuid.UUID(uid), kind='upload', storage_key='fake/big.png', mime_type='image/png', size_bytes=(8 * 1024 * 1024) + 1)
+        db.add_all([bad_mime, too_big])
+        db.commit()
+        bad_id, big_id = str(bad_mime.id), str(too_big.id)
+
+    r_gif = client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': bad_id}, headers=tech['h'])
+    assert r_gif.status_code == 415 and r_gif.json()['error']['code'] == 'UNSUPPORTED_MEDIA_TYPE'
+
+    r_big = client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': big_id}, headers=tech['h'])
+    assert r_big.status_code == 413 and r_big.json()['error']['code'] == 'UPLOAD_TOO_LARGE'
+
+
+def test_read_nameplate_never_logs_image_bytes_or_api_key(client, tech, fake, caplog):
+    sid = client.post('/api/v1/sessions', json={'issue_description': 'ac error', 'appliance_type': 'split_ac'}, headers=tech['h']).json()['id']
+    buf = io.BytesIO()
+    Image.new('RGB', (40, 40), (12, 34, 56)).save(buf, 'PNG')
+    raw_bytes = buf.getvalue() + b'SECRET_IMAGE_MARKER_987654'
+    up = client.post(f'/api/v1/sessions/{sid}/files?source=upload', files={'file': ('label.png', raw_bytes, 'image/png')}, headers=tech['h'])
+    assert up.status_code == 201
+    mid = up.json()['id']
+
+    fake_key = 'AIzaSyTestFakeKey1234567890abcdef'
+    fake.json['nameplate'] = {'readable': True, 'appliance_type': 'split_ac', 'brand': 'LG', 'model': 'LS1', 'error_code': 'CH38', 'raw_text': 'CH38', 'confidence': 0.9}
+
+    caplog.set_level(logging.DEBUG)
+    r_ok = client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': mid}, headers=tech['h'])
+    assert r_ok.status_code == 200
+
+    fake.fail['nameplate'] = AIError(f'Key failed: {fake_key}', code='AI_ERROR')
+    r_err = client.post(f'/api/v1/sessions/{sid}/read-nameplate', json={'media_id': mid}, headers=tech['h'])
+    assert r_err.status_code == 200
+
+    fmt = JsonFormatter()
+    formatted = '\n'.join(fmt.format(rec_) for rec_ in caplog.records)
+    raw_lines = '\n'.join(rec_.getMessage() for rec_ in caplog.records)
+    assert 'SECRET_IMAGE_MARKER_987654' not in formatted and 'SECRET_IMAGE_MARKER_987654' not in raw_lines
+    b64_chunk = base64.b64encode(b'SECRET_IMAGE_MARKER_987654').decode()
+    assert b64_chunk not in formatted
+    assert fake_key not in formatted
+    assert 'data:image' not in formatted
