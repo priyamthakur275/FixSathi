@@ -87,8 +87,11 @@ gcloud run deploy fixsaathi \
   --min-instances 1 \
   --memory 1Gi \
   --timeout 300 \
+  --no-cpu-throttling \
+  --cpu-boost \
+  --quiet \
   --set-secrets "GEMINI_API_KEY=GEMINI_API_KEY:latest,SECRET_KEY=SECRET_KEY:latest,DATABASE_URL=DATABASE_URL:latest" \
-  --set-env-vars "^@^APP_ENV=production@STORAGE_PROVIDER=database@VECTOR_SEARCH_MODE=auto@GEMINI_AGENT_MODEL=gemini-4-neon@GEMINI_FAST_MODEL=gemini-3.5-flash-lite@GEMINI_AGENT_FALLBACK_MODELS=gemini-4-hydrogen,gemini-3.5-flash-lite@GEMINI_THINKING_LEVEL=low@GEMINI_EMBED_MODEL=gemini-embedding-2@GEMINI_LIVE_MODEL=gemini-3.8-live@GEMINI_TTS_MODEL=gemini-3.8-flash-tts@NANO_BANANA_MODEL=gemini-3.1-flash-image"
+  --set-env-vars "^@^APP_ENV=production@STORAGE_PROVIDER=database@VECTOR_SEARCH_MODE=auto@GEMINI_AGENT_MODEL=gemini-4-hydrogen@GEMINI_FAST_MODEL=gemini-3.5-flash-lite@GEMINI_AGENT_FALLBACK_MODELS=gemini-4-neon,gemini-3.5-flash-lite@GEMINI_THINKING_LEVEL=low@GEMINI_EMBED_MODEL=gemini-embedding-2@GEMINI_LIVE_MODEL=gemini-3.8-live@GEMINI_TTS_MODEL=gemini-3.8-flash-tts@NANO_BANANA_MODEL=gemini-3.1-flash-image"
 ```
 
 Capture the public URL and align `CORS_ORIGINS` (safe same-origin setting even if an external tab or Swagger hits the API):
