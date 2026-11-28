@@ -107,3 +107,19 @@ class NameplateOut(BaseModel):
             return None
         v = v.strip()
         return v if v in APPLIANCES and v != 'unknown' else None
+
+
+class ChallengerObjection(BaseModel):
+    claim: str = Field(max_length=240)
+    claim_hi: str = Field(default='', max_length=240, description='Everyday spoken Hindi (Devanagari) version of claim')
+    why: str = Field(max_length=360)
+    why_hi: str = Field(default='', max_length=360, description='Everyday spoken Hindi (Devanagari) version of why')
+    evidence_id: str | None = Field(default=None, max_length=80)
+
+
+class ChallengerOutput(BaseModel):
+    agrees: bool
+    objections: list[ChallengerObjection] = Field(default_factory=list, max_length=4)
+    missed_checks: list[str] = Field(default_factory=list, max_length=5)
+    safety_concerns: list[str] = Field(default_factory=list, max_length=4)
+    revised_confidence: float = Field(ge=0.0, le=1.0)

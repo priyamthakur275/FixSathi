@@ -26,7 +26,8 @@ class FakeGemini(gclient.GeminiClient):
         from pydantic import ValidationError
         from app.core.exceptions import AIError
         try:
-            return schema.model_validate(json.loads(self.json[op]) if isinstance(self.json[op], str) else self.json[op]), gclient.CallResult(model='fake-agent', latency_ms=5)
+            payload = self.json[op] if op in self.json else (CHALLENGER if op == 'challenger' else self.json[op])
+            return schema.model_validate(json.loads(payload) if isinstance(payload, str) else payload), gclient.CallResult(model='fake-agent', latency_ms=5)
         except (ValidationError, ValueError) as e:
             raise AIError('The AI model returned a response that failed validation.', code='AI_INVALID_OUTPUT') from e
 
@@ -68,5 +69,6 @@ DIAG = {'appliance_type': 'ceiling_fan', 'problem_summary': 'Fan slow with hum',
     'recommended_checks': ['spin by hand'], 'follow_up_questions': ['Does speed change?'], 'safety_requirements': ['Isolate power'], 'requires_escalation': False}
 STEPS = {'steps': [{'title': 'Observe', 'instruction': 'Watch the fan', 'kind': 'observation', 'requires_power_off': False},
                    {'title': 'Open canopy', 'instruction': 'Remove canopy', 'kind': 'power_sensitive', 'requires_power_off': False}]}
+CHALLENGER = {'agrees': True, 'objections': [], 'missed_checks': [], 'safety_concerns': [], 'revised_confidence': 0.6}
 
 

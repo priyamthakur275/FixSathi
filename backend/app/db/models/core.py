@@ -94,6 +94,8 @@ class DiagnosisResult(IdMixin, CreatedMixin, Base):
     sources: Mapped[list] = mapped_column(JSONType, default=list)
     model_identifier: Mapped[str] = mapped_column(String(80))
     latency_ms: Mapped[int | None] = mapped_column(Integer)
+    challenger: Mapped[dict | None] = mapped_column(JSONType)
+    challenger_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class IdentifiedComponent(IdMixin, CreatedMixin, Base):
@@ -204,3 +206,15 @@ class RepairEmbedding(IdMixin, CreatedMixin, Base):
     dimensions: Mapped[int] = mapped_column(Integer)
     vector: Mapped[list] = mapped_column(JSONType)
     __table_args__ = (UniqueConstraint('source_type', 'source_id', 'model_identifier', name='uq_repair_embeddings_source_model'),)
+
+
+class CustomerReceipt(Base):
+    """Minimal, expiring shareable safety & repair receipt keyed by an unguessable token (zero customer PII)."""
+    __tablename__ = 'customer_receipts'
+    token: Mapped[str] = mapped_column(String(64), primary_key=True)
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('repair_sessions.id', ondelete='CASCADE'), index=True)
+    report_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('service_reports.id', ondelete='SET NULL'))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey('users.id', ondelete='SET NULL'))
+    payload: Mapped[dict] = mapped_column(JSONType, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

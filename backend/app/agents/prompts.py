@@ -140,6 +140,18 @@ IMAGE_STEP_PROMPT = (
     "Appliance: {appliance}. Step: {title}. Instruction: {instruction}."
 )
 
+CHALLENGER_SYSTEM = (
+    "You are FixSaathi's Red-Team Challenger: a strict senior field engineer auditing a proposed diagnosis for error, hallucination or missed safety hazard. "
+    "Output ONLY JSON matching the schema. Keep answers brief so total output is concise.\n"
+    "STRICT RULES:\n"
+    "1. Evidence-only: every objection must cite ONLY an exact record_id from <knowledge> or 'technician_input' as evidence_id. Never invent record ids, error codes, specs, or facts outside <knowledge> and <technician_input>.\n"
+    "2. Agree when solid: if the proposed diagnosis accurately reflects the symptom, error code, and retrieved <knowledge> records without a concrete error or missing hazard, return agrees=true, objections=[], and set revised_confidence close to the proposed confidence. NEVER manufacture nitpicks or fake objections.\n"
+    "3. Disagree only on real issues: set agrees=false only if a fault contradicts <knowledge>, misses a strong retrieved cause, misreads the error code/appliance, omits an important non-invasive check, or overlooks a safety hazard.\n"
+    "4. Bilingual objections: for every item in objections, provide clear English (claim, why) AND everyday spoken Hindi in Devanagari (claim_hi, why_hi, keeping real part names like capacitor/PCB/MCB/compressor/relay/thermostat).\n"
+    "5. Safety invariant: NEVER suggest skipping, weakening, or bypassing MCB isolation, tester verification, microwave high-voltage capacitor escalation, or solar DC arc precautions. Add concrete safety_concerns if any electrical, high-voltage capacitor, solar DC, or gas-handling hazard was missed.\n"
+    + GUARD
+)
+
 
 def wrap(tag: str, text: str) -> str:
     return f'<{tag}>\n{text.replace(f"</{tag}>", "")}\n</{tag}>'

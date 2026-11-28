@@ -1,10 +1,10 @@
 """Business services that call Gemini agents. Model output is validated and treated as untrusted data."""
-import base64, logging, time
+import base64, json, logging, time
 from google.genai import types
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from ..agents import prompts
-from ..agents.schemas import ComponentOut, DiagnosisOutput, GuidanceOutput, NameplateOut
+from ..agents.schemas import ChallengerOutput, ComponentOut, DiagnosisOutput, GuidanceOutput, NameplateOut
 from ..config import get_settings
 from ..core.exceptions import AppError, Conflict, NotFound
 from ..core.logging import log
@@ -264,6 +264,81 @@ async def diagnose(db: Session, s: RepairSession, media_ids: list | None = None)
         s.appliance_type = out.appliance_type
     transition(s, 'active')
     db.add(d); record_usage(db, s, 'diagnosis', meta); db.flush()
+    d.challenger = await _run_challenger(db, s, g, res, d, np_text)
+    d.challenger_checked_at = None
+    if d.challenger and d.challenger.get('safety_concerns'):
+        merged = list(dict.fromkeys(list(d.safety_requirements or []) + list(d.challenger['safety_concerns'])))
+        d.safety_requirements = merged
+        safety.force_relock(db, s, reason='CHALLENGER_SAFETY_CONCERN', details={'concerns': d.challenger['safety_concerns']})
+    db.flush()
+    return d
+
+
+async def _run_challenger(db: Session, s: RepairSession, g, res: dict, d: DiagnosisResult, np_text: str) -> dict:
+    """Run adversarial red-team verification on the proposed diagnosis. Any error/timeout fails open with status='unavailable'."""
+    conf_before = round(float(d.faults[0]['confidence']), 3) if d.faults else None
+    allowed = {h.record_id for h in res['hits']}
+    proposed = {
+        'appliance_type': s.appliance_type,
+        'problem_summary': d.problem_summary,
+        'possible_faults': [
+            {'fault': f.get('fault'), 'confidence': f.get('confidence'), 'status': f.get('status'), 'record_ids': f.get('record_ids', [])}
+            for f in (d.faults or [])[:4]
+        ],
+        'recommended_checks': (d.recommended_checks or [])[:5],
+        'safety_requirements': (d.safety_requirements or [])[:5],
+    }
+    ch_contents = [
+        f'Appliance: {s.appliance_type}. Nameplate: {np_text or "none"}',
+        prompts.wrap('technician_input', s.issue_description or '(none)'),
+        prompts.wrap('knowledge', kb.context_block(res)),
+        prompts.wrap('proposed_diagnosis', json.dumps(proposed, ensure_ascii=False)),
+    ]
+    t0 = time.perf_counter()
+    try:
+        out, meta = await g.generate_json('challenger', ChallengerOutput, ch_contents, prompts.CHALLENGER_SYSTEM, temperature=0.1)
+    except Exception as e:  # noqa: BLE001 — challenger failures must never block diagnosis
+        ms = int((time.perf_counter() - t0) * 1000)
+        code = getattr(e, 'code', 'CHALLENGER_UNAVAILABLE')
+        record_usage(db, s, 'challenger', None, ok=False, code=str(code)[:40], model='agent')
+        log(logger, 'challenger_unavailable', logging.WARNING, session=str(s.id), code=code, ms=ms)
+        return {
+            'status': 'unavailable', 'agrees': None, 'objections': [], 'missed_checks': [], 'safety_concerns': [],
+            'revised_confidence': None, 'confidence_before': conf_before, 'model_identifier': None, 'latency_ms': ms,
+            'error_code': str(code),
+        }
+    ms = int((time.perf_counter() - t0) * 1000)
+    record_usage(db, s, 'challenger', meta)
+    objections = []
+    for o in out.objections:
+        ev = o.evidence_id if (o.evidence_id in allowed or o.evidence_id == 'technician_input') else None
+        objections.append({
+            'claim': o.claim, 'claim_hi': o.claim_hi, 'why': o.why, 'why_hi': o.why_hi, 'evidence_id': ev,
+        })
+    agrees = bool(out.agrees)
+    if not agrees and not objections and not out.missed_checks and not out.safety_concerns:
+        agrees = True  # never invent a disagreement without a concrete reason
+    return {
+        'status': 'ok',
+        'agrees': agrees,
+        'objections': objections,
+        'missed_checks': list(out.missed_checks),
+        'safety_concerns': list(out.safety_concerns),
+        'revised_confidence': round(float(out.revised_confidence), 3),
+        'confidence_before': conf_before,
+        'model_identifier': meta.model,
+        'latency_ms': ms,
+    }
+
+
+def acknowledge_challenger(db: Session, s: RepairSession) -> DiagnosisResult:
+    from ..db.base import utcnow
+    ensure_open(s)
+    d = db.scalars(select(DiagnosisResult).where(DiagnosisResult.session_id == s.id).order_by(DiagnosisResult.created_at.desc()).limit(1)).first()
+    if not d:
+        raise NotFound('No diagnosis found for this session.')
+    d.challenger_checked_at = utcnow()
+    db.flush()
     return d
 
 
@@ -275,6 +350,8 @@ async def generate_steps(db: Session, s: RepairSession) -> list[RepairStep]:
     d = db.scalars(select(DiagnosisResult).where(DiagnosisResult.session_id == s.id).order_by(DiagnosisResult.created_at.desc()).limit(1)).first()
     if not d:
         raise Conflict('Run a diagnosis before generating repair steps.', code='DIAGNOSIS_REQUIRED')
+    if d.challenger and d.challenger.get('status') == 'ok' and d.challenger.get('agrees') is False and d.challenger_checked_at is None:
+        raise Conflict('Review the Challenger objections and tap "I checked this" before generating repair steps.', code='CHALLENGER_CHECK_REQUIRED')
     top = d.faults[0]['fault'] if d.faults else d.problem_summary
     np_brand, np_codes, np_text = _nameplate_search_parts(s)
     q_steps = f'{s.issue_description} {np_text} {top}'.strip()

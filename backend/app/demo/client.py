@@ -27,6 +27,8 @@ class DemoClient(GeminiClient):
         yield '', meta
 
     async def generate_json(self, op, schema, contents, system, temperature=0.2):
+        if op == 'challenger' and op not in self.sc:
+            return schema.model_validate({'agrees': True, 'objections': [], 'missed_checks': [], 'safety_concerns': [], 'revised_confidence': 0.85}), self._meta()
         return schema.model_validate(json.loads(json.dumps(self.sc[op]))), self._meta()
 
     async def generate_image(self, prompt, reference=None):

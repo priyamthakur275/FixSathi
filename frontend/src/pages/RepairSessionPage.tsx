@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Camera, Check, ChevronLeft, ChevronRight, Circle, Cpu, Download, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, ScanSearch, ShieldCheck, Sparkles, Star, Stethoscope, Wand2 } from 'lucide-react'
+import { Camera, Check, ChevronLeft, ChevronRight, Circle, Cpu, Download, ExternalLink, FileText, HandHelping, ImagePlus, Loader2, Lock, MessageSquare, QrCode, ScanSearch, ShieldCheck, Sparkles, Star, Stethoscope, Wand2 } from 'lucide-react'
 import { CameraModal } from '../components/camera/CameraModal'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
 import { RepairProgress } from '../components/repair/RepairProgress'
 import { DiagnosisCard } from '../components/repair/DiagnosisCard'
+import { ChallengerCard } from '../components/repair/ChallengerCard'
 import { ExpectedReadingsCard } from '../components/repair/ExpectedReadingsCard'
 import { NameplateCard } from '../components/repair/NameplateCard'
 import { PartCard } from '../components/repair/PartCard'
 import { AuthImage } from '../components/common/AuthImage'
 import { ErrorState, Skeleton, StatusPill } from '../components/common/ui'
 import { SourceList } from '../components/common/SourceList'
-import { fileService, repairService, sessionService } from '../services'
+import { fileService, receiptService, repairService, sessionService, type CustomerReceiptResponse } from '../services'
+import { apiBase, type ApiError } from '../services/api'
 import { DocChip } from '../components/composer/Composer'
 import { openFile } from '../utils/openFile'
-import type { ApiError } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useT } from '../i18n'
 import type { Attachment, ComponentResult, Diagnosis, MediaItem, NameplateResponse, RepairSession, RepairStep, SafetyState, SimilarResult } from '../types'
@@ -51,6 +52,7 @@ export default function RepairSessionPage() {
   const [notes, setNotes] = useState('')
   const [rating, setRating] = useState(0)
   const [causeRight, setCauseRight] = useState<boolean | null>(null)
+  const [receipt, setReceipt] = useState<CustomerReceiptResponse | null>(null)
   const [activeStage, setActiveStage] = useState<number>(hash === '#safety' ? 2 : 0)
   const [stagePicked, setStagePicked] = useState(hash === '#safety')
 
@@ -118,7 +120,13 @@ export default function RepairSessionPage() {
       const m = await fileService.upload(id, f, 'upload', f.name); setMedia(x => [...x, m])
     }
   })
-  const diagnose = () => run('diagnose', async () => { setDiag(await repairService.diagnose(id, media.filter(isPhoto).slice(-3).map(m => m.id))); await refreshSession() })
+  const diagnose = () => run('diagnose', async () => {
+    const d = await repairService.diagnose(id, media.filter(isPhoto).slice(-3).map(m => m.id))
+    setDiag(d)
+    setSafety(await repairService.safety(id))
+    await refreshSession()
+  })
+  const ackChallenger = () => run('challenger-ack', async () => { setDiag(await repairService.acknowledgeChallenger(id)) })
   const genSteps = () => run('steps', async () => { setSteps(await repairService.generateSteps(id)); await refreshSession() })
   const setSafe = (p: boolean, tester: boolean) => run('safety', async () => { setSafety(await repairService.confirmSafety(id, p, tester)); setSteps(await repairService.steps(id)) })
   const toggle = (x: RepairStep) => run(`step-${x.id}`, async () => {
@@ -157,6 +165,7 @@ export default function RepairSessionPage() {
     if (rating) await repairService.feedback(id, rating, causeRight)
     const r = await repairService.report(id, outcome, outcome === 'resolved' ? ftf : null, notes); nav(`/reports/${r.id}`)
   })
+  const makeReceipt = () => run('receipt', async () => { setReceipt(await receiptService.create(id)) })
 
   if (loadErr) return <div className="mx-auto max-w-3xl px-4 py-10"><ErrorState message={loadErr} onRetry={() => void load()} /></div>
   if (!s) return <div className="mx-auto max-w-6xl space-y-4 px-4 py-8 md:px-8"><Skeleton className="h-12 w-1/2" /><Skeleton className="h-20" /><Skeleton className="h-64" /></div>
@@ -294,6 +303,7 @@ export default function RepairSessionPage() {
             const np = nameplateRes?.extracted ?? s.nameplate
             const nameplateNeedsConfirm = !!np && !np.verified_by_technician && !!(np.model || np.brand || np.error_code)
             const lockedCount = steps.filter(x => x.locked).length
+            const ch = diag?.challenger
             return (
           <section aria-labelledby="diag-h" className={`card card-pad ${visStage(1)}`}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -317,9 +327,20 @@ export default function RepairSessionPage() {
                 {diag.knowledge_coverage === 'grounded' ? 'Backed by repair records' : diag.knowledge_coverage === 'partial' ? 'Partly backed by repair records' : 'No matching repair record: treat as unverified'}
               </p>
               {diag.confirmed_findings?.length > 0 && <p className="mb-3 text-sm"><span className="text-ink-2">Confirmed: </span>{diag.confirmed_findings.join('; ')}</p>}
-              <ul className="space-y-3">
-                {diag.faults.map((f, idx) => <DiagnosisCard key={f.fault} fault={f} sources={diag.sources ?? []} index={idx} />)}
-              </ul>
+              <div className={ch ? 'grid items-start gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]' : ''}>
+                <ul className="space-y-3">
+                  {diag.faults.map((f, idx) => <DiagnosisCard key={f.fault} fault={f} sources={diag.sources ?? []} index={idx} />)}
+                </ul>
+                {ch && (
+                  <ChallengerCard
+                    challenger={ch}
+                    checkedAt={diag.challenger_checked_at}
+                    canEdit={owner && open}
+                    busy={busy === 'challenger-ack'}
+                    onAcknowledge={ackChallenger}
+                  />
+                )}
+              </div>
               {diag.follow_up_questions.length > 0 && <div className="mt-4 rounded-xl border border-line bg-surface-2/50 p-3.5 text-sm"><p className="mb-1.5 text-xs font-medium text-ink-3">Check next</p><ul className="space-y-1">{diag.follow_up_questions.map(q => <li key={q} className="flex gap-2"><span aria-hidden className="text-accent">?</span>{q}</li>)}</ul></div>}
               {diag.missing_information?.length > 0 && <div className="mt-3 text-sm"><p className="text-ink-2">Still unknown:</p><ul className="list-disc pl-5">{diag.missing_information.map(q => <li key={q}>{q}</li>)}</ul></div>}
               {(diag.required_tools?.length ?? 0) > 0 && <p className="mt-3 text-sm"><span className="text-ink-2">Tools needed:</span> {diag.required_tools!.join(', ')}</p>}
@@ -365,6 +386,21 @@ export default function RepairSessionPage() {
                       </dd>
                     </div>
                   )}
+                  {ch && (
+                    <>
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <dt className="text-ink-3">Challenger model</dt>
+                        <dd className="font-mono text-ink">{ch.model_identifier ?? 'Unavailable'}</dd>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <dt className="text-ink-3">Challenger verdict</dt>
+                        <dd className="text-ink">
+                          {ch.status === 'unavailable' ? 'Unavailable' : ch.agrees ? 'Agreed' : 'Disagreed'}
+                          {typeof ch.latency_ms === 'number' ? ` (${ch.latency_ms} ms)` : ''}
+                        </dd>
+                      </div>
+                    </>
+                  )}
                 </dl>
               </details>
               <p className="mt-3 text-xs text-ink-3">{diag.confidence_note}</p>
@@ -395,15 +431,25 @@ export default function RepairSessionPage() {
           </div>
 
           {/* Stage 3: Repair */}
+          {(() => {
+            const challengerNeedsCheck = !!(diag?.challenger && diag.challenger.status === 'ok' && diag.challenger.agrees === false && !diag.challenger_checked_at)
+            return (
           <section aria-labelledby="steps-h" className={`card card-pad ${visStage(3)}`}>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 id="steps-h" className={`${h2} whitespace-nowrap`}><span className={ico}><Wand2 size={16} /></span>4. Repair guidance</h2>
-              {owner && open && diag && done === 0 && <button onClick={genSteps} disabled={!!busy} className={btn}>{busy === 'steps' ? <Loader2 size={15} className="animate-spin" /> : <Wand2 size={15} />}{steps.length ? 'Regenerate' : 'Generate steps'}</button>}</div>
-            {steps.length > 0 && <div className="mb-4 flex items-center gap-3">
+              {owner && open && diag && done === 0 && <button onClick={genSteps} disabled={!!busy || challengerNeedsCheck} className={btn}>{busy === 'steps' ? <Loader2 size={15} className="animate-spin" /> : <Wand2 size={15} />}{steps.length ? 'Regenerate' : 'Generate steps'}</button>}</div>
+            {challengerNeedsCheck && (
+              <div role="note" className="mb-4 rounded-xl border border-warn/45 bg-warn/10 p-3.5 text-sm text-ink-2">
+                <p className="font-semibold text-ink">Challenger raised an objection</p>
+                <p className="mt-1 text-xs">Review the Challenger card under <strong className="text-ink">2. Suspected faults</strong> and tap <strong className="text-ink">I checked this</strong> before repair steps are shown.</p>
+                <button type="button" onClick={() => selectStage(1)} className="btn btn-sm mt-2.5 lg:hidden">Review Challenger objections</button>
+              </div>
+            )}
+            {!challengerNeedsCheck && steps.length > 0 && <div className="mb-4 flex items-center gap-3">
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Step progress"><div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${pct}%` }} /></div>
               <span className="num text-xs text-ink-3">{done} of {steps.length}</span>
             </div>}
-            {steps.length === 0 && <p className="text-sm text-ink-2">{diag ? 'Generate steps from the diagnosis, or get them live by voice.' : 'Steps appear after a diagnosis.'}</p>}
-            <ol className="space-y-2.5">
+            {!challengerNeedsCheck && steps.length === 0 && <p className="text-sm text-ink-2">{diag ? 'Generate steps from the diagnosis, or get them live by voice.' : 'Steps appear after a diagnosis.'}</p>}
+            {!challengerNeedsCheck && <ol className="space-y-2.5">
               {steps.map(x => {
                 const isDone = x.status === 'completed'
                 const vis = x.visual_media_id ? media.find(m => m.id === x.visual_media_id) : undefined
@@ -434,8 +480,10 @@ export default function RepairSessionPage() {
                     </div>
                   </li>)
               })}
-            </ol>
+            </ol>}
           </section>
+            )
+          })()}
 
           {/* Stage 4: Report */}
           {owner && open && (
@@ -457,7 +505,22 @@ export default function RepairSessionPage() {
               )}
               <label className="sr-only" htmlFor="notes">Notes</label>
               <textarea id="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Notes for the report (parts used, what you found)" className="field mt-3 text-sm" />
-              <button onClick={report} disabled={!!busy} className="btn btn-primary mt-3">{busy === 'report' ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}Create report</button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button onClick={report} disabled={!!busy} className="btn btn-primary">{busy === 'report' ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}Create report</button>
+                <button type="button" onClick={makeReceipt} disabled={!!busy} className="btn">{busy === 'receipt' ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}Customer Safety Receipt</button>
+              </div>
+              {receipt && (
+                <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-accent/35 bg-accent/[0.04] p-3">
+                  <img src={`${apiBase}${receipt.qr_url}`} alt="Customer safety receipt QR code" className="h-20 w-20 rounded-lg border border-line bg-white p-1" />
+                  <div className="min-w-0 flex-1 text-xs">
+                    <p className="font-semibold text-ink">Safety Receipt ready (Hindi / English)</p>
+                    <p className="mt-0.5 text-ink-2">No customer personal data stored.</p>
+                    <Link to={`/receipt/${receipt.token}`} className="mt-1 inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                      Open receipt <ExternalLink size={12} />
+                    </Link>
+                  </div>
+                </div>
+              )}
               <p className="mt-2 text-xs text-ink-3">The report lists only steps you marked done. Steps not done are shown as not performed.</p>
             </section>
           )}

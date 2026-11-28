@@ -16,7 +16,7 @@ const load = {
   session: () => import('./pages/RepairSessionPage'), history: () => import('./pages/RepairHistoryPage'),
   reports: () => import('./pages/ReportsPage'), settings: () => import('./pages/SettingsPage'),
   info: () => import('./pages/InfoPages'), demo: () => import('./pages/DemoPage'), lookup: () => import('./pages/FaultFinderPage'),
-  evaluation: () => import('./pages/EvaluationPage'),
+  evaluation: () => import('./pages/EvaluationPage'), receipt: () => import('./pages/ReceiptPage'),
 }
 const RepairSessionPage = lazy(load.session)
 const RepairHistoryPage = lazy(load.history)
@@ -26,6 +26,7 @@ const SettingsPage = lazy(load.settings)
 const DemoPage = lazy(load.demo)
 const FaultFinderPage = lazy(load.lookup)
 const EvaluationPage = lazy(load.evaluation)
+const ReceiptPage = lazy(load.receipt)
 const SavedDiagnoses = lazy(() => load.info().then(m => ({ default: m.SavedDiagnoses })))
 const SeniorSupport = lazy(() => load.info().then(m => ({ default: m.SeniorSupport })))
 const HelpPage = lazy(() => load.info().then(m => ({ default: m.HelpPage })))
@@ -75,6 +76,7 @@ export default function App() {
             <Routes>
               <Route path="login" element={<LoginPage />} />
               <Route path="evaluation" element={<EvaluationPage />} />
+              <Route path="receipt/:id" element={<ReceiptPage />} />
               <Route element={<Protected><AppLayout /></Protected>}>
                 <Route index element={<WelcomePage />} />
                 <Route path="chat" element={<ChatPage />} />

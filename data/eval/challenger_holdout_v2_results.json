@@ -1,0 +1,1023 @@
+{
+  "summary": {
+    "date": "2026-11-28",
+    "dataset": "held_out_v2",
+    "cases": 36,
+    "model": "gemini-3.5-flash-lite",
+    "ok_count": 36,
+    "unavailable_count": 0,
+    "agrees_count": 36,
+    "disagrees_count": 0,
+    "agree_rate": 1.0,
+    "disagree_rate": 0.0,
+    "safety_concerns_flagged": 0,
+    "avg_latency_ms": 1412,
+    "median_latency_ms": 1341,
+    "max_latency_ms": 3302,
+    "disagreements_on_top_fault_miss": 0,
+    "disagreements_on_top_fault_hit": 0,
+    "agreements_on_top_fault_miss": 1,
+    "note": "Primary diagnosis and adversarial challenger both ran unmocked via gemini-3.5-flash-lite over all 36 held_out_v2 queries. Disagreements are broken down by whether the primary top fault cited a ground-truth relevant record.",
+    "disagreements": []
+  },
+  "results": [
+    {
+      "id": "v2-01",
+      "language": "en",
+      "appliance": "ceiling_fan",
+      "query": "fan is dead, no sound at all when I switch it on",
+      "relevant": [
+        "fixsaathi:fan_no_start",
+        "mfr:crompton-fan-no-power",
+        "mfr:crompton-fan-fuse",
+        "mfr:orient-fan-not-working"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 5041,
+      "diag_cited": [
+        "fixsaathi:fan_no_start",
+        "mfr:orient-fan-not-working",
+        "mfr:crompton-fan-no-power",
+        "mfr:crompton-fan-light-ok"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1629,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-02",
+      "language": "en",
+      "appliance": "ceiling_fan",
+      "query": "there is a burning smell coming from the ceiling fan",
+      "relevant": [
+        "mfr:orient-fan-burning-smell"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 3529,
+      "diag_cited": [
+        "mfr:orient-fan-burning-smell"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 3302,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-03",
+      "language": "en",
+      "appliance": "ceiling_fan",
+      "query": "fan light works but the blades do not turn",
+      "relevant": [
+        "mfr:crompton-fan-light-ok",
+        "mfr:crompton-fan-no-start-power",
+        "fixsaathi:fan_slow_hum"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2799,
+      "diag_cited": [
+        "mfr:crompton-fan-light-ok"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1091,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-04",
+      "language": "hinglish",
+      "appliance": "ceiling_fan",
+      "query": "pankha bahut hil raha hai aur khat khat awaaz aa rahi hai",
+      "relevant": [
+        "fixsaathi:fan_wobble_noise",
+        "mfr:crompton-fan-wobble",
+        "mfr:orient-fan-wobble",
+        "mfr:crompton-fan-noise"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 5674,
+      "diag_cited": [
+        "mfr:crompton-fan-wobble",
+        "fixsaathi:fan_wobble_noise",
+        "mfr:crompton-fan-noise",
+        "mfr:orient-fan-wobble",
+        "mfr:orient-fan-hum"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.85,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1036,
+      "agrees": true,
+      "revised_confidence": 0.9,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-05",
+      "language": "en",
+      "appliance": "ceiling_fan",
+      "query": "regulator does nothing, fan stays at the same speed",
+      "relevant": [
+        "mfr:crompton-fan-some-speeds"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2883,
+      "diag_cited": [
+        "mfr:crompton-fan-some-speeds",
+        "mfr:crompton-fan-loose-wiring"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.85,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1316,
+      "agrees": true,
+      "revised_confidence": 0.85,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-06",
+      "language": "en",
+      "appliance": "ceiling_fan",
+      "query": "fan stops on its own after running for some time and the motor feels hot",
+      "relevant": [
+        "mfr:crompton-fan-sudden-stop"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 5043,
+      "diag_cited": [
+        "mfr:crompton-fan-sudden-stop"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1914,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-07",
+      "language": "en",
+      "appliance": "split_ac",
+      "query": "water dripping from the indoor unit onto the wall",
+      "relevant": [
+        "fixsaathi:ac_water_leak",
+        "mfr:daikin-split-water-leak",
+        "mfr:samsung-ac-drain-slope",
+        "mfr:samsung-ac-dew-droplets",
+        "mfr:lg-ac-ch04"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 3022,
+      "diag_cited": [
+        "fixsaathi:ac_water_leak",
+        "mfr:samsung-ac-drain-slope",
+        "mfr:samsung-ac-dew-droplets"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1609,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-08",
+      "language": "en",
+      "appliance": "split_ac",
+      "query": "LG AC showing CH05",
+      "relevant": [
+        "mfr:lg-ac-ch05"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2413,
+      "diag_cited": [
+        "mfr:lg-ac-ch05"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.85,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 2384,
+      "agrees": true,
+      "revised_confidence": 0.85,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-09",
+      "language": "en",
+      "appliance": "split_ac",
+      "query": "AC trips the MCB as soon as the compressor starts",
+      "relevant": [
+        "mfr:samsung-ac-breaker-trip",
+        "fixsaathi:mcb_trip"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2710,
+      "diag_cited": [
+        "mfr:samsung-ac-breaker-trip",
+        "mfr:lg-ac-outdoor-codes"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1380,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-10",
+      "language": "hinglish",
+      "appliance": "split_ac",
+      "query": "AC se paani tapak raha hai",
+      "relevant": [
+        "fixsaathi:ac_water_leak",
+        "mfr:daikin-split-water-leak",
+        "mfr:samsung-ac-drain-slope",
+        "mfr:samsung-ac-dew-droplets"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2250,
+      "diag_cited": [
+        "mfr:samsung-ac-drain-slope",
+        "fixsaathi:ac_water_leak",
+        "mfr:samsung-ac-dew-droplets"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1223,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-11",
+      "language": "en",
+      "appliance": "split_ac",
+      "query": "outdoor fan is not spinning on the LG split",
+      "relevant": [
+        "mfr:lg-ac-ch67"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2378,
+      "diag_cited": [
+        "mfr:lg-ac-ch67",
+        "fixsaathi:ac_low_cooling"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1599,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-12",
+      "language": "en",
+      "appliance": "split_ac",
+      "query": "Daikin AC stops suddenly and the lamp keeps flashing",
+      "relevant": [
+        "mfr:daikin-split-stops-flashing"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2650,
+      "diag_cited": [
+        "mfr:daikin-split-stops-flashing"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1428,
+      "agrees": true,
+      "revised_confidence": 0.85,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-13",
+      "language": "en",
+      "appliance": "split_ac",
+      "query": "AC is completely off, remote does nothing and no light on the unit",
+      "relevant": [
+        "mfr:daikin-split-no-operate",
+        "mfr:samsung-ac-settings-cooling",
+        "mfr:samsung-ac-breaker-trip"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2999,
+      "diag_cited": [
+        "mfr:daikin-split-no-operate",
+        "mfr:samsung-ac-settings-cooling"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 957,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-14",
+      "language": "hi",
+      "appliance": "split_ac",
+      "query": "एसी से पानी टपक रहा है",
+      "relevant": [
+        "fixsaathi:ac_water_leak",
+        "mfr:daikin-split-water-leak",
+        "mfr:samsung-ac-drain-slope",
+        "mfr:samsung-ac-dew-droplets"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2669,
+      "diag_cited": [
+        "mfr:samsung-ac-drain-slope",
+        "fixsaathi:ac_water_leak"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1347,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-15",
+      "language": "en",
+      "appliance": "refrigerator",
+      "query": "freezer is fine but the bottom fridge section is warm",
+      "relevant": [
+        "fixsaathi:fridge_not_cooling"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 3036,
+      "diag_cited": [
+        "fixsaathi:fridge_not_cooling"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.7,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1253,
+      "agrees": true,
+      "revised_confidence": 0.7,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-16",
+      "language": "en",
+      "appliance": "refrigerator",
+      "query": "thick ice forming in the freezer of my direct cool fridge",
+      "relevant": [
+        "mfr:samsung-fridge-directcool-ice"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2296,
+      "diag_cited": [
+        "mfr:samsung-fridge-directcool-ice",
+        "mfr:samsung-fridge-directcool-settings",
+        "mfr:samsung-fridge-directcool-install"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1353,
+      "agrees": true,
+      "revised_confidence": 0.85,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-17",
+      "language": "en",
+      "appliance": "refrigerator",
+      "query": "fridge makes a loud rattling sound from the back",
+      "relevant": [
+        "fixsaathi:fridge_noise",
+        "mfr:lg-fridge-compressor-noise",
+        "mfr:lg-fridge-fan-frost",
+        "mfr:lg-fridge-unlevel-vibration"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2152,
+      "diag_cited": [
+        "mfr:lg-fridge-compressor-noise",
+        "fixsaathi:fridge_noise"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.6,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1320,
+      "agrees": true,
+      "revised_confidence": 0.6,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-18",
+      "language": "en",
+      "appliance": "refrigerator",
+      "query": "the sides of the refrigerator get very hot",
+      "relevant": [
+        "mfr:samsung-fridge-directcool-install"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2409,
+      "diag_cited": [
+        "mfr:samsung-fridge-directcool-install"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1023,
+      "agrees": true,
+      "revised_confidence": 0.9,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-19",
+      "language": "en",
+      "appliance": "refrigerator",
+      "query": "fridge is completely dead, inside light also off",
+      "relevant": [
+        "mfr:samsung-fridge-no-power"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2335,
+      "diag_cited": [
+        "mfr:samsung-fridge-no-power"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1533,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-20",
+      "language": "hinglish",
+      "appliance": "refrigerator",
+      "query": "fridge thanda nahi kar raha",
+      "relevant": [
+        "fixsaathi:fridge_not_cooling",
+        "mfr:samsung-fridge-no-power",
+        "mfr:samsung-fridge-directcool-settings",
+        "mfr:samsung-fridge-directcool-ice",
+        "mfr:samsung-fridge-directcool-install"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2727,
+      "diag_cited": [
+        "mfr:samsung-fridge-directcool-settings",
+        "mfr:samsung-fridge-directcool-ice",
+        "mfr:samsung-fridge-directcool-install"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.6,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1336,
+      "agrees": true,
+      "revised_confidence": 0.6,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-21",
+      "language": "en",
+      "appliance": "washing_machine",
+      "query": "washing machine shakes violently and moves across the floor during spin",
+      "relevant": [
+        "fixsaathi:wm_spin_noise"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2940,
+      "diag_cited": [
+        "fixsaathi:wm_spin_noise",
+        "appliancedb:3",
+        "appliancedb:60"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1459,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-22",
+      "language": "en",
+      "appliance": "washing_machine",
+      "query": "front load door won't unlock and machine does not start",
+      "relevant": [
+        "fixsaathi:wm_door_lock"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2522,
+      "diag_cited": [
+        "fixsaathi:wm_door_lock",
+        "appliancedb:274"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1584,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-23",
+      "language": "hinglish",
+      "appliance": "washing_machine",
+      "query": "machine spin ke time bahut awaaz karti hai",
+      "relevant": [
+        "fixsaathi:wm_spin_noise"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2890,
+      "diag_cited": [
+        "fixsaathi:wm_spin_noise"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1410,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-24",
+      "language": "en",
+      "appliance": "microwave_oven",
+      "query": "sparks and crackling inside the microwave while heating",
+      "relevant": [
+        "mfr:samsung-mw-arcing"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 1900,
+      "diag_cited": [
+        "mfr:samsung-mw-arcing"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.9,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1366,
+      "agrees": true,
+      "revised_confidence": 0.9,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-25",
+      "language": "en",
+      "appliance": "microwave_oven",
+      "query": "microwave runs and the plate turns but food stays cold",
+      "relevant": [
+        "mfr:samsung-mw-kitchen-timer",
+        "mfr:samsung-mw-demo-mode",
+        "mfr:samsung-mw-ventilation",
+        "mfr:samsung-mw-not-cooking-breaker"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2677,
+      "diag_cited": [
+        "mfr:samsung-mw-demo-mode",
+        "mfr:samsung-mw-kitchen-timer"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1211,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-26",
+      "language": "en",
+      "appliance": "microwave_oven",
+      "query": "microwave light inside does not come on",
+      "relevant": [
+        "mfr:samsung-mw-lamp"
+      ],
+      "retrieval_hit_top1": false,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2319,
+      "diag_cited": [
+        "mfr:samsung-mw-lamp"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1123,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-27",
+      "language": "en",
+      "appliance": "microwave_oven",
+      "query": "steam coming out from around the microwave door",
+      "relevant": [
+        "mfr:samsung-mw-door-steam"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2253,
+      "diag_cited": [
+        "mfr:samsung-mw-door-steam"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1207,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-28",
+      "language": "en",
+      "appliance": "microwave_oven",
+      "query": "new microwave smells and smokes a little on first use",
+      "relevant": [
+        "mfr:samsung-mw-first-use-smell"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2128,
+      "diag_cited": [
+        "mfr:samsung-mw-first-use-smell"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.9,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1129,
+      "agrees": true,
+      "revised_confidence": 0.9,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-29",
+      "language": "en",
+      "appliance": "microwave_oven",
+      "query": "microwave takes much longer than before to heat food",
+      "relevant": [
+        "mfr:samsung-mw-slow-cooking",
+        "mfr:samsung-mw-ventilation"
+      ],
+      "retrieval_hit_top1": false,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2436,
+      "diag_cited": [
+        "mfr:samsung-mw-slow-cooking"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.6,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1668,
+      "agrees": true,
+      "revised_confidence": 0.6,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-30",
+      "language": "en",
+      "appliance": "water_purifier",
+      "query": "Aquaguard red light blinking and beeping, no water",
+      "relevant": [
+        "mfr:aquaguard-classic-red-led"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2162,
+      "diag_cited": [
+        "mfr:aquaguard-classic-red-led"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.7,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1094,
+      "agrees": true,
+      "revised_confidence": 0.7,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-31",
+      "language": "en",
+      "appliance": "water_purifier",
+      "query": "purifier water tastes salty and strange",
+      "relevant": [
+        "mfr:aquaguard-royale-taste",
+        "mfr:kent-sapphire-taste",
+        "mfr:kent-sterling-taste"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2410,
+      "diag_cited": [],
+      "diag_hit": false,
+      "top_fault_hit": false,
+      "confidence_before": 0.6,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1430,
+      "agrees": true,
+      "revised_confidence": 0.6,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-32",
+      "language": "en",
+      "appliance": "water_purifier",
+      "query": "Kent purifier leaking water from the bottom",
+      "relevant": [
+        "mfr:kent-sapphire-leak",
+        "mfr:kent-sterling-leak"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2847,
+      "diag_cited": [
+        "mfr:kent-sterling-leak"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1055,
+      "agrees": true,
+      "revised_confidence": 0.85,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-33",
+      "language": "hinglish",
+      "appliance": "water_purifier",
+      "query": "purifier se paani bahut dheere aa raha hai",
+      "relevant": [
+        "mfr:kent-sterling-slow",
+        "mfr:aquaguard-royale-low-output",
+        "mfr:kent-sapphire-low-pressure",
+        "mfr:aquaguard-royale-low-pressure"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2600,
+      "diag_cited": [
+        "mfr:aquaguard-royale-low-output",
+        "mfr:kent-sterling-slow"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.8,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 987,
+      "agrees": true,
+      "revised_confidence": 0.8,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-34",
+      "language": "en",
+      "appliance": "water_purifier",
+      "query": "Aquaguard yellow LED blinking",
+      "relevant": [
+        "mfr:aquaguard-classic-yellow-led"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2480,
+      "diag_cited": [
+        "mfr:aquaguard-classic-yellow-led"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.85,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1637,
+      "agrees": true,
+      "revised_confidence": 0.85,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-35",
+      "language": "en",
+      "appliance": "mcb_electrical",
+      "query": "MCB keeps tripping whenever the geyser is switched on",
+      "relevant": [
+        "fixsaathi:mcb_trip"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 3264,
+      "diag_cited": [
+        "fixsaathi:mcb_trip"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.6,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1261,
+      "agrees": true,
+      "revised_confidence": 0.6,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    },
+    {
+      "id": "v2-36",
+      "language": "en",
+      "appliance": "rooftop_solar",
+      "query": "solar panels producing much less power than last month",
+      "relevant": [
+        "fixsaathi:solar_low_output"
+      ],
+      "retrieval_hit_top1": true,
+      "diag_model": "gemini-3.5-flash-lite",
+      "diag_ms": 2498,
+      "diag_cited": [
+        "fixsaathi:solar_low_output"
+      ],
+      "diag_hit": true,
+      "top_fault_hit": true,
+      "confidence_before": 0.7,
+      "challenger_status": "ok",
+      "challenger_model": "gemini-3.5-flash-lite",
+      "challenger_ms": 1198,
+      "agrees": true,
+      "revised_confidence": 0.7,
+      "objections": [],
+      "missed_checks": [],
+      "safety_concerns": []
+    }
+  ]
+}

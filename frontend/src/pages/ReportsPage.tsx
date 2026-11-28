@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Check, ChevronLeft, ChevronRight, Circle, Copy, Download, FileText, Loader2, Printer, Send } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Circle, Copy, Download, ExternalLink, FileText, Loader2, Printer, QrCode, Send } from 'lucide-react'
 import { jobSummary, whatsappLink } from '../utils/jobSummary'
 import { when } from '../utils/when'
 import { EmptyState, ErrorState, PageHeader, Skeleton, StatusPill } from '../components/common/ui'
-import { historyService, sessionService } from '../services'
+import { apiBase } from '../services/api'
+import { historyService, receiptService, sessionService, type CustomerReceiptResponse } from '../services'
 import { useAsync } from '../hooks/useAsync'
 
 export function ReportsList() {
@@ -46,6 +47,13 @@ export function ReportDetailPage() {
     try { await sessionService.downloadPdf(data.session_id, data.session_reference) } catch (e) { setErr((e as Error).message) } finally { setBusy(false) }
   }
   const [copied, setCopied] = useState(false)
+  const [receipt, setReceipt] = useState<CustomerReceiptResponse | null>(null)
+  const [receiptBusy, setReceiptBusy] = useState(false)
+  const createReceipt = async () => {
+    if (!data) return
+    setReceiptBusy(true); setErr(null)
+    try { setReceipt(await receiptService.create(data.session_id)) } catch (e) { setErr((e as Error).message) } finally { setReceiptBusy(false) }
+  }
   // Send the customer a plain summary of the visit: the phone's share sheet where there is one, WhatsApp otherwise.
   const share = async () => {
     if (!data) return
@@ -65,7 +73,19 @@ export function ReportDetailPage() {
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && d && (<>
         <PageHeader title={`Report ${data.reference}`} subtitle={`${d.session.appliance} · ${new Date(data.created_at).toLocaleDateString()} · ${d.session.technician ?? ''}`}
-          eyebrow="Service report" right={<div className="flex flex-wrap items-center gap-2 print:hidden"><button onClick={() => void share()} className="btn" title="Send a short summary of this visit to the customer"><Send size={15} />Send to customer</button><button onClick={() => void copy()} className="btn" aria-live="polite">{copied ? <Check size={15} className="text-accent" /> : <Copy size={15} />}{copied ? 'Copied' : 'Copy summary'}</button><button onClick={() => window.print()} className="btn"><Printer size={15} />Print</button><button onClick={() => void download()} disabled={busy} className="btn btn-primary">{busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}Download PDF</button></div>} />
+          eyebrow="Service report" right={<div className="flex flex-wrap items-center gap-2 print:hidden"><button onClick={() => void createReceipt()} disabled={receiptBusy} className="btn" title="Create bilingual customer safety receipt with QR code">{receiptBusy ? <Loader2 size={15} className="animate-spin" /> : <QrCode size={15} />}Safety Receipt QR</button><button onClick={() => void share()} className="btn" title="Send a short summary of this visit to the customer"><Send size={15} />Send to customer</button><button onClick={() => void copy()} className="btn" aria-live="polite">{copied ? <Check size={15} className="text-accent" /> : <Copy size={15} />}{copied ? 'Copied' : 'Copy summary'}</button><button onClick={() => window.print()} className="btn"><Printer size={15} />Print</button><button onClick={() => void download()} disabled={busy} className="btn btn-primary">{busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}Download PDF</button></div>} />
+        {receipt && (
+          <div className="card card-pad mb-4 flex flex-wrap items-center gap-4 border-accent/35 bg-accent/[0.04] print:hidden">
+            <img src={`${apiBase}${receipt.qr_url}`} alt="Customer safety receipt QR code" className="h-24 w-24 rounded-lg border border-line bg-white p-1" />
+            <div className="min-w-0 flex-1 space-y-1 text-sm">
+              <p className="font-semibold text-ink">Customer Safety Receipt (Hindi / English)</p>
+              <p className="text-xs text-ink-2">Shareable safety &amp; checks summary with zero customer personal data.</p>
+              <Link to={`/receipt/${receipt.token}`} className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+                Open /receipt/{receipt.token.slice(0, 12)}… <ExternalLink size={12} />
+              </Link>
+            </div>
+          </div>
+        )}
         {err && <p role="alert" className="mb-4 rounded-xl border border-crit/40 bg-crit/10 px-4 py-2.5 text-sm text-crit">{err}</p>}
         <div className="card card-pad">
         <StatusPill status={data.resolution_status} />

@@ -256,11 +256,17 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
                             print('        ai_error:', np_data.get('ai_error'))
                             failures += 1
 
-            # (b2) Structured diagnosis showing real answering model
+            # (b2) Structured diagnosis showing real answering model + Challenger verifier
             diag_res = await client.post(f'/api/v1/sessions/{sid}/diagnose', json={}, headers=headers, timeout=90.0)
             if diag_res.status_code == 201:
                 d_json = diag_res.json()
-                _step('(b2) Structured diagnosis', True, f"model={d_json.get('model_identifier')} latency_ms={d_json.get('latency_ms')} faults={len(d_json.get('faults') or [])}")
+                ch = d_json.get('challenger') or {}
+                _step(
+                    '(b2) Structured diagnosis',
+                    True,
+                    f"model={d_json.get('model_identifier')} latency_ms={d_json.get('latency_ms')} faults={len(d_json.get('faults') or [])} "
+                    f"challenger={ch.get('status')}/{ch.get('agrees')} ({ch.get('latency_ms')}ms)",
+                )
             else:
                 _step('(b2) Structured diagnosis', False, f'HTTP {diag_res.status_code}: {diag_res.text[:160]}')
                 failures += 1
@@ -300,6 +306,26 @@ async def run_smoke(base_url: str | None, image_path: Path) -> int:
             _step('GET /api/v1/samples/nameplate', samp_ok, f'HTTP {samp.status_code}, {len(samp.content)} bytes')
             if not samp_ok:
                 failures += 1
+
+            # (d2) Customer Safety Receipt mint + public JSON & QR SVG check
+            rc_post = await client.post(f'/api/v1/sessions/{sid}/receipt', headers=headers)
+            if rc_post.status_code != 201:
+                _step('(d2) Customer Safety Receipt + QR', False, f'POST HTTP {rc_post.status_code}')
+                failures += 1
+            else:
+                tok = rc_post.json().get('token', '')
+                rc_pub = await client.get(f'/api/v1/receipts/{tok}')
+                rc_qr = await client.get(f'/api/v1/receipts/{tok}/qr')
+                rc_ok = (
+                    rc_pub.status_code == 200
+                    and bool((rc_pub.json().get('receipt') or {}).get('technician_name'))
+                    and rc_qr.status_code == 200
+                    and rc_qr.headers.get('content-type', '').startswith('image/svg+xml')
+                    and '<svg' in rc_qr.text
+                )
+                _step('(d2) Customer Safety Receipt + QR', rc_ok, f'token_len={len(tok)} pub={rc_pub.status_code} qr={rc_qr.status_code}')
+                if not rc_ok:
+                    failures += 1
 
             # (e) Hindi (Devanagari) & Hinglish language matching check
             hi_uid = uuid.uuid4().hex[:8]
