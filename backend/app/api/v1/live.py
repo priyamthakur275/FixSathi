@@ -38,7 +38,9 @@ async def live_ws(ws: WebSocket, session_id: uuid.UUID):
             check_ai_quota(u.id)  # one Live conversation counts as one AI request
             if s.status in ('completed', 'cancelled'):
                 raise AppError('This session is closed.', code='SESSION_CLOSED', status=409)
-            ctx = live.LiveContext(session_id=s.id, user_id=u.id, language=str(first.get('language') or u.preferred_language)[:20])
+            from ...services.ai import reply_language
+            lang = reply_language(db, s, str(first.get('language') or u.preferred_language)[:20])
+            ctx = live.LiveContext(session_id=s.id, user_id=u.id, language=lang)
         finally:
             db.close()
         get_settings_ok = live.get_gemini().model('live')  # raises AIUnavailable with a clear code if not configured

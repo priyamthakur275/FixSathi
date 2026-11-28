@@ -42,7 +42,10 @@ def test_creator_question_reaches_the_model_with_the_rule(client, tech, session_
     r = client.post(f'/api/v1/sessions/{session_id}/messages', json={'text': question, 'channel': channel}, headers=tech['h'])
     assert r.status_code == 201, r.text
     _rule_in(fake.systems[-1])
-    assert f'reply in {LANG_SETTING[lang]}' in fake.systems[-1]
+    if LANG_SETTING[lang] in ('Kannada', 'Tamil'):  # not screenable yet, so English while the power is locked
+        assert f'safety screening for {LANG_SETTING[lang]} is not available' in fake.systems[-1]
+    else:
+        assert f'reply in {LANG_SETTING[lang]}' in fake.systems[-1]
     assert r.json()['assistant_message']['message'] == 'I was created by Prerana P Jois.'  # passes the safety screen unchanged
 
 

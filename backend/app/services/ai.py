@@ -159,6 +159,17 @@ def _photo_still_relevant(db: Session, s: RepairSession, text: str, exclude_id=N
     return bool(PHOTO_REF.search(text or ''))
 
 
+def reply_language(db: Session, s: RepairSession, preferred: str) -> str:
+    """The language the AI may answer in. Safety screening reads English, Hinglish and Hindi only, so while the power is
+    locked (and always for microwaves) other languages are answered in English instead of being withheld whole."""
+    from ..core.power_rules import SCREENED_LANGUAGES
+    if preferred in SCREENED_LANGUAGES:
+        return preferred
+    if s.appliance_type == 'microwave_oven' or not safety.current_state(db, s).unlocked:
+        return 'English (only for now: safety screening for ' + preferred + ' is not available, so use English until the technician records power isolation, even if they write in ' + preferred + ')'
+    return preferred
+
+
 async def prepare_chat_stream(db: Session, s: RepairSession, user: User, text: str, media_ids: list, exclude_id=None, channel: str = 'text'):
     g = _ai(db, s)
     attached, doc_text = _attachments(db, s, media_ids) if media_ids else ([], '')
@@ -175,7 +186,7 @@ async def prepare_chat_stream(db: Session, s: RepairSession, user: User, text: s
     if channel == 'voice':
         final.append(types.Part(text=prompts.VOICE_CHANNEL_NOTE))
     contents = [*_turns(db, s, exclude_id), types.Content(role='user', parts=final)]
-    system = prompts.CHAT_SYSTEM.format(language=user.preferred_language)
+    system = prompts.CHAT_SYSTEM.format(language=reply_language(db, s, user.preferred_language))
     allowed = {h.record_id for h in res['hits']}
     return g, res, contents, system, allowed
 

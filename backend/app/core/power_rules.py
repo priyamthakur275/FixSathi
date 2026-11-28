@@ -88,9 +88,25 @@ MICROWAVE_ESCALATION = ('Do not open the microwave. Its high-voltage capacitor c
                         'Unplug the oven, note the symptom and model number, and hand it to authorised service.')
 
 
+# Scripts these rules cannot read: Bengali, Gurmukhi, Gujarati, Odia, Tamil, Telugu, Kannada, Malayalam, and Arabic/Urdu.
+# (Devanagari Hindi and Latin-script English/Hinglish have rules above.) Text in them cannot be checked for live-work
+# instructions, so it is treated as power-sensitive: withheld until isolation is recorded, never shown unscreened.
+UNSCREENED_SCRIPT = re.compile(r'[\u0600-\u06FF\u0980-\u0D7F]')
+SCREENED_LANGUAGES = ('English', 'Hindi')
+
+
+# Fixed sentences the app itself prescribes (the creator answer in Kannada and Tamil). They describe no work, so they pass.
+_FIXED_SAFE = re.compile(r'(ನನ್ನನ್ನು|என்னை|FixSaathi(-ಅನ್ನು|-ஐ)?)\s*[A-Za-z .]{2,60}?\s*(ಅವರು ರಚಿಸಿದ್ದಾರೆ|ಅವರು ರಚಿಸಿದರು|உருவாக்கினார்)\s*[.।]?')
+
+
+def unscreenable(text: str) -> bool:
+    """True if the text contains a script the safety rules cannot read."""
+    return bool(UNSCREENED_SCRIPT.search(_FIXED_SAFE.sub(' ', text or '')))
+
+
 def step_needs_power_off(text: str) -> bool:
     """Structured repair steps: broad rule."""
-    return bool(POWER_WORDS.search(text or '') or ACTION_WORDS.search(text or '') or _hi_instruction(text or ''))
+    return unscreenable(text) or bool(POWER_WORDS.search(text or '') or ACTION_WORDS.search(text or '') or _hi_instruction(text or ''))
 
 
 def _is_instruction(t: str, m: re.Match) -> bool:
@@ -104,7 +120,8 @@ def instructs_power_work(text: str) -> bool:
     """Free text: True if it tells someone to do power-sensitive work. Prohibitions ('never open the cover') and
     preconditions ('before opening it, switch off the MCB') do not count; the work itself does."""
     t = text or ''
-    return any(_is_instruction(t, m) for rx in (ACTION_WORDS, HANDS_ON_LIVE) for m in rx.finditer(t)) or _hi_instruction(t)
+    return (unscreenable(t) or any(_is_instruction(t, m) for rx in (ACTION_WORDS, HANDS_ON_LIVE) for m in rx.finditer(t))
+            or _hi_instruction(t))
 
 
 def step_text_needs_power_off(text: str) -> bool:
@@ -114,12 +131,14 @@ def step_text_needs_power_off(text: str) -> bool:
 
     def hit(rx: re.Pattern) -> bool:
         return any(not NEGATION.search(t[max(0, m.start() - 40):m.start()]) for m in rx.finditer(t))
-    return (hit(ACTION_WORDS) or hit(LIVE_PARTS) or hit(HANDS_ON_LIVE) or (hit(SOFT_PARTS) and not OBSERVE_ONLY.match(t))
+    return (unscreenable(t) or hit(ACTION_WORDS) or hit(LIVE_PARTS) or hit(HANDS_ON_LIVE) or (hit(SOFT_PARTS) and not OBSERVE_ONLY.match(t))
             or _hi_instruction(t))
 
 
 def mentions_microwave_internals(text: str) -> bool:
     t = text or ''
+    if unscreenable(t):
+        return True
     for m in MICROWAVE_INTERNAL.finditer(t):
         if not NEGATION.search(t[max(0, m.start() - 40):m.start()]):
             return True
