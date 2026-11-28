@@ -2,26 +2,23 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, Loader2, Lock, ShieldCheck, Zap } from 'lucide-react'
 import type { SafetyState } from '../../types'
 import { IsolatorSwitch } from './IsolatorSwitch'
+import { useT, type Key } from '../../i18n'
 
 interface Props { state: SafetyState | null; busy: boolean; canEdit: boolean; onChange: (power: boolean, tester: boolean) => void; appliance?: string }
 
 /** Appliances where "MCB off, tester checked" is not the whole story. Shown in red above the two statements. */
-const SPECIAL_HAZARD: Record<string, { title: string; text: string }> = {
-  microwave_oven: {
-    title: 'Microwave: switching off the MCB is not enough',
-    text: 'The high-voltage capacitor can hold a lethal charge long after power-off. FixSaathi will not guide opening the cabinet. Note the symptom and model, and hand internal work to authorised service.',
-  },
-  rooftop_solar: {
-    title: 'Solar: the DC side stays live in daylight',
-    text: 'Isolating the AC side does not make the panels or strings safe. Open the DC isolator first, never pull DC connectors under load (a DC arc does not go out by itself), and send DC wiring and inverter internals to a qualified solar technician.',
-  },
+const SPECIAL_HAZARD: Record<string, { title: Key; text: Key }> = {
+  microwave_oven: { title: 'hazard.mwTitle', text: 'hazard.mwText' },
+  rooftop_solar: { title: 'hazard.solarTitle', text: 'hazard.solarText' },
 }
 
 const time = (iso: string | null | undefined) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null
 
 /** The server's safety gate, drawn as the breaker the technician has to switch off. Red is live and locked, green is isolated. */
 export function SafetyPanel({ state, busy, canEdit, onChange, appliance }: Props) {
-  const hazard = appliance ? SPECIAL_HAZARD[appliance] : undefined
+  const t = useT()
+  const hk = appliance ? SPECIAL_HAZARD[appliance] : undefined
+  const hazard = hk ? { title: t(hk.title), text: t(hk.text) } : undefined
   const power = state?.power_off_confirmed ?? false
   const tester = state?.tester_checked ?? false
   const both = !!state?.unlocked

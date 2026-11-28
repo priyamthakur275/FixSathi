@@ -100,6 +100,7 @@ function PdfCard() {
 const MICROWAVE_HV = /Do not open the microwave\. Its high-voltage capacitor can hold a lethal charge even after unplugging\. Unplug the oven, note the symptom and model number, and hand it to authorised service\.\s*/
 
 function Bubble({ m, onRetry }: { m: ChatMessage; onRetry?: (text: string) => void }) {
+  const t = useT()
   if (m.role === 'system') {
     return (
       <div role="status" className="mx-auto flex max-w-xl items-start gap-3 rounded-2xl border border-warn/35 bg-warn/[0.07] px-4 py-3.5 text-sm text-warn">
@@ -150,8 +151,8 @@ function Bubble({ m, onRetry }: { m: ChatMessage; onRetry?: (text: string) => vo
         {hv && (
           <div role="alert" className="mb-3 flex gap-3 rounded-xl border border-crit/50 bg-crit/[0.07] p-3.5">
             <Zap size={18} className="mt-0.5 shrink-0 text-crit" aria-hidden />
-            <div className="text-sm leading-relaxed"><p className="font-semibold text-crit">Do not open the microwave</p>
-              <p className="text-ink-2">The high-voltage capacitor can hold a lethal charge even after unplugging. Unplug it, note the model and symptom, and hand it to authorised service.</p></div>
+            <div className="text-sm leading-relaxed"><p className="font-semibold text-crit">{t('hazard.chatMwTitle')}</p>
+              <p className="text-ink-2">{t('hazard.chatMwText')}</p></div>
           </div>
         )}
         {body && <Markdown text={body} sources={m.sources} />}

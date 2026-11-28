@@ -7,6 +7,12 @@ import type { Language } from './types'
  * Strings not listed for a language fall back to English. Error messages that come from the server stay in English.
  */
 const en = {
+  'hazard.mwTitle': 'Microwave: switching off the MCB is not enough',
+  'hazard.mwText': 'The high-voltage capacitor can hold a lethal charge long after power-off. FixSaathi will not guide opening the cabinet. Note the symptom and model, and hand internal work to authorised service.',
+  'hazard.solarTitle': 'Solar: the DC side stays live in daylight',
+  'hazard.solarText': 'Isolating the AC side does not make the panels or strings safe. Open the DC isolator first, never pull DC connectors under load (a DC arc does not go out by itself), and send DC wiring and inverter internals to a qualified solar technician.',
+  'hazard.chatMwTitle': 'Do not open the microwave',
+  'hazard.chatMwText': 'The high-voltage capacitor can hold a lethal charge even after unplugging. Unplug it, note the model and symptom, and hand it to authorised service.',
   'nav.newChat': 'New chat', 'nav.home': 'Home', 'nav.search': 'Search chats', 'nav.settings': 'Settings', 'nav.signOut': 'Sign out',
   'nav.manager': 'Manager dashboard', 'nav.senior': 'Senior support', 'nav.reports': 'Service reports', 'nav.menu': 'Open menu', 'nav.close': 'Close menu',
   'nav.lookup': 'Fault finder', 'nav.repairs': 'My repairs', 'nav.teamRepairs': 'Team repairs', 'nav.demo': 'Offline backup', 'nav.workspace': 'Workspace',
@@ -56,6 +62,12 @@ const en = {
 export type Key = keyof typeof en
 
 const hi: Partial<Record<Key, string>> = {
+  'hazard.mwTitle': 'माइक्रोवेव: सिर्फ़ MCB बंद करना काफ़ी नहीं है',
+  'hazard.mwText': 'हाई-वोल्टेज कैपेसिटर में बिजली बंद होने के बहुत देर बाद तक जानलेवा करंट रह सकता है। FixSaathi कैबिनेट खोलने का तरीका नहीं बताएगा। खराबी और मॉडल नोट करें, और अंदर का काम अधिकृत सर्विस को दें।',
+  'hazard.solarTitle': 'सोलर: दिन में DC साइड चालू रहती है',
+  'hazard.solarText': 'AC साइड बंद करने से पैनल और स्ट्रिंग सुरक्षित नहीं होते। पहले DC आइसोलेटर बंद करें, लोड पर DC कनेक्टर कभी न खींचें (DC आर्क अपने आप नहीं बुझता), और DC वायरिंग व इन्वर्टर का अंदर का काम योग्य सोलर टेक्नीशियन को दें।',
+  'hazard.chatMwTitle': 'माइक्रोवेव को न खोलें',
+  'hazard.chatMwText': 'हाई-वोल्टेज कैपेसिटर में प्लग निकालने के बाद भी जानलेवा करंट रह सकता है। प्लग निकालें, मॉडल और खराबी नोट करें, और इसे अधिकृत सर्विस को दें।',
   'nav.newChat': 'नई चैट', 'nav.home': 'होम', 'nav.search': 'चैट खोजें', 'nav.settings': 'सेटिंग्स', 'nav.signOut': 'साइन आउट',
   'nav.lookup': 'फ़ॉल्ट खोजें', 'nav.repairs': 'मेरी रिपेयर', 'nav.teamRepairs': 'टीम की रिपेयर', 'nav.demo': 'ऑफ़लाइन बैकअप', 'nav.workspace': 'वर्कस्पेस',
   'nav.manager': 'मैनेजर डैशबोर्ड', 'nav.senior': 'सीनियर सहायता', 'nav.reports': 'सर्विस रिपोर्ट', 'nav.menu': 'मेन्यू खोलें', 'nav.close': 'मेन्यू बंद करें', 'nav.chats': 'चैट',
