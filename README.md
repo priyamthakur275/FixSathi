@@ -4,7 +4,7 @@
 
 **An AI repair copilot for appliance technicians in India: grounded diagnosis, a safety lock enforced by the server, and voice in English, Hindi and Kannada.**
 
-[**Live app**](https://fixsaathi-vu9s.onrender.com) · [**Demo video (2:32)**](https://fixsaathi-vu9s.onrender.com/demo.mp4) · [API docs](https://fixsaathi-vu9s.onrender.com/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Model Usage](docs/MODEL_USAGE.md) · [Built During Hackathon](docs/BUILT_DURING_HACKATHON.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md)
+[**Live app**](https://fixsaathi-vu9s.onrender.com) · [**Demo video (2:51)**](https://fixsaathi-vu9s.onrender.com/demo.mp4) · [API docs](https://fixsaathi-vu9s.onrender.com/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Model Usage](docs/MODEL_USAGE.md) · [Built During Hackathon](docs/BUILT_DURING_HACKATHON.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md)
 
 ![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
