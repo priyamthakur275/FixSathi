@@ -132,10 +132,25 @@ export interface MediaItem { id: string; kind: 'capture' | 'upload' | 'generated
 export interface Evidence { source: 'observed_in_image' | 'technician_statement' | 'ai_inference' | 'unknown'; detail: string }
 export interface Fault { fault: string; explanation: string; confidence: number; evidence: Evidence[]; status?: 'supported_by_records' | 'possible_cause' | 'unverified_hypothesis'; record_ids?: string[] }
 export interface SourceRef { record_id: string; source_name: string; source_url: string | null; license: string; verification_status: string; match: string; related_category: boolean }
+export interface ChallengerObjection { claim: string; claim_hi?: string; why: string; why_hi?: string; evidence_id?: string | null }
+export interface ChallengerResult {
+  status: 'ok' | 'unavailable'
+  agrees: boolean | null
+  objections: ChallengerObjection[]
+  missed_checks: string[]
+  safety_concerns: string[]
+  revised_confidence: number | null
+  confidence_before?: number | null
+  model_identifier: string | null
+  latency_ms: number | null
+  error_code?: string
+}
 export interface Diagnosis {
   id: string; problem_summary: string; faults: Fault[]; recommended_checks: string[]; follow_up_questions: string[]; safety_requirements: string[]
   requires_escalation: boolean; model_identifier: string; latency_ms?: number | null; created_at: string; confidence_note: string
   confirmed_findings: string[]; missing_information: string[]; required_tools?: string[]; escalation_reason?: string | null; knowledge_coverage: 'grounded' | 'partial' | 'none'; sources: SourceRef[]
+  challenger?: ChallengerResult | null
+  challenger_checked_at?: string | null
 }
 
 export interface RepairStep {

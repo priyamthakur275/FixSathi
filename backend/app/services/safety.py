@@ -103,6 +103,32 @@ def record_block(db: Session, s: RepairSession, user: User | None, action: str, 
     log(logger, 'safety_block', logging.WARNING, session=str(s.id), action=action, actor=actor, reason=reason)
 
 
+def force_relock(db: Session, s: RepairSession, reason: str, details: dict | None = None) -> SafetyState:
+    """Force the session's power safety lock on (e.g. when a challenger flags a safety concern) and log it."""
+    st = current_state(db, s)
+    if st.unlocked:
+        db.add(SafetyConfirmation(
+            session_id=s.id,
+            technician_id=s.technician_id,
+            power_off_confirmed=False,
+            tester_checked=False,
+            confirmation_source='challenger_guard',
+        ))
+    db.add(SafetyEvent(
+        session_id=s.id,
+        technician_id=s.technician_id,
+        event_type='action_blocked',
+        attempted_action='challenger_safety_check',
+        actor='challenger',
+        blocked=True,
+        reason=reason,
+        details=details or {},
+    ))
+    db.flush()
+    log(logger, 'safety_force_relocked', logging.WARNING, session=str(s.id), reason=reason)
+    return current_state(db, s)
+
+
 LOCK_NOTE = ('**Power-sensitive step withheld.** Switch off at the MCB (or unplug) and verify with your own tester, then tick both '
              'statements in the safety panel of the repair workspace. Ask again after that and the full step will be shown.')
 LOCK_NOTE_VOICE = ('I have held back a power-sensitive step. Switch off at the MCB, check with your own tester, and tick both '

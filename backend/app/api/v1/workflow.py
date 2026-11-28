@@ -43,6 +43,12 @@ def latest_diagnosis(session_id: uuid.UUID, u: User = Depends(current_user), db:
     return DiagnosisOut.model_validate(d) if d else None
 
 
+@router.post('/sessions/{session_id}/diagnosis/challenger-check', response_model=DiagnosisOut)
+def challenger_check(session_id: uuid.UUID, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
+    s = get_owned_session(db, u, session_id, lock=True)
+    return DiagnosisOut.model_validate(ai.acknowledge_challenger(db, s))
+
+
 @router.get('/diagnoses', response_model=list[dict])
 def my_diagnoses(limit: int = Query(20, ge=1, le=100), u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
     from ...services.access import session_scope

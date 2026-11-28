@@ -93,6 +93,8 @@ class DiagnosisOut(BaseModel):
     sources: list[dict] = []
     model_identifier: str
     latency_ms: int | None = None
+    challenger: dict | None = None
+    challenger_checked_at: datetime | None = None
     created_at: datetime
     confidence_note: str = 'Confidence values are model estimates, not calibrated probabilities.'
 

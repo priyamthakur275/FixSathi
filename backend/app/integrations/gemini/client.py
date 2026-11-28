@@ -46,7 +46,7 @@ SKIP_AFTER_429_SECONDS = 300.0
 QUOTA_CODES = frozenset({'QUOTA_EXCEEDED', 'BILLING_REQUIRED'})
 LAST_429: dict[str, float] = {}
 GEMINI_BUSY_MESSAGE = "Google's Gemini service is busy right now. Please press Retry in a few seconds."
-TEXT_OUTPUT_CAP = {'chat': 2048}  # output tokens, thinking included; chat answers are a few short paragraphs
+TEXT_OUTPUT_CAP = {'chat': 2048, 'challenger': 650}  # output tokens, thinking included
 MODEL_SETTINGS = {'agent': 'gemini_agent_model', 'live': 'gemini_live_model', 'embed': 'gemini_embed_model', 'image': 'nano_banana_model', 'tts': 'gemini_tts_model'}
 # Prebuilt Gemini TTS voices offered in Settings: each was generated and measured (21-22 Nov; docs/VOICE.md).
 TTS_VOICES = ('Charon', 'Leda', 'Achird', 'Sulafat', 'Puck', 'Kore', 'Iapetus', 'Orus', 'Alnilam', 'Sadaltager')
@@ -152,6 +152,8 @@ class GeminiClient:
         s = get_settings()
         if op == 'chat':
             return float(s.gemini_chat_timeout_seconds)
+        if op == 'challenger':
+            return float(s.gemini_challenger_timeout_seconds)
         if op in ('diagnosis', 'guidance', 'nameplate', 'part_locator'):
             return float(s.gemini_diagnosis_timeout_seconds)
         return float(s.gemini_timeout_seconds)
@@ -315,8 +317,9 @@ class GeminiClient:
         raise last  # pragma: no cover
 
     async def generate_json(self, op: str, schema: type[T], contents: Any, system: str, temperature: float = 0.2) -> tuple[T, CallResult]:
+        cap = TEXT_OUTPUT_CAP.get(op)
         resp, meta = await self._agent_call(op, contents, system_instruction=system, temperature=temperature, response_mime_type='application/json',
-                                            response_json_schema=schema.model_json_schema())
+                                            response_json_schema=schema.model_json_schema(), **({'max_output_tokens': cap} if cap else {}))
         text = self._text_or_raise(resp, op)
         try:
             return schema.model_validate(json.loads(text)), meta

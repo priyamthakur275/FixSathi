@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, BarChart3, CheckCircle2, FileCheck2, Shield } from 'lucide-react'
+import { ArrowLeft, BarChart3, CheckCircle2, FileCheck2, Scale, Shield } from 'lucide-react'
 import { Emblem, Wordmark } from '../components/common/Logo'
 import { ErrorState, Skeleton } from '../components/common/ui'
 import { useMaybeAuth } from '../context/AuthContext'
@@ -267,6 +267,67 @@ export default function EvaluationPage() {
               </div>
               <RetrievalBreakdown suite={data.held_out.retrieval} mode={mode} />
             </section>
+
+            {/* Red-Team Challenger Held-out v2 Eval */}
+            {data.challenger_holdout_v2 && (
+              <section aria-labelledby="eval-challenger-h" className="card card-pad space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-surface-2 text-accent"><Scale size={16} /></span>
+                    <div>
+                      <h2 id="eval-challenger-h" className="text-base font-semibold">Red-Team Challenger ({data.challenger_holdout_v2.cases} held-out v2 queries)</h2>
+                      <p className="text-xs text-ink-3">Measured {data.challenger_holdout_v2.date} with <span className="font-mono">{data.challenger_holdout_v2.model}</span>.</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                  <div className="rounded-xl border border-line bg-surface-2/45 p-3">
+                    <p className="text-xs text-ink-3">Agreed</p>
+                    <p className="num font-display mt-1 text-2xl text-accent">{data.challenger_holdout_v2.agrees_count}/{data.challenger_holdout_v2.ok_count}</p>
+                    <p className="num text-[11px] text-ink-3">{pct(data.challenger_holdout_v2.agree_rate)}</p>
+                  </div>
+                  <div className="rounded-xl border border-line bg-surface-2/45 p-3">
+                    <p className="text-xs text-ink-3">Disagreed</p>
+                    <p className="num font-display mt-1 text-2xl text-ink">{data.challenger_holdout_v2.disagrees_count}/{data.challenger_holdout_v2.ok_count}</p>
+                    <p className="num text-[11px] text-ink-3">{pct(data.challenger_holdout_v2.disagree_rate)}</p>
+                  </div>
+                  <div className="rounded-xl border border-line bg-surface-2/45 p-3">
+                    <p className="text-xs text-ink-3">Median latency</p>
+                    <p className="num font-display mt-1 text-2xl text-ink">{data.challenger_holdout_v2.median_latency_ms} ms</p>
+                    <p className="num text-[11px] text-ink-3">avg {data.challenger_holdout_v2.avg_latency_ms} ms</p>
+                  </div>
+                  <div className="rounded-xl border border-line bg-surface-2/45 p-3">
+                    <p className="text-xs text-ink-3">On primary misses</p>
+                    <p className="num font-display mt-1 text-2xl text-ink">{data.challenger_holdout_v2.disagreements_on_top_fault_miss}</p>
+                    <p className="text-[11px] text-ink-3">vs {data.challenger_holdout_v2.disagreements_on_top_fault_hit} on hits</p>
+                  </div>
+                  <div className="rounded-xl border border-line bg-surface-2/45 p-3">
+                    <p className="text-xs text-ink-3">Safety flags</p>
+                    <p className="num font-display mt-1 text-2xl text-ink">{data.challenger_holdout_v2.safety_concerns_flagged}</p>
+                    <p className="num text-[11px] text-ink-3">unavailable: {data.challenger_holdout_v2.unavailable_count}</p>
+                  </div>
+                </div>
+                <p className="text-xs leading-relaxed text-ink-2">{data.challenger_holdout_v2.note}</p>
+                {data.challenger_holdout_v2.disagreements.length > 0 && (
+                  <div className="rounded-xl border border-warn/40 bg-warn/10 p-3.5 text-xs">
+                    <p className="font-semibold text-warn">Recorded disagreements ({data.challenger_holdout_v2.disagrees_count})</p>
+                    <ul className="mt-2 space-y-2">
+                      {data.challenger_holdout_v2.disagreements.map(d => (
+                        <li key={d.id} className="rounded-lg border border-line bg-surface px-3 py-2 text-ink-2">
+                          <p className="font-medium text-ink">
+                            <span className="num font-mono text-ink-3">{d.id}</span> · “{d.query}” ·{' '}
+                            <span className={d.top_fault_hit ? 'text-ink-3' : 'font-semibold text-warn'}>
+                              {d.top_fault_hit ? 'primary hit relevant record' : 'primary missed top record'}
+                            </span>
+                          </p>
+                          {d.claim && <p className="mt-1">{d.claim}{d.why ? ` — ${d.why}` : ''}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Development set (explicitly collapsed & labelled non-held-out) */}
             <details className="card group px-5 py-4">
