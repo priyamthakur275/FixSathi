@@ -45,6 +45,8 @@ FixSaathi gives that technician a copilot on their phone: describe the fault by 
 | | |
 |---|---|
 | **Grounded diagnosis** | Every answer is built from the repair records retrieved for that question (377 records: manufacturer documentation, the ApplianceDB error-code dataset and FixSaathi's own guidance). The server deletes any citation that was not retrieved, and marks a fault as unverified when no record supports it. |
+| **Red-Team Challenger** | After diagnosis, a second adversarial Gemini pass reviews the proposed diagnosis against only the retrieved records and session inputs, surfaces any disagreement in Hindi and English, requires the technician to tap "I checked this" before showing repair steps when it disagrees, forces the server safety lock back on if it spots a hazard, and never blocks diagnosis on timeout or failure. |
+| **Customer Safety Receipt** | Generates a shareable 30-day QR/link summary (`/receipt/<id>`) for the customer showing the appliance, work done, and isolated/locked safety status (Hindi-first with an English toggle, customer phone/email stripped). |
 | **Server-side safety lock** | Steps that need the power off are sent to the phone *without their instructions* until the technician records two statements: "power switched off at the MCB" and "checked with my own tester". AI chat and voice replies are screened sentence by sentence before anyone reads or hears them. Microwave internals are always handed over to authorised service. |
 | **Nameplate & error display reader** | Upload a photo of a rating label or digital display; Gemini Vision extracts brand, model and error code to feed retrieval and lets the technician verify or correct them before diagnosis (falling back cleanly to manual entry when AI is unavailable). |
 | **Server-screened SSE streaming** | Chat replies stream word-by-word over SSE while `StreamScreener` buffers lines/sentences on the server so no power-sensitive instruction leaks before isolation is recorded, with automatic fallback to standard REST replies. |
@@ -79,6 +81,7 @@ These numbers cover retrieval (keyword and error-code channels, reproducible wit
 | Live-work steps readable while the power is locked | **0 / 30** (1 / 30 on the first run: a Hindi reply, which led to Devanagari safety rules) |
 | Meanings invented for unknown error codes | **0** |
 | Cites a repair record where one exists | 22 / 24 |
+| Red-Team Challenger on held-out v2 (36 real Gemini queries) | **36 / 36** responded (`median 1,341 ms`, `max 3,302 ms`), `36 / 36` agreed (`0` false objections on 35 cited diagnoses; `1` missed un-cited case `v2-31`) |
 
 The queries were written by the team, not collected from technicians. Method, both runs and every miss: [docs/EVALUATION.md](docs/EVALUATION.md#answer-quality-gemini-answers-live-app).
 
@@ -127,7 +130,7 @@ Only models and services verified with real unmocked calls on `https://fixsaathi
 | Nameplate & error display Vision | `gemini-3.5-flash-lite` | Verified in 3/3 Render runs (`LG LS-Q18YNZA` + `CH38`, matched 5 KB records) |
 | Structured diagnosis | `gemini-3.5-flash-lite` | Verified in 3/3 Render runs (`2,458–3,699 ms`, 3 faults); provenance panel displays `model_identifier` and latency |
 | Real-time voice & video relay | `gemini-3.8-live` (`v1beta` WebSocket) | Verified live in 3/3 Render runs on `WS /api/v1/live/{id}` (`session_ready`, `transcription`, `audio_chunk`) |
-| Spoken replies (TTS) | `gemini-3.8-flash-tts` (`v1beta`, `Charon`) | Verified live in 3/3 Render runs on `GET /speech` (HTTP 200, `audio/wav`, `1.84–4.30 MB`); device voice fallback |
+| Spoken replies & demo voiceover (TTS) | `gemini-3.8-flash-tts` (`v1beta`, `Charon`); demo narration via `gemini-3.8-flash-lite-tts` & `gemini-3.1-flash-tts-preview` | App `GET /speech` verified live in 3/3 Render runs (HTTP 200, `audio/wav`); demo narration switched to lite/preview after `gemini-3.8-flash-tts` hit its 10/day Free Tier cap |
 | Knowledge embeddings | `gemini-embedding-2` | Reported available on Render `/health`; configured for hybrid retrieval (`VECTOR_SEARCH_MODE=auto`) alongside PostgreSQL FTS |
 | Server-side safety guardrail | `StreamScreener` + `power_rules.py` | Deterministic server check on every streamed sentence and step before anything reaches the client |
 | Prototyping | **Antigravity** | Used to prototype the live Gemini integration, Cloud Run & Render deployments, reliability hardening, and UI polish |
@@ -146,7 +149,7 @@ Summarised directly from `git log` on branch `antigravity-v2` (full commit-by-co
 - **During the hackathon (Nov 25–28, 2026):**
   - **Live Vision, streaming, evaluation & Hindi polish (`56d8218`, `69bf163`, `172e124`, `4f86d5e`, `0dbadc3`, `a36f75f`, `2e91987`, `a8b0443`):** Gemini Vision nameplate & error-display reader with technician verification, server-screened SSE chat streaming (`StreamScreener`), public `/evaluation` page, expected-readings reference cards, spoken Hindi technician vocabulary, and unmocked `smoke_live.py`.
   - **Cloud Run + Cloud SQL sprint deployment & stage reliability (`9dca899`, `f63e18a`, `8980e92`, `e2e608d`, `b602a4f`, `843f49d`, `6e23167`):** Single-container `Dockerfile`, temporary Cloud Run + Cloud SQL deployment, per-op timeouts, 5-minute circuit breaker, SSE `working` heartbeats, "How this answer was made" provenance panel, 503 jittered retries, and 429 skip.
-  - **Permanent Render deployment & submission polish (`c6196df` → HEAD):** Configured `render.yaml` for `gemini-3.5-flash-lite` and external Postgres, verified 3x end-to-end smoke passes on `https://fixsaathi-vu9s.onrender.com`, aligned `README.md`, `DEMO_SCRIPT.md`, and GitHub Actions workflows.
+  - **Permanent Render deployment & submission polish (`c6196df` → HEAD):** Configured `render.yaml` for `gemini-3.5-flash-lite` and external Postgres, verified end-to-end smoke passes on `https://fixsaathi-vu9s.onrender.com`, added the **Red-Team Challenger** + 36-query evaluation (`challenger_holdout_v2`), **Customer Safety Receipt** (`/receipt/<id>` + QR), unknown-script fail-closed safety rules, Gemini TTS narration on the 2:51 demo video, and aligned `README.md`, `DEMO_SCRIPT.md`, and GitHub Actions workflows.
 
 ## Engineering
 
