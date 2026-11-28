@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
             db_ok = False
         from .integrations.gemini.client import get_cached_models_available
         body = {'status': 'ok' if db_ok else 'unhealthy', 'env': st.app_env,
-                'commit': (os.environ.get('RENDER_GIT_COMMIT') or '')[:7] or None,
+                'commit': (os.environ.get('GIT_COMMIT') or os.environ.get('RENDER_GIT_COMMIT') or '')[:7] or None,
                 'database': 'ok' if db_ok else 'unreachable',
                 'db_ms': int((time.perf_counter() - t0) * 1000), 'storage': st.storage_provider,
                 'ai': {'configured': st.ai_configured,

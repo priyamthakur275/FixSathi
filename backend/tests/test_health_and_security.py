@@ -18,3 +18,16 @@ def test_health_and_ready_include_security_headers(client):
         assert r.headers.get('referrer-policy') == 'strict-origin-when-cross-origin'
         assert 'strict-transport-security' in r.headers
         assert 'permissions-policy' in r.headers
+
+
+def test_health_commit_prefers_git_commit_over_render_git_commit(client, monkeypatch):
+    monkeypatch.setenv('GIT_COMMIT', 'abcdef123456')
+    monkeypatch.setenv('RENDER_GIT_COMMIT', '9999999')
+    assert client.get('/health').json()['commit'] == 'abcdef1'
+
+    monkeypatch.delenv('GIT_COMMIT', raising=False)
+    monkeypatch.setenv('RENDER_GIT_COMMIT', '987654321')
+    assert client.get('/health').json()['commit'] == '9876543'
+
+    monkeypatch.delenv('RENDER_GIT_COMMIT', raising=False)
+    assert client.get('/health').json()['commit'] is None
