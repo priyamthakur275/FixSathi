@@ -124,7 +124,7 @@ python backend/scripts/smoke_live.py --base-url "$SERVICE_URL"
 
 ## 5. Safe Rollout (`--no-traffic`) & Rollback Target
 
-- **Currently serving (100% traffic):** `fixsaathi-00005-xaq`, built from commit `4501cd4` (`4501cd4867afea9a3025c6653ef58f7d24e00f1e`) on branch `antigravity-v2`. Passed 3/3 consecutive `smoke_live.py` runs on `candidate2` on 2026-11-27.
+- **Currently serving (100% traffic):** `fixsaathi-00005-xaq`, built from commit `843f49d` (`843f49df1f51fa9a4e196c75fad192a5f3592e22`) on branch `antigravity-v2`. Passed 3/3 consecutive `smoke_live.py` runs on `candidate2` on 2026-11-27.
 - **Known good rollback revision:** `fixsaathi-00005-xaq` (prior rollback targets: `fixsaathi-00003-han`, `fixsaathi-00002-56b`)
 - **Emergency rollback command (100% instant traffic shift):**
 
