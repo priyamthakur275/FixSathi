@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ApiError } from '../services/api'
-import { chatService, fileService, sessionService } from '../services'
+import { chatService, fileService, sessionService, StreamFallbackError } from '../services'
 import { useMaybeAuth } from './AuthContext'
 import type { Attachment, ChatMessage, MessageFile, RepairSession, ServerMessage, SourceRef } from '../types'
 
@@ -66,12 +66,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshSessions = useCallback(() => setSessionsVersion(v => v + 1), [])
   const busy = useRef(false)
   const sid = useRef<string | null>(null)
+  const streamCtl = useRef<AbortController | null>(null)
   // Every conversation switch gets a new number. A reply that arrives after the technician moved to another chat is saved on the
   // server as usual, but never shown in, or spoken over, the chat that is now open.
   const conv = useRef(0)
 
   const reset = useCallback(() => {
     conv.current++; busy.current = false; sid.current = null
+    streamCtl.current?.abort(); streamCtl.current = null
     setSessionId(null); setSession(null); setMessages([]); setThinking(false); setProgress(null); setError(null); setOpenError(null); setFreshReply(null)
   }, [])
 
@@ -116,18 +118,84 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       if (live()) setProgress(null)
       stage = 'send'
-      const r = await chatService.send(target, text.trim(), ids, channel)
-      setSessionsVersion(v => v + 1)  // the title can change after the first description
-      if (!live()) return true
-      const reply = r.assistant_message ? toChat(r.assistant_message) : null
-      setMessages(m => {
-        const next = m.map(x => x.id === localId ? { ...toChat(r.user_message), attachments: x.attachments } : x)
-        if (reply) next.push(reply)
-        else next.push({ id: uid(), role: 'system', at: Date.now(), notice: r.ai_status === 'unavailable' ? 'ai_unavailable' : 'ai_error',
-          text: r.ai_error?.message || 'The AI could not reply.', hint: r.ai_error?.hint, errorCode: r.ai_error?.code })
-        return next
-      })
-      if (reply) setFreshReply(reply)
+      const streamId = `stream-${localId}`
+      const ctl = new AbortController()
+      streamCtl.current = ctl
+      let userSaved = false
+      let streamedDone: ChatMessage | null = null
+      let streamedErr: { status: 'unavailable' | 'error'; err: { code: string; message: string; hint?: string | null } } | null = null
+      let useFallback = false
+
+      try {
+        await chatService.stream(target, text.trim(), ids, channel, {
+          onUserMessage: um => {
+            userSaved = true
+            if (!live()) return
+            setMessages(m => m.map(x => x.id === localId ? { ...toChat(um), attachments: x.attachments } : x))
+          },
+          onDelta: delta => {
+            if (!live() || !delta) return
+            setThinking(false)
+            setMessages(m => {
+              const idx = m.findIndex(x => x.id === streamId)
+              if (idx === -1) return [...m, { id: streamId, role: 'assistant', text: delta, at: Date.now(), aiGenerated: true, channel, streaming: true }]
+              return m.map(x => x.id === streamId ? { ...x, text: x.text + delta } : x)
+            })
+          },
+          onDone: am => {
+            streamedDone = toChat(am)
+            if (!live()) return
+            setThinking(false)
+            setMessages(m => {
+              const cleaned = m.some(x => x.id === streamId)
+                ? m.map(x => x.id === streamId ? streamedDone! : x)
+                : [...m, streamedDone!]
+              return cleaned
+            })
+            setFreshReply(streamedDone)
+          },
+          onWorking: () => { if (live()) setThinking(true) },
+          onAiError: (status, aiErr) => {
+            streamedErr = { status, err: aiErr }
+            if (!live()) return
+            setThinking(false)
+            setMessages(m => [
+              ...m.filter(x => x.id !== streamId),
+              { id: uid(), role: 'system', at: Date.now(), notice: status === 'unavailable' ? 'ai_unavailable' : 'ai_error',
+                text: aiErr.message || 'The AI could not reply.', hint: aiErr.hint, errorCode: aiErr.code, retryText: text.trim() || undefined },
+            ])
+          },
+        }, ctl.signal)
+      } catch (streamErr) {
+        if (!live()) return false
+        setMessages(m => m.filter(x => x.id !== streamId))
+        if (streamErr instanceof StreamFallbackError || !userSaved) {
+          useFallback = true
+        } else {
+          throw streamErr
+        }
+      } finally {
+        if (streamCtl.current === ctl) streamCtl.current = null
+      }
+
+      if (useFallback) {
+        const r = await chatService.send(target, text.trim(), ids, channel)
+        setSessionsVersion(v => v + 1)
+        if (!live()) return true
+        const reply = r.assistant_message ? toChat(r.assistant_message) : null
+        setMessages(m => {
+          const next = m.map(x => x.id === localId ? { ...toChat(r.user_message), attachments: x.attachments } : x)
+          if (reply) next.push(reply)
+          else next.push({ id: uid(), role: 'system', at: Date.now(), notice: r.ai_status === 'unavailable' ? 'ai_unavailable' : 'ai_error',
+            text: r.ai_error?.message || 'The AI could not reply.', hint: r.ai_error?.hint, errorCode: r.ai_error?.code, retryText: text.trim() || undefined })
+          return next
+        })
+        if (reply) setFreshReply(reply)
+      } else {
+        setSessionsVersion(v => v + 1)
+        if (!live()) return true
+        void (streamedDone || streamedErr)
+      }
       sessionService.get(target).then(s => { if (live()) setSession(s) }).catch(() => undefined)  // picks up the server's title for a new chat
       return true
     } catch (e) {

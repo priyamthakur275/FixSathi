@@ -26,7 +26,7 @@ function CopyButton({ text }: { text: string }) {
   const t = useT()
   const [ok, setOk] = useState(false)
   const copy = async () => { try { await navigator.clipboard.writeText(speakable(text)); setOk(true); setTimeout(() => setOk(false), 1500) } catch { /* clipboard blocked */ } }
-  return <button onClick={copy} aria-label={t('chat.copy')} title={t('chat.copy')} className={tool}>{ok ? <Check size={13} className="text-ok" /> : <Copy size={13} />}<span className="sr-only sm:not-sr-only">{ok ? t('chat.copied') : t('chat.copy')}</span></button>
+  return <button onClick={copy} aria-label={t('chat.copy')} title={t('chat.copy')} className={tool}>{ok ? <Check size={13} className="text-accent" /> : <Copy size={13} />}<span className="sr-only sm:not-sr-only">{ok ? t('chat.copied') : t('chat.copy')}</span></button>
 }
 
 function ReadAloud({ text, id }: { text: string; id: string }) {
@@ -61,9 +61,9 @@ function RateAnswer({ m }: { m: ChatMessage }) {
   const on = 'bg-surface-2 text-ink'
   return (
     <>
-      <button onClick={() => pick(true)} aria-pressed={value === true} aria-label={t('chat.helpful')} title={t('chat.helpful')} className={`${tool} ${value === true ? on : ''}`}><ThumbsUp size={13} className={value === true ? 'text-ok' : ''} /></button>
-      <button onClick={() => pick(false)} aria-pressed={value === false} aria-label={t('chat.notHelpful')} title={t('chat.notHelpful')} className={`${tool} ${value === false ? on : ''}`}><ThumbsDown size={13} className={value === false ? 'text-crit' : ''} /></button>
-      {sent && !failed && <span className="ml-1 text-ok">{t('chat.thanks')}</span>}
+      <button onClick={() => pick(true)} aria-pressed={value === true} aria-label={t('chat.helpful')} title={t('chat.helpful')} className={`${tool} ${value === true ? on : ''}`}><ThumbsUp size={13} className={value === true ? 'text-accent' : ''} /></button>
+      <button onClick={() => pick(false)} aria-pressed={value === false} aria-label={t('chat.notHelpful')} title={t('chat.notHelpful')} className={`${tool} ${value === false ? on : ''}`}><ThumbsDown size={13} className={value === false ? 'text-warn' : ''} /></button>
+      {sent && !failed && <span className="ml-1 text-accent">{t('chat.thanks')}</span>}
       {failed && <span role="alert" className="ml-1 text-crit">{t('chat.rateFailed')}</span>}
       {asking && (
         <form className="mt-1.5 flex w-full max-w-md items-center gap-2" onSubmit={e => { e.preventDefault(); setAsking(false); void save(false, note.trim()).then(ok => setSent(ok)) }}>
@@ -99,15 +99,22 @@ function PdfCard() {
 // The server adds this sentence to every microwave answer; shown as a red warning instead of a line of text.
 const MICROWAVE_HV = /Do not open the microwave\. Its high-voltage capacitor can hold a lethal charge even after unplugging\. Unplug the oven, note the symptom and model number, and hand it to authorised service\.\s*/
 
-function Bubble({ m }: { m: ChatMessage }) {
+function Bubble({ m, onRetry }: { m: ChatMessage; onRetry?: (text: string) => void }) {
   if (m.role === 'system') {
     return (
       <div role="status" className="mx-auto flex max-w-xl items-start gap-3 rounded-2xl border border-warn/35 bg-warn/[0.07] px-4 py-3.5 text-sm text-warn">
         <AlertTriangle size={17} className="mt-0.5 shrink-0" />
-        <span>
-          {m.notice === 'ai_unavailable' ? `AI is not available: ${m.text}` : `The AI could not reply: ${m.text}`} Your message was saved.
-          {m.hint && <span className="mt-1.5 block text-xs text-ink-2">Fix: {m.hint}{m.errorCode ? ` (${m.errorCode})` : ''}</span>}
-        </span>
+        <div className="min-w-0 flex-1">
+          <span>
+            {m.notice === 'ai_unavailable' ? `AI is not available: ${m.text}` : `The AI could not reply: ${m.text}`} Your message was saved.
+            {m.hint && <span className="mt-1.5 block text-xs text-ink-2">Fix: {m.hint}{m.errorCode ? ` (${m.errorCode})` : ''}</span>}
+          </span>
+          {m.retryText && onRetry && (
+            <div className="mt-2">
+              <button type="button" onClick={() => onRetry(m.retryText!)} className="btn btn-sm !min-h-[36px]">Retry</button>
+            </div>
+          )}
+        </div>
       </div>
     )
   }
@@ -148,14 +155,17 @@ function Bubble({ m }: { m: ChatMessage }) {
           </div>
         )}
         {body && <Markdown text={body} sources={m.sources} />}
+        {m.streaming && <span className="mt-1 inline-block h-3.5 w-1.5 animate-pulse rounded-sm bg-accent" aria-label="Streaming response" />}
         {m.action === 'pdf_report' && <PdfCard />}
         {m.sources && m.sources.length > 0 && <SourceList sources={m.sources} />}
-        <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[12.5px] text-ink-3">
-          {m.text && m.action !== 'pdf_report' && <ReadAloud text={m.text} id={m.id} />}
-          {m.text && <CopyButton text={m.text} />}
-          {m.aiGenerated && !m.demo && m.action !== 'pdf_report' && <RateAnswer m={m} />}
-          <span className="ml-1.5">{time(m.at)}</span>
-        </div>
+        {!m.streaming && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-0.5 text-[12.5px] text-ink-3">
+            {m.text && m.action !== 'pdf_report' && <ReadAloud text={m.text} id={m.id} />}
+            {m.text && <CopyButton text={m.text} />}
+            {m.aiGenerated && !m.demo && m.action !== 'pdf_report' && <RateAnswer m={m} />}
+            <span className="ml-1.5">{time(m.at)}</span>
+          </div>
+        )}
       </div>
     </motion.div>
   )
@@ -172,12 +182,12 @@ function ThinkingLabel({ progress }: { progress: string | null }) {
 }
 
 export function ChatThread() {
-  const { messages, thinking, progress, error } = useApp()
+  const { messages, thinking, progress, error, send } = useApp()
   const end = useRef<HTMLDivElement>(null)
-  useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }) }, [messages.length, thinking])
+  useEffect(() => { end.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' }) }, [messages.length, thinking])
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-4 pt-6 md:px-6" role="log" aria-live="polite" aria-label="Conversation">
-      {messages.map(m => <Bubble key={m.id} m={m} />)}
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 pb-4 pt-8 md:px-6" role="log" aria-live="polite" aria-label="Conversation">
+      {messages.map(m => <Bubble key={m.id} m={m} onRetry={txt => void send(txt)} />)}
       {thinking && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3" aria-label="FixSaathi is thinking">
           <Avatar />

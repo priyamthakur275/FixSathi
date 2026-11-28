@@ -6,11 +6,11 @@ export function DemoBadge({ children = 'Sample data' }: { children?: ReactNode }
 }
 
 const PILL: Record<string, string> = {
-  completed: 'text-ok bg-ok/10 border-ok/30', resolved: 'text-ok bg-ok/10 border-ok/30',
+  completed: 'text-accent bg-accent/10 border-accent/30', resolved: 'text-accent bg-accent/10 border-accent/30',
   escalated: 'text-warn bg-warn/10 border-warn/30', awaiting_confirmation: 'text-warn bg-warn/10 border-warn/30', open: 'text-warn bg-warn/10 border-warn/30',
-  cancelled: 'text-ink-3 border-line', not_resolved: 'text-crit bg-crit/10 border-crit/30',
+  cancelled: 'text-ink-3 border-line bg-surface-2/60', not_resolved: 'text-ink-2 bg-surface-2 border-line-2',
 }
-const DOT: Record<string, string> = { completed: 'bg-ok', resolved: 'bg-ok', escalated: 'bg-warn', awaiting_confirmation: 'bg-warn', open: 'bg-warn', cancelled: 'bg-ink-3', not_resolved: 'bg-crit' }
+const DOT: Record<string, string> = { completed: 'bg-accent', resolved: 'bg-accent', escalated: 'bg-warn', awaiting_confirmation: 'bg-warn', open: 'bg-warn', cancelled: 'bg-ink-3', not_resolved: 'bg-ink-2' }
 
 export function StatusPill({ status }: { status: string }) {
   const label = status.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())

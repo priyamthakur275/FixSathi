@@ -24,10 +24,12 @@ describe('workspace links', () => {
     return screen.findByRole('navigation', { name: 'Workspace' })
   }
 
-  it('a technician sees their repairs, reports and the demos, and no dashboard', async () => {
+  it('a technician sees their repairs and reports in primary nav, with demos behind Offline backup', async () => {
     const nav = await show('technician')
     const links = within(nav).getAllByRole('link').map(a => [a.textContent, a.getAttribute('href')])
-    expect(links).toEqual([['Fault finder', '/lookup'], ['My repairs', '/repairs'], ['Service reports', '/reports'], ['Demo scenarios', '/demo']])
+    expect(links).toEqual([['Fault finder', '/lookup'], ['My repairs', '/repairs'], ['Service reports', '/reports']])
+    const backup = screen.getByRole('link', { name: 'Offline backup' })
+    expect(backup.getAttribute('href')).toBe('/demo')
   })
 
   it('a manager also sees the team dashboard and the team history', async () => {

@@ -14,7 +14,7 @@ export function ReportsList() {
       <PageHeader eyebrow="Workspace" title="Service reports" subtitle="Generated from finished sessions, using only recorded data." />
       {loading && <div className="space-y-3">{[0, 1, 2].map(i => <Skeleton key={i} className="h-20" />)}</div>}
       {error && <ErrorState message={error} onRetry={retry} />}
-      {data && data.items.length === 0 && <EmptyState icon={<FileText size={22} />} title="No reports yet" hint="Finish a repair session to create its service report." />}
+      {data && data.items.length === 0 && <EmptyState icon={<FileText size={22} />} title="No reports yet" hint="Finish a repair session to create its service report." action={<Link to="/repairs" className="btn btn-primary">View open repairs</Link>} />}
       {data && data.items.length > 0 && (
         <ul className="card divide-y divide-line/70 overflow-hidden">
           {data.items.map(r => (
@@ -65,7 +65,7 @@ export function ReportDetailPage() {
       {error && <ErrorState message={error} onRetry={retry} />}
       {data && d && (<>
         <PageHeader title={`Report ${data.reference}`} subtitle={`${d.session.appliance} · ${new Date(data.created_at).toLocaleDateString()} · ${d.session.technician ?? ''}`}
-          eyebrow="Service report" right={<div className="flex flex-wrap items-center gap-2 print:hidden"><button onClick={() => void share()} className="btn" title="Send a short summary of this visit to the customer"><Send size={15} />Send to customer</button><button onClick={() => void copy()} className="btn" aria-live="polite">{copied ? <Check size={15} className="text-ok" /> : <Copy size={15} />}{copied ? 'Copied' : 'Copy summary'}</button><button onClick={() => window.print()} className="btn"><Printer size={15} />Print</button><button onClick={() => void download()} disabled={busy} className="btn btn-primary">{busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}Download PDF</button></div>} />
+          eyebrow="Service report" right={<div className="flex flex-wrap items-center gap-2 print:hidden"><button onClick={() => void share()} className="btn" title="Send a short summary of this visit to the customer"><Send size={15} />Send to customer</button><button onClick={() => void copy()} className="btn" aria-live="polite">{copied ? <Check size={15} className="text-accent" /> : <Copy size={15} />}{copied ? 'Copied' : 'Copy summary'}</button><button onClick={() => window.print()} className="btn"><Printer size={15} />Print</button><button onClick={() => void download()} disabled={busy} className="btn btn-primary">{busy ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}Download PDF</button></div>} />
         {err && <p role="alert" className="mb-4 rounded-xl border border-crit/40 bg-crit/10 px-4 py-2.5 text-sm text-crit">{err}</p>}
         <div className="card card-pad">
         <StatusPill status={data.resolution_status} />

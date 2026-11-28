@@ -1,6 +1,6 @@
-import re, uuid
-from fastapi import APIRouter, Depends, File, Query, UploadFile
-from fastapi.responses import Response
+import asyncio, json, re, uuid
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import exists, func, or_, select
 from sqlalchemy.orm import Session
 from ...core.exceptions import AppError, NotFound
@@ -8,11 +8,11 @@ from ...core.quota import check_ai_quota
 from ...demo.client import is_demo
 from ...db.base import utcnow
 from ...db.models import Conversation, Media, RepairSession, User
-from ...db.session import get_db
+from ...db.session import SessionLocal, get_db
 from ...dependencies import current_user
 from ...integrations.storage.local import get_storage
 from ...schemas.repair import AnswerFeedbackIn, ChatResult, MediaOut, MessageIn, MessageOut, Page, SessionCreate, SessionOut, SessionPatch
-from ...services import ai
+from ...services import ai, safety
 from ...services.access import get_owned_session, get_readable_session, session_scope
 from ...services.sessions import TERMINAL, add_message, chat_title, create_session, ensure_open, retitle_from, transition
 from .serializers import media_out, session_out
@@ -130,8 +130,7 @@ def messages(session_id: uuid.UUID, limit: int = Query(100, ge=1, le=500), offse
     return Page(items=[MessageOut.model_validate(r) for r in rows], total=total or 0, limit=limit, offset=offset)
 
 
-@router.post('/sessions/{session_id}/messages', response_model=ChatResult, status_code=201)
-async def post_message(session_id: uuid.UUID, body: MessageIn, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
+def _prepare_user_message(db: Session, u: User, session_id: uuid.UUID, body: MessageIn) -> tuple[RepairSession, Conversation]:
     s = get_owned_session(db, u, session_id); ensure_open(s)
     if not body.text.strip() and not body.media_ids:
         raise AppError('Message is empty.', code='EMPTY_MESSAGE')
@@ -150,6 +149,16 @@ async def post_message(session_id: uuid.UUID, body: MessageIn, u: User = Depends
             s.title = chat_title(s.issue_description, s.appliance_type)
     elif body.text.strip():
         retitle_from(s, body.text)
+    return s, um
+
+
+def _sse(event: str, payload: dict) -> str:
+    return f'event: {event}\ndata: {json.dumps(payload, default=str)}\n\n'
+
+
+@router.post('/sessions/{session_id}/messages', response_model=ChatResult, status_code=201)
+async def post_message(session_id: uuid.UUID, body: MessageIn, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
+    s, um = _prepare_user_message(db, u, session_id, body)
     if not body.media_ids and wants_pdf(body.text):
         # Answered by the server, not Gemini: the PDF is built from recorded data, so there is nothing for the model to write.
         am = add_message(db, s, 'assistant', PDF_REPLY, meta={'action': 'pdf_report', 'ai_generated': False, 'channel': body.channel})
@@ -164,6 +173,112 @@ async def post_message(session_id: uuid.UUID, body: MessageIn, u: User = Depends
         db.commit()
         return ChatResult(user_message=MessageOut.model_validate(um), assistant_message=None, ai_status='unavailable' if e.status == 503 else 'error',
                           ai_error={'code': e.code, 'message': e.message, 'hint': e.details.get('hint'), 'provider_status': e.details.get('provider_status')})
+
+
+@router.post('/sessions/{session_id}/messages/stream')
+async def stream_message(request: Request, session_id: uuid.UUID, body: MessageIn, u: User = Depends(current_user), db: Session = Depends(get_db, scope="function")):
+    """Stream AI reply via SSE with sentence-by-sentence server safety screening before any text reaches the client."""
+    s, um = _prepare_user_message(db, u, session_id, body)
+    text = body.text.strip()
+    media_ids = list(body.media_ids)
+    channel = body.channel
+    pdf_fast = not media_ids and wants_pdf(text)
+    if not pdf_fast and not is_demo(s):
+        check_ai_quota(u.id)
+    um_json = MessageOut.model_validate(um).model_dump(mode='json')
+    sid, uid, um_id = s.id, u.id, um.id
+    db.commit()
+
+    async def event_stream():
+        yield _sse('user_message', {'user_message': um_json})
+        if pdf_fast:
+            with SessionLocal() as sdb:
+                sess = sdb.get(RepairSession, sid)
+                am = add_message(sdb, sess, 'assistant', PDF_REPLY, meta={'action': 'pdf_report', 'ai_generated': False, 'channel': channel})
+                sdb.commit()
+                am_json = MessageOut.model_validate(am).model_dump(mode='json')
+            yield _sse('delta', {'text': PDF_REPLY})
+            yield _sse('done', {'assistant_message': am_json, 'ai_status': 'ok'})
+            return
+
+        yield _sse('working', {'stage': 'preparing'})
+        q: asyncio.Queue[tuple[str, dict | None]] = asyncio.Queue()
+
+        async def _produce():
+            with SessionLocal() as sdb:
+                sess = sdb.get(RepairSession, sid)
+                usr = sdb.get(User, uid)
+                try:
+                    g, res, contents, system, allowed = await ai.prepare_chat_stream(sdb, sess, usr, text, media_ids, exclude_id=um_id, channel=channel)
+                    used_cites: list[str] = []
+                    invented_cites: list[str] = []
+
+                    def clean_fn(txt: str) -> str:
+                        cleaned, u_ids, inv_ids = ai._clean_citations(txt, allowed)
+                        used_cites.extend(u_ids)
+                        invented_cites.extend(inv_ids)
+                        return cleaned
+
+                    screener = safety.StreamScreener(sdb, sess, usr, actor='chat', voice=channel == 'voice', cite_fn=clean_fn)
+                    meta = None
+                    await q.put(('working', {'stage': 'generating'}))
+                    async for chunk, call_meta in g.stream_text('chat', contents, system):
+                        if await request.is_disconnected():
+                            sdb.rollback()
+                            return
+                        if chunk:
+                            for part in screener.feed(chunk):
+                                await q.put(('delta', {'text': part}))
+                        if call_meta is not None:
+                            meta = call_meta
+                    if await request.is_disconnected():
+                        sdb.rollback()
+                        return
+                    for part in screener.finish():
+                        await q.put(('delta', {'text': part}))
+                    if await request.is_disconnected():
+                        sdb.rollback()
+                        return
+                    am = ai.finalize_stream_message(sdb, sess, meta, res, list(dict.fromkeys(used_cites)), invented_cites, screener, channel)
+                    sdb.commit()
+                    am_json = MessageOut.model_validate(am).model_dump(mode='json')
+                    await q.put(('done', {'assistant_message': am_json, 'ai_status': 'ok'}))
+                except asyncio.CancelledError:
+                    sdb.rollback()
+                    raise
+                except AppError as e:
+                    sdb.rollback()
+                    sess_err = sdb.get(RepairSession, sid)
+                    ai.record_usage(sdb, sess_err, 'chat', None, ok=False, code=e.code, model='agent')
+                    sdb.commit()
+                    await q.put(('error', {
+                        'ai_status': 'unavailable' if e.status == 503 else 'error',
+                        'ai_error': {'code': e.code, 'message': e.message, 'hint': e.details.get('hint'), 'provider_status': e.details.get('provider_status')},
+                    }))
+                finally:
+                    await q.put(('_eof', None))
+
+        task = asyncio.create_task(_produce())
+        try:
+            while True:
+                if await request.is_disconnected():
+                    task.cancel()
+                    break
+                try:
+                    ev, payload = await asyncio.wait_for(q.get(), timeout=2.5)
+                except asyncio.TimeoutError:
+                    yield _sse('working', {'stage': 'waiting'})
+                    continue
+                if ev == '_eof':
+                    break
+                yield _sse(ev, payload or {})
+        finally:
+            if not task.done():
+                task.cancel()
+                with __import__('contextlib').suppress(BaseException):
+                    await task
+
+    return StreamingResponse(event_stream(), media_type='text/event-stream', headers={'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no'})
 
 
 @router.put('/sessions/{session_id}/messages/{message_id}/feedback', response_model=MessageOut)
@@ -294,7 +409,7 @@ def get_media(media_id: uuid.UUID, u: User = Depends(current_user), db: Session 
     m = db.get(Media, media_id)
     if not m:
         raise NotFound('File not found.')
-    get_readable_session(db, u, m.session_id)  # authorisation through the owning session
+    s = get_readable_session(db, u, m.session_id)  # authorisation through the owning session
     headers = {'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff'}
     if m.kind == 'document':
         from urllib.parse import quote
@@ -303,4 +418,27 @@ def get_media(media_id: uuid.UUID, u: User = Depends(current_user), db: Session 
         headers['Content-Disposition'] = f"{'inline' if inline else 'attachment'}; filename*=UTF-8''{quote(name)}"
         headers['Content-Security-Policy'] = "default-src 'none'; sandbox"  # nothing in a document can run scripts
     media_type = f'{m.mime_type}; charset=utf-8' if m.mime_type.startswith('text/') else m.mime_type
-    return Response(get_storage().get(m.storage_key), media_type=media_type, headers=headers)
+    try:
+        data = get_storage().get(m.storage_key)
+    except AppError as e:
+        if e.code == 'MEDIA_MISSING' and m.kind != 'generated' and (m.meta or {}).get('demo'):
+            from ...demo.scenarios import HERE, SCENARIOS
+            sc = SCENARIOS.get(is_demo(s) or '')
+            photo = sc and sc.get('photo')
+            if photo and (HERE / photo).is_file():
+                return Response((HERE / photo).read_bytes(), media_type=media_type, headers=headers)
+        raise
+    return Response(data, media_type=media_type, headers=headers)
+
+
+@router.get('/samples/nameplate')
+def sample_nameplate():
+    """Serves the bundled synthetic AC rating-label diagram so anyone can run live Vision without hunting for a photo."""
+    from pathlib import Path
+    for p in (
+        Path(__file__).resolve().parents[4] / 'docs' / 'samples' / 'sample_nameplate.png',
+        Path('/app/docs/samples/sample_nameplate.png'),
+    ):
+        if p.is_file():
+            return Response(p.read_bytes(), media_type='image/png', headers={'Cache-Control': 'public, max-age=3600'})
+    raise NotFound('Sample nameplate image not found.')

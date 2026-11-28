@@ -50,10 +50,59 @@ export interface ChatMessage {
   channel?: 'text' | 'voice'
   /** The technician's thumbs up (true) or down (false) on this AI answer; undefined when not rated. */
   helpful?: boolean
+  /** True while SSE chunks are actively arriving. */
+  streaming?: boolean
+  /** Saved user text to allow one-tap retry after a transient AI failure. */
+  retryText?: string
 }
 
 export type VoiceState = 'idle' | 'connecting' | 'listening' | 'processing' | 'responding' | 'error'
 export type SessionStatus = 'created' | 'active' | 'diagnosing' | 'awaiting_confirmation' | 'guidance_in_progress' | 'escalated' | 'completed' | 'cancelled'
+
+export interface NameplateData {
+  readable: boolean
+  appliance_type: string | null
+  brand: string | null
+  model: string | null
+  error_code: string | null
+  serial_number: string | null
+  raw_text: string
+  confidence: number
+  notes: string | null
+  verified_by_technician: boolean
+  source: string
+  model_identifier?: string | null
+  media_id?: string | null
+}
+
+export interface NameplateHit {
+  record_id: string
+  title: string
+  appliance_type: string
+  brand: string | null
+  model: string | null
+  error_code: string | null
+  symptoms: string[]
+  possible_faults: string[]
+  source_name: string
+  verification_status: string
+  match: string
+  related_category: boolean
+}
+
+export interface NameplateRetrieval {
+  coverage: 'grounded' | 'partial' | 'none'
+  error_codes_found: string[]
+  error_codes_unknown: string[]
+  hits: NameplateHit[]
+}
+
+export interface NameplateResponse {
+  status: 'ok' | 'unavailable' | 'error'
+  ai_error: { code: string; message: string; hint?: string | null } | null
+  extracted: NameplateData | null
+  retrieval: NameplateRetrieval | null
+}
 
 export interface RepairSession {
   id: string
@@ -62,6 +111,7 @@ export interface RepairSession {
   appliance_type: string
   appliance_label: string
   demo?: boolean
+  nameplate?: NameplateData | null
   issue_description: string
   status: SessionStatus
   technician_id: string
@@ -84,7 +134,7 @@ export interface Fault { fault: string; explanation: string; confidence: number;
 export interface SourceRef { record_id: string; source_name: string; source_url: string | null; license: string; verification_status: string; match: string; related_category: boolean }
 export interface Diagnosis {
   id: string; problem_summary: string; faults: Fault[]; recommended_checks: string[]; follow_up_questions: string[]; safety_requirements: string[]
-  requires_escalation: boolean; model_identifier: string; created_at: string; confidence_note: string
+  requires_escalation: boolean; model_identifier: string; latency_ms?: number | null; created_at: string; confidence_note: string
   confirmed_findings: string[]; missing_information: string[]; required_tools?: string[]; escalation_reason?: string | null; knowledge_coverage: 'grounded' | 'partial' | 'none'; sources: SourceRef[]
 }
 
@@ -118,6 +168,7 @@ export interface Report { id: string; reference: string; session_id: string; ses
 
 export interface Overview {
   total_sessions: number; completed: number; active: number; escalated: number; open_escalations: number
+  funnel?: { sessions: number; diagnosed: number; isolated: number; fixed_first_time: number }
   first_time_fix_rate: number | null; first_time_fix_sample: number; avg_repair_minutes: number | null; avg_rating: number | null; ratings_count: number
   guidance_correct_rate: number | null; answers_rated: number; answers_helpful: number; answer_helpful_rate: number | null; avg_ai_latency_ms: number | null; ai_cost_per_repair: number | null; ai_cost_note: string
 }

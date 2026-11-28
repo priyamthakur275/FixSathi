@@ -5,7 +5,7 @@ os.environ['CORS_ORIGINS'] = 'http://localhost:5173'
 os.environ['LOCAL_STORAGE_PATH'] = '/tmp/fixsaathi-test-uploads'
 os.environ['AUTH_RATE_LIMIT_PER_MINUTE'] = '1000'
 # Empty (not unset): environment variables win over backend/.env, so a real key there is never used by tests.
-for k in ('GEMINI_API_KEY', 'GEMINI_AGENT_MODEL', 'GEMINI_LIVE_MODEL', 'GEMINI_EMBED_MODEL', 'NANO_BANANA_MODEL', 'GEMINI_AGENT_FALLBACK_MODELS',
+for k in ('GEMINI_API_KEY', 'GEMINI_AGENT_MODEL', 'GEMINI_FAST_MODEL', 'GEMINI_LIVE_MODEL', 'GEMINI_EMBED_MODEL', 'NANO_BANANA_MODEL', 'GEMINI_AGENT_FALLBACK_MODELS',
           'GEMINI_TTS_MODEL', 'ELEVENLABS_API_KEY', 'ELEVENLABS_VOICE_ID', 'ELEVENLABS_MODEL_KANNADA'):
     os.environ[k] = ''
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'false'
@@ -56,7 +56,8 @@ def clean(migrate):
         c.execute(text('TRUNCATE ' + ', '.join(t.name for t in reversed(Base.metadata.sorted_tables)) + ' RESTART IDENTITY CASCADE'))
     from app.core.security import auth_limiter
     from app.core import quota
-    auth_limiter.hits.clear(); quota.reset(); reset_storage(); gclient.set_gemini(None); gclient.COOLDOWN.clear(); gclient.RELAXED_SCHEMA.clear(); get_settings.cache_clear()
+    from app.services import knowledge_base as kb
+    auth_limiter.hits.clear(); quota.reset(); kb.clear_cache(); reset_storage(); gclient.set_gemini(None); gclient.COOLDOWN.clear(); gclient.RELAXED_SCHEMA.clear(); get_settings.cache_clear()
     yield
     gclient.set_gemini(None)
 

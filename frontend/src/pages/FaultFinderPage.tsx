@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowUpRight, Loader2, Lock, Search, Wrench, X } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowUpRight, Loader2, Lock, MessageSquare, Search, Wrench, X } from 'lucide-react'
 import { lookupService, type LookupResponse, type LookupResult } from '../services'
+import { Skeleton } from '../components/common/ui'
 import { useApp } from '../context/AppContext'
 import { appliances } from '../constants/prompts'
 
@@ -98,16 +99,16 @@ export default function FaultFinderPage() {
       <div className="relative mt-6">
         <Search size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-3" aria-hidden />
         <label htmlFor="lookup-q" className="sr-only">Error code or symptom</label>
-        <input id="lookup-q" ref={input} autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="LG CH38, Samsung 5C, fan humming..." autoComplete="off"
+        <input id="lookup-q" ref={input} autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="LG CH38, 5C, fan hums..." autoComplete="off"
           className="field !rounded-2xl !py-4 !pl-12 !pr-12 text-[16px] shadow-[var(--shadow-card)]" />
         {busy ? <Loader2 size={18} className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-ink-3" aria-label="Searching" />
-          : q && <button onClick={() => { setQ(''); input.current?.focus() }} aria-label="Clear" className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-3 hover:bg-surface-2 hover:text-ink"><X size={16} /></button>}
+          : q && <button onClick={() => { setQ(''); input.current?.focus() }} aria-label="Clear" className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-ink-3 hover:bg-surface-2 hover:text-ink"><X size={16} /></button>}
       </div>
-      <div role="radiogroup" aria-label="Appliance" className="-mx-1 mt-3 flex gap-1.5 overflow-x-auto px-1 pb-1">
+      <div role="radiogroup" aria-label="Appliance" className="mt-3 flex flex-wrap gap-2">
         {[{ id: null, label: 'Any appliance' }, ...appliances].map(a => {
           const on = appliance === a.id
           return <button key={a.id ?? 'any'} role="radio" aria-checked={on} onClick={() => setAppliance(a.id)}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-[13px] transition-colors ${on ? 'border-accent bg-accent/10 font-medium text-ink' : 'border-line bg-surface text-ink-2 hover:text-ink'}`}>{a.label}</button>
+            className={`min-h-[44px] rounded-full border px-3.5 py-2 text-[13px] transition-colors ${on ? 'border-accent bg-accent/10 font-medium text-ink' : 'border-line bg-surface text-ink-2 hover:text-ink'}`}>{a.label}</button>
         })}
       </div>
 
@@ -119,6 +120,8 @@ export default function FaultFinderPage() {
           <div className="mt-2 flex flex-wrap gap-2">{EXAMPLES.map(x => <button key={x} onClick={() => setQ(x)} className="chip">{x}</button>)}</div>
         </div>
       )}
+
+      {busy && !shown && <div className="mt-6 space-y-3"><Skeleton className="h-32" /><Skeleton className="h-32" /></div>}
 
       {shown && (
         <section aria-live="polite" className="mt-6 space-y-4">
@@ -132,7 +135,10 @@ export default function FaultFinderPage() {
           )}
           {shown.results.map(r => <ResultCard key={r.record_id} r={r} onStart={() => start(r)} />)}
           {shown.results.length === 0 && shown.error_codes_unknown.length === 0 && (
-            <p className="py-6 text-sm text-ink-2">Nothing in the records matches “{q.trim()}”. Describe it in a chat instead and the AI will ask what it needs.</p>
+            <div className="card p-6 text-center">
+              <p className="text-sm text-ink-2">Nothing in the records matches “{q.trim()}”. Describe it in a chat instead and FixSaathi will help.</p>
+              <Link to="/chat" className="btn btn-primary mt-4"><MessageSquare size={15} />Ask FixSaathi in chat</Link>
+            </div>
           )}
         </section>
       )}

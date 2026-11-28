@@ -8,6 +8,8 @@ import { PrefsProvider } from '../context/PrefsContext'
 import { RepairProgress } from '../components/repair/RepairProgress'
 import { SafetyPanel } from '../components/repair/SafetyPanel'
 import { CommandPalette } from '../components/common/CommandPalette'
+import { StatusPill } from '../components/common/ui'
+import SettingsPage from '../pages/SettingsPage'
 import * as services from '../services'
 import type { SafetyState } from '../types'
 
@@ -82,5 +84,33 @@ describe('command palette', () => {
     await u.keyboard('{Control>}k{/Control}')
     await u.click(await screen.findByRole('option', { name: /Kent RO beeping/ }))
     expect(screen.getByTestId('where').textContent).toBe('/chat/s9')
+  })
+})
+
+describe('design system: sunlight mode, language picker, and power-state colors', () => {
+  it('supports sunlight mode and Hindi-first greeting in Settings, without Tamil in the picker', async () => {
+    const u = userEvent.setup()
+    render(<AuthProvider><PrefsProvider><AppProvider><MemoryRouter><SettingsPage /></MemoryRouter></AppProvider></PrefsProvider></AuthProvider>)
+    await u.click(screen.getByRole('radio', { name: 'Sunlight' }))
+    expect(document.documentElement.dataset.theme).toBe('sunlight')
+    const langGroup = screen.getByRole('radiogroup', { name: 'Language' })
+    const langs = within(langGroup).getAllByRole('radio').map(b => b.textContent)
+    expect(langs.some(t => /English/.test(t || ''))).toBe(true)
+    expect(langs.some(t => /Hindi/.test(t || ''))).toBe(true)
+    expect(langs.some(t => /Kannada/.test(t || ''))).toBe(true)
+    expect(langs.some(t => /Tamil/i.test(t || ''))).toBe(false)
+    const hindiToggle = screen.getByRole('switch', { name: /Hindi-first greeting/ })
+    await u.click(hindiToggle)
+    expect((hindiToggle as HTMLInputElement).checked).toBe(true)
+  })
+
+  it('reserves green (ok) and red (crit) for power state only — never decorative status pills', () => {
+    const { container } = render(<>
+      <StatusPill status="active" />
+      <StatusPill status="completed" />
+      <StatusPill status="resolved" />
+      <StatusPill status="not_resolved" />
+    </>)
+    expect(container.innerHTML).not.toMatch(/\b(bg-ok|text-ok|border-ok|bg-crit|text-crit|border-crit)\b/)
   })
 })

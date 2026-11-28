@@ -14,4 +14,4 @@ fi
 if [ -n "$GEMINI_API_KEY" ] && [ "${VECTOR_SEARCH_MODE:-auto}" != "keyword" ]; then
   (python scripts/index_knowledge.py 2>&1 | sed 's/^/[index] /' || true) &
 fi
-exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8000}" --proxy-headers --forwarded-allow-ips='*'
+exec uvicorn app.main:app --host 0.0.0.0 --port "${PORT:-8080}" --proxy-headers --forwarded-allow-ips='*'

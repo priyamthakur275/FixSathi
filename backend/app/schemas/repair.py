@@ -34,6 +34,7 @@ class SessionOut(BaseModel):
     completed_at: datetime | None
     demo: bool = False
     report_id: uuid.UUID | None = None
+    nameplate: dict | None = None
 
 
 class MessageIn(BaseModel):
@@ -91,6 +92,7 @@ class DiagnosisOut(BaseModel):
     knowledge_coverage: str = 'none'
     sources: list[dict] = []
     model_identifier: str
+    latency_ms: int | None = None
     created_at: datetime
     confidence_note: str = 'Confidence values are model estimates, not calibrated probabilities.'
 
@@ -98,6 +100,18 @@ class DiagnosisOut(BaseModel):
 class IdentifyIn(BaseModel):
     media_id: uuid.UUID
     query: str | None = Field(default=None, max_length=120)
+
+
+class NameplateReadIn(BaseModel):
+    media_id: uuid.UUID
+
+
+class NameplatePatchIn(BaseModel):
+    appliance_type: Appliance | None = None
+    brand: str | None = Field(default=None, max_length=80)
+    model: str | None = Field(default=None, max_length=120)
+    error_code: str | None = Field(default=None, max_length=32)
+    serial_number: str | None = Field(default=None, max_length=120)
 
 
 class StepOut(BaseModel):

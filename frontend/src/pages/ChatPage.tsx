@@ -74,13 +74,14 @@ export default function ChatPage() {
     <div className="flex min-h-full flex-col">
       {(sessionId || id) && (
         <div className="glass sticky top-0 z-10 border-b border-line">
-          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-4 py-2 md:px-6">
+          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-3 py-2 md:px-6">
             <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold tracking-tight" title={title}>{loading ? <span className="skeleton inline-block h-4 w-48 align-middle" /> : title}</h1>
             {sessionId && <>
               {unlocked !== null && (unlocked || powerContext) && (
                 <Link to={`/session/${sessionId}#safety`} title={unlocked ? 'Safety statements recorded: power steps are released' : 'Power steps are locked until you record both safety statements'}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${unlocked ? 'border-ok/35 text-ok hover:bg-ok/10' : 'border-crit/35 text-crit hover:bg-crit/10'}`}>
-                  {unlocked ? <ShieldCheck size={13} aria-hidden /> : <Lock size={13} aria-hidden />}<span className="hidden sm:inline">{unlocked ? 'Isolated' : 'Power steps locked'}</span><span className="sr-only sm:hidden">{unlocked ? 'Isolated' : 'Power steps locked'}</span>
+                  className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${unlocked ? 'border-ok/45 bg-ok/10 text-ok hover:bg-ok/15' : 'border-crit/45 bg-crit/10 text-crit hover:bg-crit/15'}`}>
+                  {unlocked ? <ShieldCheck size={14} aria-hidden /> : <Lock size={14} aria-hidden />}
+                  <span>{unlocked ? 'Isolated' : 'Live · Locked'}</span>
                 </Link>
               )}
               <button onClick={() => void pdf()} disabled={pdfBusy} className="btn btn-ghost btn-sm" title={t('chat.downloadPdf')}>{pdfBusy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}<span className="hidden sm:inline">PDF</span></button>

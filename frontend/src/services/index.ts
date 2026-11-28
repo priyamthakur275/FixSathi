@@ -2,9 +2,9 @@
  * Service layer. Every UI screen talks to the FastAPI backend only through these functions.
  * There are no mock implementations: when AI is not configured on the server the API returns AI_NOT_CONFIGURED and the UI says so.
  */
-import { api, tokens } from './api'
+import { api, apiBase, refreshDetailed, tokens } from './api'
 import type {
-  ChatResult, ComponentResult, Diagnosis, Escalation, FileKind, Language, MediaItem, Overview, Page, RepairSession, RepairStep, Report, SafetyState,
+  ChatResult, ComponentResult, Diagnosis, Escalation, FileKind, Language, MediaItem, NameplateResponse, Overview, Page, RepairSession, RepairStep, Report, SafetyState,
   SavedDiagnosis, ServerMessage, SimilarResult, TechRow, Tokens, TrendPoint, User,
 } from '../types'
 
@@ -50,9 +50,83 @@ export const demoService = {
   start: (scenario: string) => api<RepairSession>('/api/v1/demo/sessions', { body: { scenario }, timeoutMs: 30000 }),
 }
 
+export class StreamFallbackError extends Error {
+  constructor(message = 'Streaming unavailable') { super(message); this.name = 'StreamFallbackError' }
+}
+
+export interface ChatStreamCallbacks {
+  onUserMessage?: (m: ServerMessage) => void
+  onWorking?: (stage: string) => void
+  onDelta?: (chunk: string) => void
+  onDone?: (m: ServerMessage) => void
+  onAiError?: (status: 'unavailable' | 'error', err: { code: string; message: string; hint?: string | null }) => void
+}
+
 export const chatService = {
   history: (sid: string) => api<Page<ServerMessage>>(`/api/v1/sessions/${sid}/messages?limit=200`),
   send: (sid: string, text: string, media_ids: string[], channel: 'text' | 'voice' = 'text') => api<ChatResult>(`/api/v1/sessions/${sid}/messages`, { body: { text, media_ids, channel }, timeoutMs: 90000 }),
+  async stream(sid: string, text: string, media_ids: string[], channel: 'text' | 'voice', cb: ChatStreamCallbacks, signal?: AbortSignal): Promise<void> {
+    const runFetch = () => {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'text/event-stream' }
+      const access = tokens.access()
+      if (access) headers.Authorization = `Bearer ${access}`
+      return fetch(`${apiBase}/api/v1/sessions/${sid}/messages/stream`, {
+        method: 'POST', headers, body: JSON.stringify({ text, media_ids, channel }), signal,
+      })
+    }
+    let res: Response
+    try {
+      res = await runFetch()
+      if (res.status === 401 && (await refreshDetailed()) === 'ok') res = await runFetch()
+    } catch (e) {
+      if ((e as Error)?.name === 'AbortError') throw e
+      throw new StreamFallbackError((e as Error)?.message || 'Network stream error')
+    }
+    const ct = res.headers.get('content-type') || ''
+    if (!res.ok || !ct.includes('text/event-stream') || !res.body) {
+      throw new StreamFallbackError(`Stream HTTP ${res.status}`)
+    }
+    const reader = res.body.getReader()
+    const dec = new TextDecoder()
+    let buf = ''
+    let gotDoneOrError = false
+    const handleEvent = (raw: string) => {
+      let ev = 'message'
+      const dataLines: string[] = []
+      for (const line of raw.split('\n')) {
+        if (line.startsWith('event:')) ev = line.slice(6).trim()
+        else if (line.startsWith('data:')) dataLines.push(line.slice(5).trimStart())
+      }
+      if (!dataLines.length) return
+      const payload = JSON.parse(dataLines.join('\n')) as Record<string, unknown>
+      if (ev === 'user_message' && payload.user_message) cb.onUserMessage?.(payload.user_message as ServerMessage)
+      else if (ev === 'working') cb.onWorking?.(typeof payload.stage === 'string' ? payload.stage : 'working')
+      else if (ev === 'delta' && typeof payload.text === 'string') cb.onDelta?.(payload.text)
+      else if (ev === 'done' && payload.assistant_message) { gotDoneOrError = true; cb.onDone?.(payload.assistant_message as ServerMessage) }
+      else if (ev === 'error') {
+        gotDoneOrError = true
+        cb.onAiError?.((payload.ai_status as 'unavailable' | 'error') || 'error', (payload.ai_error as { code: string; message: string; hint?: string | null }) || { code: 'AI_ERROR', message: 'The AI could not reply.' })
+      }
+    }
+    while (true) {
+      const { value, done } = await reader.read()
+      if (value) buf += dec.decode(value, { stream: !done })
+      else if (done) buf += dec.decode()
+      buf = buf.replace(/\r\n/g, '\n')
+      let sep = buf.indexOf('\n\n')
+      while (sep !== -1) {
+        const block = buf.slice(0, sep)
+        buf = buf.slice(sep + 2)
+        if (block.trim()) handleEvent(block)
+        sep = buf.indexOf('\n\n')
+      }
+      if (done) {
+        if (buf.trim()) handleEvent(buf)
+        break
+      }
+    }
+    if (!gotDoneOrError) throw new Error('Stream ended unexpectedly before finishing.')
+  },
 }
 
 /** Every file the technician can attach. The server checks the real bytes again; this check gives a fast, clear message. */
@@ -87,6 +161,11 @@ export const fileService = {
     return api<MediaItem>(`/api/v1/sessions/${sid}/files?source=${source}`, { form: f, timeoutMs: 90000 })
   },
   list: (sid: string) => api<MediaItem[]>(`/api/v1/sessions/${sid}/images`),
+  async sampleNameplate(): Promise<Blob> {
+    const r = await fetch(`${apiBase}/api/v1/samples/nameplate`)
+    if (!r.ok) throw new Error('Sample nameplate image could not be loaded.')
+    return r.blob()
+  },
 }
 
 /** Kept for older call sites: photo-only validation and upload. */
@@ -111,6 +190,9 @@ export const repairService = {
   reopenStep: (sid: string, stepId: string) => api<RepairStep>(`/api/v1/sessions/${sid}/steps/${stepId}/reopen`, { method: 'POST' }),
   stepVisual: (sid: string, stepId: string) => api<MediaItem>(`/api/v1/sessions/${sid}/steps/${stepId}/visual`, { method: 'POST', timeoutMs: 120000 }),
   identify: (sid: string, media_id: string, query?: string) => api<ComponentResult>(`/api/v1/sessions/${sid}/identify-component`, { body: { media_id, query: query || null }, timeoutMs: 90000 }),
+  readNameplate: (sid: string, media_id: string) => api<NameplateResponse>(`/api/v1/sessions/${sid}/read-nameplate`, { body: { media_id }, timeoutMs: 90000 }),
+  updateNameplate: (sid: string, patch: { appliance_type?: string | null; brand?: string | null; model?: string | null; error_code?: string | null; serial_number?: string | null }) =>
+    api<NameplateResponse>(`/api/v1/sessions/${sid}/nameplate`, { method: 'PATCH', body: patch }),
   safety: (sid: string) => api<SafetyState>(`/api/v1/sessions/${sid}/safety`),
   confirmSafety: (sid: string, power_off_confirmed: boolean, tester_checked: boolean) => api<SafetyState>(`/api/v1/sessions/${sid}/safety/confirm`, { body: { power_off_confirmed, tester_checked } }),
   escalate: (sid: string, reason: string, priority = 'normal') => api<Escalation>(`/api/v1/sessions/${sid}/escalate`, { body: { reason, priority } }),
@@ -146,14 +228,59 @@ export interface LookupResult {
   match: 'error_code' | 'keyword' | 'embedding' | 'filter'; related_category: boolean; source_name: string; source_url: string | null; license: string; verification_status: string
 }
 export interface LookupResponse { query: string; appliance_type: string | null; brand: string | null; error_codes_found: string[]; error_codes_unknown: string[]; coverage: string; results: LookupResult[] }
+export interface ExpectedReading {
+  id: string
+  appliance_type: string
+  parameter: string
+  hindi_name: string
+  expected_range: string
+  out_of_range_meaning: string
+  condition: 'isolated_and_discharged' | 'visual_or_non_contact' | 'authorised_service_only'
+}
+export interface ExpectedReadingsResponse { appliance_type: string; disclaimer: string; items: ExpectedReading[] }
 /** Fault finder: error codes and symptoms looked up in the sourced records, without the AI. */
 export const lookupService = {
   search: (q: string, appliance?: string | null) => api<LookupResponse>(`/api/v1/lookup?q=${encodeURIComponent(q)}${appliance ? `&appliance_type=${appliance}` : ''}`),
+  expectedReadings: (appliance?: string | null) =>
+    api<ExpectedReadingsResponse>(`/api/v1/expected-readings${appliance && appliance !== 'unknown' ? `?appliance_type=${encodeURIComponent(appliance)}` : ''}`),
 }
 
 export interface KnowledgeStats { total: number; by_category: Record<string, number>; by_verification_status: Record<string, number> }
 export interface AiStatus { configured: boolean; models: Record<string, string | null> }
+export interface EvalMetrics { cases: number; 'hit@1': number; 'hit@3': number; 'hit@6': number; mrr: number }
+export interface EvalMissTop3 { id: string; query: string; rank: number; top3: string[] }
+export interface EvalDetectionMiss { id: string; query: string; expected: string; got: string }
+export interface EvalSplit {
+  overall: EvalMetrics
+  by_language: Record<string, EvalMetrics>
+  by_appliance: Record<string, EvalMetrics>
+  misses_top3: EvalMissTop3[]
+}
+export interface EvalRetrievalSuite {
+  appliance_selected: EvalSplit
+  appliance_detected: EvalSplit
+  appliance_detection_accuracy: number
+  appliance_detection_misses: EvalDetectionMiss[]
+}
+export interface EvalSafetyError { id: string; text: string; expected: string; withheld: boolean }
+export interface EvalSafetySuite {
+  cases: number
+  unsafe_withheld: string
+  recall_unsafe: number
+  safe_shown: string
+  false_positive_rate: number
+  errors: EvalSafetyError[]
+}
+export interface EvaluationResults {
+  date: string
+  retrieval_channels: string
+  note: string
+  development: { retrieval: EvalRetrievalSuite; safety_filter: EvalSafetySuite }
+  held_out: { retrieval: EvalRetrievalSuite; safety_filter: EvalSafetySuite }
+  held_out_v2: { retrieval: EvalRetrievalSuite }
+}
 export const systemService = {
   knowledge: () => api<KnowledgeStats>('/api/v1/knowledge/stats'),
   ai: () => api<AiStatus>('/api/v1/ai/status'),
+  evaluation: () => api<EvaluationResults>('/api/v1/evaluation'),
 }

@@ -20,6 +20,12 @@ class DemoClient(GeminiClient):
     async def generate_text(self, op, contents, system, temperature=0.4):
         replies = self.sc['chat']; return replies[min(self.turn, len(replies) - 1)], self._meta()
 
+    async def stream_text(self, op, contents, system, temperature=0.4):
+        text, meta = await self.generate_text(op, contents, system, temperature)
+        for line in text.splitlines(keepends=True):
+            yield line, None
+        yield '', meta
+
     async def generate_json(self, op, schema, contents, system, temperature=0.2):
         return schema.model_validate(json.loads(json.dumps(self.sc[op]))), self._meta()
 

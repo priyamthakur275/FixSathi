@@ -4,21 +4,21 @@
 
 **An AI repair copilot for appliance technicians in India: grounded diagnosis, a safety lock enforced by the server, and voice in English, Hindi and Kannada.**
 
-[**Live app**](https://fixsaathi-vu9s.onrender.com) · [API docs](https://fixsaathi-vu9s.onrender.com/docs) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md)
+[**Live app**](https://fixsaathi-vu9s.onrender.com) · [API docs](https://fixsaathi-vu9s.onrender.com/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Model Usage](docs/MODEL_USAGE.md) · [Built During Hackathon](docs/BUILT_DURING_HACKATHON.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md)
 
 ![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-441-2ea44f)
+![Tests](https://img.shields.io/badge/tests-496-2ea44f)
 ![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
 
 <p align="center">
-<a href="docs/demo/fixsaathi-demo.mp4"><img src="docs/demo/demo.gif" width="860" alt="FixSaathi walkthrough: the server withholds power-sensitive steps until the technician records two safety statements, then releases them and writes the report"></a>
-<br><sub><a href="docs/demo/fixsaathi-demo.mp4"><b>Watch the 53-second walkthrough (MP4)</b></a></sub>
+<img src="docs/demo/demo.gif" width="860" alt="FixSaathi walkthrough: login, Hindi voice home, server-withheld safety lock, unlock, part schematics, public evaluation, and manager dashboard">
+<br><sub><b><a href="DEMO_SCRIPT.md">Read the 90-second demo script &amp; judge Q&amp;A</a></b> · <a href="docs/demo/fixsaathi-demo.mp4">Watch MP4 walkthrough (Demo: scripted sample, not live AI)</a> · Captured from a local run against the updated UI</sub>
 </p>
 
 <table>
@@ -27,7 +27,8 @@
 <td width="32%"><img src="docs/screenshots/mobile-home.png" alt="FixSaathi home screen on a phone"></td>
 </tr>
 <tr>
-<td colspan="2"><img src="docs/screenshots/chat.png" alt="Chat: a power-sensitive step is withheld until isolation is recorded"></td>
+<td><img src="docs/screenshots/chat.png" alt="Chat: a power-sensitive step is withheld until isolation is recorded"></td>
+<td><img src="docs/screenshots/evaluation.png" alt="Public evaluation page rendering held-out retrieval and safety results"></td>
 </tr>
 </table>
 
@@ -45,13 +46,16 @@ FixSaathi gives that technician a copilot on their phone: describe the fault by 
 |---|---|
 | **Grounded diagnosis** | Every answer is built from the repair records retrieved for that question (377 records: manufacturer documentation, the ApplianceDB error-code dataset and FixSaathi's own guidance). The server deletes any citation that was not retrieved, and marks a fault as unverified when no record supports it. |
 | **Server-side safety lock** | Steps that need the power off are sent to the phone *without their instructions* until the technician records two statements: "power switched off at the MCB" and "checked with my own tester". AI chat and voice replies are screened sentence by sentence before anyone reads or hears them. Microwave internals are always handed over to authorised service. |
-| **Voice, three languages** | Speak a fault, hear the answer. Gemini Live for real-time voice, with Gemini text-to-speech and the device voice as fallbacks. The interface works in English, Hindi and Kannada, and the search understands Hinglish ("pankha dheere chal raha hai") and Devanagari Hindi. |
+| **Nameplate & error display reader** | Upload a photo of a rating label or digital display; Gemini Vision extracts brand, model and error code to feed retrieval and lets the technician verify or correct them before diagnosis (falling back cleanly to manual entry when AI is unavailable). |
+| **Server-screened SSE streaming** | Chat replies stream word-by-word over SSE while `StreamScreener` buffers lines/sentences on the server so no power-sensitive instruction leaks before isolation is recorded, with automatic fallback to standard REST replies. |
+| **Expected readings (reference only)** | Nominal values and out-of-range meanings per appliance (`GET /expected-readings`), clearly framed as reference only — never instructions to work on live circuits. |
+| **Voice, three languages** | Speak a fault, hear the answer. Gemini Live for real-time voice, with Gemini text-to-speech and the device voice as fallbacks. The interface works in English, Hindi and Kannada (plus high-contrast **Sunlight mode** and a Hindi-first Home toggle), and chat prompts use spoken Hindi with real technician part names. |
 | **Photos and documents** | Attach appliance photos, a camera capture, PDFs or Word files. The server checks every file's real type and strips location data from photos. |
-| **Fault finder** | Type an error code or a symptom ("LG CH38", "fan hums but does not spin") and get the matching records at once, straight from the knowledge base: no AI call, no quota, works without a Gemini key. Checks that need the power isolated are sent locked, as in a session. |
+| **Fault finder** | Type an error code or a symptom ("LG CH38", "fan hums but does not spin") and get the matching records at once, straight from the knowledge base (with bounded TTL lookup caching): no AI call, no quota, works without a Gemini key. Checks that need the power isolated are sent locked, as in a session. |
 | **Send to customer** | A finished report becomes a short plain-text summary of the visit (problem, work done, result, isolation recorded) to send on WhatsApp or copy. |
-| **Answer feedback** | Thumbs up or down on each AI answer, with a note on what was wrong. When a job is closed the technician rates the guidance and says whether the AI's likely cause was right. The manager dashboard shows the share of answers technicians found helpful. |
-| **Answer-quality check** | 30 technician questions asked to the deployed app and graded by fixed rules: right points covered, records cited, no invented error codes, no live-work step readable while the power is locked. See [Results](#results). |
-| **Reports and dashboard** | A service report and PDF built only from what was recorded in the session; a manager view with sessions, first-time-fix rate, escalations and ratings. |
+| **Answer feedback** | Thumbs up or down on each AI answer, with a note on what was wrong. When a job is closed the technician rates the guidance and says whether the AI's likely cause was right. The manager dashboard shows the repair funnel and the share of answers technicians found helpful. |
+| **Public `/evaluation` & live checks** | Unauthenticated [`/evaluation`](docs/EVALUATION.md) page renders [`EVALUATION_RESULTS.json`](docs/EVALUATION_RESULTS.json) verbatim (passes, misses and false positives). Plus 30 technician questions graded against the deployed app; see [Results](#results). |
+| **Reports and dashboard** | A service report and PDF built only from what was recorded in the session; a manager view with repair funnel, sessions, first-time-fix rate, escalations and ratings. |
 
 ## Results
 
@@ -113,13 +117,44 @@ flowchart TD
 3. **Screen.** `app/core/power_rules.py` is the single definition of "power-sensitive", shared by repair steps, chat, Live voice and the dataset importer, including Hindi verbs (*khol*, *nikal*, *badal*). `SafetyService.guard` is the only code path that can permit a power-sensitive action, and the AI has no tool that can record a safety statement. Every blocked attempt is logged.
 4. **Fail safely.** Every Gemini failure is classified (bad key, quota, timeout, blocked...) and shown with a fix; the technician's message is saved either way. Rate limits fall back to the next model. Live audio that cannot be screened is not played.
 
+## Built with Google (Proven Usage)
+
+Only models and services verified with real unmocked calls on `https://fixsaathi-vu9s.onrender.com` (3/3 consecutive `smoke_live.py` passes on 2026-11-28) are claimed below. During the hackathon sprint, FixSaathi was also temporarily deployed on **Google Cloud Run** and **Cloud SQL for PostgreSQL 16** (3x probe history in [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md)).
+
+| Role | Proven Model / Service | Verified Live Behavior |
+|---|---|---|
+| Streamed chat (English, Devanagari Hindi, Hinglish) | `gemini-3.5-flash-lite` | Verified in 3/3 consecutive Render SSE smoke runs (`devanagari=True`, server-side safety lock enforced) |
+| Nameplate & error display Vision | `gemini-3.5-flash-lite` | Verified in 3/3 Render runs (`LG LS-Q18YNZA` + `CH38`, matched 5 KB records) |
+| Structured diagnosis | `gemini-3.5-flash-lite` | Verified in 3/3 Render runs (`2,458–3,699 ms`, 3 faults); provenance panel displays `model_identifier` and latency |
+| Real-time voice & video relay | `gemini-3.8-live` (`v1beta` WebSocket) | Verified live in 3/3 Render runs on `WS /api/v1/live/{id}` (`session_ready`, `transcription`, `audio_chunk`) |
+| Spoken replies (TTS) | `gemini-3.8-flash-tts` (`v1beta`, `Charon`) | Verified live in 3/3 Render runs on `GET /speech` (HTTP 200, `audio/wav`, `1.84–4.30 MB`); device voice fallback |
+| Knowledge embeddings | `gemini-embedding-2` | Reported available on Render `/health`; configured for hybrid retrieval (`VECTOR_SEARCH_MODE=auto`) alongside PostgreSQL FTS |
+| Server-side safety guardrail | `StreamScreener` + `power_rules.py` | Deterministic server check on every streamed sentence and step before anything reaches the client |
+| Prototyping | **Antigravity** | Used to prototype the live Gemini integration, Cloud Run & Render deployments, reliability hardening, and UI polish |
+
+**Not claimed:** `gemini-4-neon` and `gemini-4-carbon` returned `429 RESOURCE_EXHAUSTED` (0/3) on the sprint API key, `gemini-4-hydrogen` answered 0/3 probes under 8 s, `gemini-decision-1` returned `404 NOT_FOUND` on `v1beta`, and `gemini-3.1-flash-image` was not probed live.
+
+Scripted demo scenarios are no longer placed in the primary workspace navigation and live solely behind the clearly labelled **Offline backup** footer link (`/demo`).
+
+## Built during the hackathon vs before
+
+Summarised directly from `git log` on branch `antigravity-v2` (full commit-by-commit breakdown in [docs/BUILT_DURING_HACKATHON.md](docs/BUILT_DURING_HACKATHON.md)):
+
+- **Before Nov 27:**
+  - **Pre-hackathon baseline (`7bc3aed`, imported 2026-11-26):** `FixSathi-main` — the core FastAPI + React + PostgreSQL app built earlier for Google Startup Buildathon India 2026 (auth, sessions, 377-record repair KB, hybrid retrieval, server-side power-isolation safety lock, diagnosis/steps/reports, Gemini Live relay, TTS, and 350+ tests).
+  - **Nov 26 UI & design foundation (`0723148`, `98cbf4e`, `5473d4f`, `b647b90`):** Unified token system, high-contrast Sunlight mode, Hindi-first greeting, strict power-state colors, mobile-first 5-stage workspace, diagnosis "Why" panel, SVG part cards, and manager funnel.
+- **During the hackathon (Nov 25–28, 2026):**
+  - **Live Vision, streaming, evaluation & Hindi polish (`1ce695b`, `4ae2765`, `945f6b4`, `cb11d11`, `c742595`, `05b9d36`, `2d71534`, `3fc7d8b`):** Gemini Vision nameplate & error-display reader with technician verification, server-screened SSE chat streaming (`StreamScreener`), public `/evaluation` page, expected-readings reference cards, spoken Hindi technician vocabulary, and unmocked `smoke_live.py`.
+  - **Cloud Run + Cloud SQL sprint deployment & stage reliability (`67a9254`, `ce9083d`, `32c78a9`, `2c1d96a`, `6548c53`, `4501cd4`, `8d67bee`):** Single-container `Dockerfile`, temporary Cloud Run + Cloud SQL deployment, per-op timeouts, 5-minute circuit breaker, SSE `working` heartbeats, "How this answer was made" provenance panel, 503 jittered retries, and 429 skip.
+  - **Permanent Render deployment & submission polish (`a565765` → HEAD):** Configured `render.yaml` for `gemini-3.5-flash-lite` and external Postgres, verified 3x end-to-end smoke passes on `https://fixsaathi-vu9s.onrender.com`, aligned `README.md`, `DEMO_SCRIPT.md`, and GitHub Actions workflows.
+
 ## Engineering
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 441 automated tests: 368 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 73 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the answer-quality check above.
+- **Tests:** 496 automated tests: 405 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 91 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the live smoke script (`backend/scripts/smoke_live.py`).
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
-- **Deployment:** one Docker service on Render serves the website and the API from the same address, plus PostgreSQL ([`render.yaml`](render.yaml)); no URL is written into the config, so it deploys to any account. Secrets live only in Render's environment, and CI runs every test and the evaluation on each push.
+- **Deployment:** one single-origin Docker service ([`Dockerfile`](Dockerfile), [`render.yaml`](render.yaml)) deployed live on **Render** (`https://fixsaathi-vu9s.onrender.com`, Singapore, auto-deploying from `antigravity-v2`) with Render free PostgreSQL (`fixsaathi-db`). Also deployed temporarily on **Google Cloud Run** and **Cloud SQL for PostgreSQL 16** during the hackathon sprint ([`DEPLOY_CLOUDRUN.md`](DEPLOY_CLOUDRUN.md)).
 
 ```
 frontend/   React app
@@ -130,9 +165,9 @@ docs/       architecture, API, safety and security, retrieval, voice, datasets, 
 
 ## Deploy your own copy
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/priyamthakur275/FixSathi)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/priyamthakur275/FixSathi/tree/antigravity-v2)
 
-Sign in to Render, paste a Gemini API key when asked (or leave it empty to try the labelled demo scenarios), and apply. Render creates the database and one web service; the first build takes about ten minutes, and the app is at the service's `onrender.com` address.
+Sign in to Render and apply the [`render.yaml`](render.yaml) Blueprint on branch `antigravity-v2` (choosing the same region as your Neon database). Paste your external **Neon PostgreSQL direct URL** (ending with `?sslmode=require`) into `DATABASE_URL` and your personal **Gemini API key** into `GEMINI_API_KEY` (`SECRET_KEY` is generated automatically; without `GEMINI_API_KEY`, the labelled Offline backup demos still work). On startup, `render_start.sh` runs Alembic migrations, upserts the 377 knowledge records, and serves the React + FastAPI app from one URL.
 
 ## Run it locally
 
@@ -163,17 +198,19 @@ cd ../frontend && npm test && npm run build && npm run lint
 # evaluation: see docs/EVALUATION.md
 ```
 
-## Honest limits
+## Honest limitations
 
 - **Small pilot only.** Seven technicians tried it once on a fault of their choice and were reached through personal contacts. It has not yet been used day to day on paid jobs.
 - **The safety statements are the technician's word.** FixSaathi cannot measure voltage or verify isolation, and the app and reports say so.
 - **The knowledge base is small** (377 records, two-thirds of them washing-machine error codes). Answers outside it are marked as not grounded.
-- **Free hosting.** The API runs on Render's free plan, which sleeps after 15 idle minutes. A GitHub Actions job pings it every 4 minutes to keep it awake; if that job is late, the first request can still take 30-50 seconds.
+- **Free-plan cold start.** Render's free web plan sleeps after 15 idle minutes; waking it takes up to ~50 seconds (`.github/workflows/keepalive.yml` pings `/health` every 4 minutes to keep it awake).
+- **Database expiry date.** The current live database (`fixsaathi-db`) runs on Render's free PostgreSQL tier, which expires about 30 days after creation (around **2026-12-28** unless upgraded or pointed to an external PostgreSQL host such as Neon via `DATABASE_URL`).
+- **Model availability & language script quirks.** `gemini-4-neon`, `gemini-4-carbon`, `gemini-4-hydrogen`, and `gemini-decision-1` are not relied on (see [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md)), and Devanagari Hindi prompts can occasionally receive a Roman Hinglish reply depending on model output.
 - **No live-testing mode, by design.** Some checks (running current with a clamp meter, PCB voltages) need the supply on. FixSaathi does not guide work on live circuits; it tells the technician what the reading should be checked against and leaves live work to their training and judgement.
 
 ## Team
 
-Built by **Prerana P Jois** and **Priyam Thakur** (Team Tensor Trailblazers, BMS College of Engineering, Bengaluru) for the Google Startup Buildathon India 2026, where the project reached the end of Round 2.
+Built by **Prerana P Jois** and **Priyam Thakur** (Team Tensor Trailblazers, BMS College of Engineering, Bengaluru) for the Google Startup Buildathon India 2026, where the project reached the end of Round 2. The live Gemini integration, temporary Google Cloud Run sprint deployment, Render deployment, and UI polish were prototyped with **Antigravity**.
 
 ## Data and licence
 

@@ -16,7 +16,7 @@ export function SavedDiagnoses() {
       <PageHeader eyebrow="Workspace" title="Saved diagnoses" subtitle="AI diagnoses from your repair sessions." />
       {loading && <Skeleton className="h-40" />}
       {error && <ErrorState message={error} onRetry={retry} />}
-      {data && data.length === 0 && <EmptyState icon={<Bookmark size={22} />} title="No diagnoses yet" hint="Run a diagnosis inside a repair session." />}
+      {data && data.length === 0 && <EmptyState icon={<Bookmark size={22} />} title="No diagnoses yet" hint="Run a diagnosis inside a repair session." action={<Link to="/" className="btn btn-primary">Start a repair</Link>} />}
       {data && data.length > 0 && (
         <ul className="card divide-y divide-line/70 overflow-hidden">
           {data.map(d => {
@@ -53,14 +53,14 @@ export function SeniorSupport() {
       <PageHeader eyebrow="Team" title="Senior technician support" subtitle={isManager ? 'Escalations from your team.' : 'Your requests for senior help.'} />
       {loading && <Skeleton className="h-40" />}
       {error && <ErrorState message={error} onRetry={retry} />}
-      {data && data.length === 0 && <EmptyState icon={<HandHelping size={22} />} title="No escalations" hint="Ask a senior technician from inside a repair session." />}
+      {data && data.length === 0 && <EmptyState icon={<HandHelping size={22} />} title="No escalations" hint="Ask a senior technician from inside a repair session." action={<Link to="/history" className="btn btn-primary">View active repairs</Link>} />}
       <ul className="space-y-2.5">
         {data?.map(e => (
           <li key={e.id} className="card px-5 py-4">
             <div className="flex flex-wrap items-center gap-2"><Link to={`/session/${e.session_id}`} className="font-medium hover:text-teal">{appliances.find(a => a.id === e.appliance_type)?.label ?? 'Repair'} <span className="num text-sm font-normal text-ink-3">{e.session_reference}</span></Link><StatusPill status={e.status} /><span className="text-xs text-ink-3">{e.technician ? `${e.technician} · ` : ''}{when(e.created_at)}</span></div>
             <p className="mt-1 text-sm">{e.reason}</p>
             {e.diagnosis_summary && <p className="text-sm text-ink-2">Diagnosis: {e.diagnosis_summary}</p>}
-            {isManager && e.status !== 'resolved' && <div className="mt-2 flex gap-2">{e.status === 'open' && <button onClick={() => void update(e.id, 'in_review')} className="btn btn-sm">Mark in review</button>}<button onClick={() => void update(e.id, 'resolved')} className="btn btn-sm !border-ok/40 !text-ok">Mark resolved</button></div>}
+            {isManager && e.status !== 'resolved' && <div className="mt-2 flex gap-2">{e.status === 'open' && <button onClick={() => void update(e.id, 'in_review')} className="btn btn-sm">Mark in review</button>}<button onClick={() => void update(e.id, 'resolved')} className="btn btn-sm !border-accent/40 !text-accent">Mark resolved</button></div>}
           </li>
         ))}
       </ul>
@@ -84,7 +84,10 @@ export function HelpPage() {
     <div className="page page-read">
       <PageHeader eyebrow="Support" title="Help and support" subtitle="How FixSaathi works, what it can and cannot do, and how your data is handled." />
       <div className="space-y-2">{faq.map(([q, a]) => <details key={q} className="card group px-5 py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium marker:hidden">{q}<span className="text-ink-3 transition-transform group-open:rotate-45" aria-hidden>+</span></summary><p className="mt-2 text-sm leading-relaxed text-ink-2">{a}</p></details>)}</div>
-      <button onClick={() => { newSession(); nav('/chat') }} className="btn btn-brand mt-6"><MessageSquareText size={16} />Ask the assistant</button>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button onClick={() => { newSession(); nav('/chat') }} className="btn btn-brand"><MessageSquareText size={16} />Ask the assistant</button>
+        <Link to="/evaluation" className="btn">View evaluation results</Link>
+      </div>
     </div>
   )
 }

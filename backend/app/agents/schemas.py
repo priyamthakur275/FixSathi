@@ -87,3 +87,23 @@ class ComponentOut(BaseModel):
         if not self.found:
             self.box = None
         return self
+
+
+class NameplateOut(BaseModel):
+    readable: bool
+    appliance_type: str | None = Field(default=None, max_length=40)
+    brand: str | None = Field(default=None, max_length=80)
+    model: str | None = Field(default=None, max_length=120)
+    error_code: str | None = Field(default=None, max_length=32)
+    serial_number: str | None = Field(default=None, max_length=120)
+    raw_text: str = Field(default='', max_length=600)
+    confidence: float = Field(default=0.0, ge=0, le=1)
+    notes: str | None = Field(default=None, max_length=300)
+
+    @field_validator('appliance_type')
+    @classmethod
+    def _app(cls, v: str | None) -> str | None:
+        if not v:
+            return None
+        v = v.strip()
+        return v if v in APPLIANCES and v != 'unknown' else None

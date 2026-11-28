@@ -21,8 +21,8 @@ export default function DemoPage() {
   }
   return (
     <div className="page page-mid">
-      <h1 className="font-display text-[26px] leading-tight md:text-[34px]">Demo scenarios</h1>
-      <p className="mt-2 max-w-2xl text-ink-2">Walk through a complete repair even when live AI is unavailable. Replies, diagnosis and steps in these sessions are <b className="text-ink">scripted sample content written by our team, not live AI</b>, and every screen says so.</p>
+      <h1 className="font-display text-[26px] leading-tight md:text-[34px]">Offline backup scenarios</h1>
+      <p className="mt-2 max-w-2xl text-ink-2">Offline backup for walks when live Gemini is unavailable or running without an API key. All normal chats use live Gemini; replies, diagnosis and steps inside these backup sessions are <b className="text-ink">scripted sample content written by our team, not live AI</b>.</p>
       <div className="mt-5 flex max-w-2xl items-start gap-3 rounded-2xl border border-teal/30 bg-teal/[0.07] px-4 py-3.5 text-sm text-ink-2">
         <ShieldCheck size={18} className="mt-0.5 shrink-0 text-teal" />
         <span>What is real: your login, the session, the photo, the knowledge-base sources, the <b className="text-ink">server-side safety lock</b>, the event log and the service report. Demo mode cannot skip the safety checks.</span>

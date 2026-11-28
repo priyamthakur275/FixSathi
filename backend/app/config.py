@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     google_cloud_region: str = 'asia-south1'
     gemini_live_model: str | None = None
     gemini_agent_model: str | None = None
+    # Optional fast model used first for free-text chat replies (`op='chat'`); agent_model + fallbacks remain primary for diagnosis/vision.
+    gemini_fast_model: str | None = None
     # Comma-separated models tried in order when the agent model is rate-limited or not in the key's tier. Logged on every use.
     gemini_agent_fallback_models: str | None = None
     # Lower thinking = much faster replies. low | medium | high | empty (model default).
@@ -29,6 +31,8 @@ class Settings(BaseSettings):
     gemini_embed_model: str | None = None
     nano_banana_model: str | None = None
     gemini_timeout_seconds: float = 45
+    gemini_chat_timeout_seconds: float = 8.0
+    gemini_diagnosis_timeout_seconds: float = 20.0
     gemini_max_retries: int = 1
     # Chat replies only: seconds before the first fallback model is also asked (0 disables). See HEDGED_OPS in the Gemini client.
     gemini_hedge_seconds: float = 12
@@ -67,7 +71,7 @@ class Settings(BaseSettings):
     ai_requests_per_minute: int = 20
     ai_requests_per_day: int = 400
 
-    @field_validator('gemini_api_key', 'gemini_live_model', 'gemini_agent_model', 'gemini_embed_model', 'nano_banana_model', 'gemini_tts_model',
+    @field_validator('gemini_api_key', 'gemini_live_model', 'gemini_agent_model', 'gemini_fast_model', 'gemini_embed_model', 'nano_banana_model', 'gemini_tts_model',
                      'elevenlabs_api_key', 'elevenlabs_voice_id', 'elevenlabs_model_kannada', mode='before')
     @classmethod
     def _strip(cls, v):

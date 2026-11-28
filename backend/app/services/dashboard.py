@@ -1,8 +1,8 @@
 from datetime import timedelta
-from sqlalchemy import func, select
+from sqlalchemy import distinct, func, select
 from sqlalchemy.orm import Session
 from ..db.base import utcnow
-from ..db.models import AIUsage, Conversation, EscalationRequest, Feedback, RepairSession, User
+from ..db.models import AIUsage, Conversation, DiagnosisResult, EscalationRequest, Feedback, RepairSession, SafetyConfirmation, User
 from .access import session_scope
 
 TERMINAL = ('completed', 'cancelled')
@@ -28,8 +28,14 @@ def overview(db: Session, user: User) -> dict:
                           .where(Conversation.session_id.in_(sub), Conversation.role == 'assistant')).one()
     lat = db.scalar(select(func.avg(AIUsage.latency_ms)).where(AIUsage.session_id.in_(sub), AIUsage.ok.is_(True)))
     open_esc = db.scalar(select(func.count()).select_from(EscalationRequest).where(EscalationRequest.session_id.in_(sub), EscalationRequest.status == 'open'))
+    diagnosed = db.scalar(select(func.count(distinct(DiagnosisResult.session_id))).where(DiagnosisResult.session_id.in_(sub))) or 0
+    isolated = db.scalar(
+        select(func.count(distinct(SafetyConfirmation.session_id)))
+        .where(SafetyConfirmation.session_id.in_(sub), SafetyConfirmation.power_off_confirmed.is_(True), SafetyConfirmation.tester_checked.is_(True))
+    ) or 0
     return {
         'total_sessions': total, 'completed': completed, 'active': active, 'escalated': escalated, 'open_escalations': open_esc,
+        'funnel': {'sessions': total, 'diagnosed': diagnosed, 'isolated': isolated, 'fixed_first_time': ftf_yes},
         'first_time_fix_rate': round(ftf_yes / ftf_known, 3) if ftf_known else None,
         'first_time_fix_sample': ftf_known,
         'avg_repair_minutes': round(float(dur) / 60, 1) if dur else None,

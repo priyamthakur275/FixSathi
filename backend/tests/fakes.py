@@ -13,6 +13,8 @@ class FakeGemini(gclient.GeminiClient):
     def __init__(self):
         super().__init__(client=object())
         self.json: dict = {}; self.text = 'Demo-free scripted reply'; self.fail: dict = {}; self.calls: list = []; self.systems: list = []
+        self.stream_chunks: list[str] | None = None
+        self.stream_fail_after: tuple[int, Exception] | None = None
 
     def model(self, kind):
         return {'agent': 'fake-agent', 'live': 'fake-live', 'embed': 'fake-embed', 'image': 'fake-image', 'tts': 'fake-tts'}[kind]
@@ -32,6 +34,20 @@ class FakeGemini(gclient.GeminiClient):
         self.calls.append((op, contents)); self.systems.append(system)
         if op in self.fail: raise self.fail[op]
         return self.text, gclient.CallResult(model='fake-agent', latency_ms=5)
+
+    async def stream_text(self, op, contents, system, temperature=0.4):
+        self.calls.append((op, contents)); self.systems.append(system)
+        if op in self.fail and not self.stream_fail_after:
+            raise self.fail[op]
+        chunks = self.stream_chunks if self.stream_chunks is not None else [self.text]
+        for idx, ch in enumerate(chunks):
+            if self.stream_fail_after and idx >= self.stream_fail_after[0]:
+                raise self.stream_fail_after[1]
+            if ch:
+                yield ch, None
+        if self.stream_fail_after and len(chunks) <= self.stream_fail_after[0]:
+            raise self.stream_fail_after[1]
+        yield '', gclient.CallResult(model='fake-agent', latency_ms=5)
 
     async def speech(self, text, voice, direction=None):
         self.calls.append(('tts', text, voice, direction))

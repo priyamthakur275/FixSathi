@@ -1,15 +1,31 @@
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
+_HEADERS = [
+    (b'x-content-type-options', b'nosniff'),
+    (b'x-frame-options', b'DENY'),
+    (b'referrer-policy', b'strict-origin-when-cross-origin'),
+    (b'strict-transport-security', b'max-age=63072000; includeSubDomains'),
+    (b'permissions-policy', b'geolocation=(), payment=(), usb=()'),
+]
 
 
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Adds baseline HTTP security headers to all API responses."""
+class SecurityHeadersMiddleware:
+    """Adds baseline HTTP security headers without buffering streaming responses."""
 
-    async def dispatch(self, request: Request, call_next):
-        response = await call_next(request)
-        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
-        response.headers.setdefault('X-Frame-Options', 'DENY')
-        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
-        response.headers.setdefault('Strict-Transport-Security', 'max-age=63072000; includeSubDomains')
-        response.headers.setdefault('Permissions-Policy', 'geolocation=(), payment=(), usb=()')
-        return response
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] != 'http':
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message):
+            if message['type'] == 'http.response.start':
+                hdrs = list(message.get('headers', []))
+                present = {k.lower() for k, _ in hdrs}
+                for k, v in _HEADERS:
+                    if k not in present:
+                        hdrs.append((k, v))
+                message = {**message, 'headers': hdrs}
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)

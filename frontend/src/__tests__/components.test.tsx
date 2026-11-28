@@ -50,6 +50,18 @@ describe('password visibility', () => {
     await u.click(screen.getByRole('button', { name: 'Already have an account? Sign in' }))
     expect((screen.getByLabelText('Password') as HTMLInputElement).type).toBe('password')
   })
+
+  it('warms up the server with a /health call on mount', async () => {
+    const fetched = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) => {
+      void _url; void _init
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'content-type': 'application/json' } })
+    })
+    vi.stubGlobal('fetch', fetched)
+    wrap(<LoginPage />)
+    await waitFor(() => expect(fetched).toHaveBeenCalled())
+    expect(String(fetched.mock.calls[0]?.[0] ?? '')).toMatch(/\/health$/)
+    vi.unstubAllGlobals()
+  })
 })
 
 // ---------------- attach menu and files ----------------

@@ -31,6 +31,9 @@ async def main(a):
         avail = {}
         async for m in await g.raw.aio.models.list(config={'page_size': 200}):
             avail[(m.name or '').removeprefix('models/')] = set(m.supported_actions or [])
+        async for m in await g.raw_beta.aio.models.list(config={'page_size': 200}):
+            k = (m.name or '').removeprefix('models/')
+            avail.setdefault(k, set()).update(m.supported_actions or [])
         show('API key accepted by Google', True, f'{len(avail)} models visible')
     except Exception as e:  # noqa: BLE001
         c = classify(e); show('API key accepted by Google', False, f'{c.code}: {c.message}'); print(f'        Google said: {c.provider_message}\n        Fix: {c.hint}'); return 1
@@ -60,7 +63,7 @@ async def main(a):
         if a.live:
             from app.services.live import build_config
             try:
-                async with g.raw.aio.live.connect(model=s.gemini_live_model, config=build_config('English')):
+                async with g.raw_beta.aio.live.connect(model=s.gemini_live_model, config=build_config('English')):
                     pass
                 show('Live connect', True)
             except Exception as e:  # noqa: BLE001
