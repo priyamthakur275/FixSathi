@@ -184,6 +184,7 @@ export const cameraService = {
 export const repairService = {
   diagnose: (sid: string, media_ids: string[] = []) => api<Diagnosis>(`/api/v1/sessions/${sid}/diagnose`, { body: { media_ids }, timeoutMs: 90000 }),
   diagnosis: (sid: string) => api<Diagnosis | null>(`/api/v1/sessions/${sid}/diagnosis`),
+  acknowledgeChallenger: (sid: string) => api<Diagnosis>(`/api/v1/sessions/${sid}/diagnosis/challenger-check`, { method: 'POST' }),
   steps: (sid: string) => api<RepairStep[]>(`/api/v1/sessions/${sid}/steps`),
   generateSteps: (sid: string) => api<RepairStep[]>(`/api/v1/sessions/${sid}/steps/generate`, { method: 'POST', timeoutMs: 90000 }),
   completeStep: (sid: string, stepId: string) => api<RepairStep>(`/api/v1/sessions/${sid}/steps/${stepId}/complete`, { method: 'POST' }),
@@ -271,6 +272,37 @@ export interface EvalSafetySuite {
   false_positive_rate: number
   errors: EvalSafetyError[]
 }
+export interface EvalChallengerDisagreement {
+  id: string
+  query: string
+  top_fault_hit: boolean
+  diag_hit: boolean
+  confidence_before?: number | null
+  revised_confidence?: number | null
+  claim: string
+  why: string
+}
+export interface EvalChallengerSuite {
+  date: string
+  dataset: string
+  cases: number
+  model: string
+  ok_count: number
+  unavailable_count: number
+  agrees_count: number
+  disagrees_count: number
+  agree_rate: number
+  disagree_rate: number
+  safety_concerns_flagged: number
+  avg_latency_ms: number
+  median_latency_ms: number
+  max_latency_ms: number
+  disagreements_on_top_fault_miss: number
+  disagreements_on_top_fault_hit: number
+  agreements_on_top_fault_miss: number
+  note: string
+  disagreements: EvalChallengerDisagreement[]
+}
 export interface EvaluationResults {
   date: string
   retrieval_channels: string
@@ -278,7 +310,41 @@ export interface EvaluationResults {
   development: { retrieval: EvalRetrievalSuite; safety_filter: EvalSafetySuite }
   held_out: { retrieval: EvalRetrievalSuite; safety_filter: EvalSafetySuite }
   held_out_v2: { retrieval: EvalRetrievalSuite }
+  challenger_holdout_v2?: EvalChallengerSuite
 }
+export interface CustomerReceiptPayload {
+  session_reference: string
+  appliance_type: string
+  appliance_en: string
+  appliance_hi: string
+  unit_label?: string | null
+  issue: string
+  checks_done: string[]
+  parts: string[]
+  safety_status: {
+    power_off_confirmed: boolean
+    tester_checked: boolean
+    unlocked: boolean
+    blocked_attempts: number
+    disclaimer_en: string
+    disclaimer_hi: string
+  }
+  technician_name: string
+  issued_at: string
+}
+export interface CustomerReceiptResponse {
+  token: string
+  url?: string
+  created_at: string
+  expires_at: string
+  qr_url: string
+  receipt: CustomerReceiptPayload
+}
+export const receiptService = {
+  create: (sid: string) => api<CustomerReceiptResponse>(`/api/v1/sessions/${sid}/receipt`, { method: 'POST' }),
+  getPublic: (token: string) => api<CustomerReceiptResponse>(`/api/v1/receipts/${encodeURIComponent(token)}`),
+}
+
 export const systemService = {
   knowledge: () => api<KnowledgeStats>('/api/v1/knowledge/stats'),
   ai: () => api<AiStatus>('/api/v1/ai/status'),
