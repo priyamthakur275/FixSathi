@@ -1,4 +1,4 @@
-import asyncio, logging, sys, time
+import asyncio, logging, os, sys, time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,7 +56,9 @@ def create_app() -> FastAPI:
         except Exception:
             db_ok = False
         from .integrations.gemini.client import get_cached_models_available
-        body = {'status': 'ok' if db_ok else 'unhealthy', 'env': st.app_env, 'database': 'ok' if db_ok else 'unreachable',
+        body = {'status': 'ok' if db_ok else 'unhealthy', 'env': st.app_env,
+                'commit': (os.environ.get('RENDER_GIT_COMMIT') or '')[:7] or None,
+                'database': 'ok' if db_ok else 'unreachable',
                 'db_ms': int((time.perf_counter() - t0) * 1000), 'storage': st.storage_provider,
                 'ai': {'configured': st.ai_configured,
                        'models': {'agent': bool(st.gemini_agent_model), 'live': bool(st.gemini_live_model), 'embed': bool(st.gemini_embed_model), 'image': bool(st.nano_banana_model)},

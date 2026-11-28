@@ -1,6 +1,23 @@
 # Measured Gemini Model Usage
 
-All numbers below are from real API calls executed on **2026-11-27** using the same Gemini API key configured in Secret Manager for the deployed Cloud Run service (`https://fixsaathi-915991223959.us-east4.run.app`, project `geminisprints26blr-3820`, region `us-east4`). No mocks or estimated figures.
+## 0. Live Render Verification (2026-11-28)
+
+Measured directly against the permanent live service (`https://fixsaathi-vu9s.onrender.com`, Render Docker, Singapore, PostgreSQL `fixsaathi-db`) across **3 consecutive unmocked runs** of `backend/scripts/smoke_live.py`:
+
+| Capability | Endpoint | Model That Actually Answered | Measured Result (3/3 Runs) |
+|---|---|---|---|
+| Streamed chat (English, Devanagari Hindi, Hinglish) | `POST /api/v1/sessions/{id}/messages/stream` | `gemini-3.5-flash-lite` | **3/3 PASSED** (3–4 SSE deltas English locked; 5–7 deltas unlocked; `devanagari=True` 453–611 chars; Hinglish 689–796 chars) |
+| Nameplate & error display Vision | `POST /api/v1/sessions/{id}/read-nameplate` | `gemini-3.5-flash-lite` | **3/3 PASSED** (`brand=LG`, `model=LS-Q18YNZA`, `error_code=CH38`, `hits=5`) |
+| Structured diagnosis | `POST /api/v1/sessions/{id}/diagnose` | `gemini-3.5-flash-lite` | **3/3 PASSED** (`latency_ms` 2,458 / 2,466 / 3,699 ms, 3 faults) |
+| Spoken replies (TTS) | `GET /api/v1/sessions/{id}/messages/{msg_id}/speech` | `gemini-3.8-flash-tts` | **3/3 PASSED** (HTTP 200, `audio/wav`, 1.84 / 3.41 / 4.30 MB) |
+| Real-time voice & video (WebSocket) | `WS /api/v1/live/{id}` | `gemini-3.8-live` | **3/3 PASSED** (`session_ready`, `transcription`, `audio_chunk`) |
+| Knowledge embeddings | `/health` `models_available` | `gemini-embedding-2` | Configured (`VECTOR_SEARCH_MODE=auto`) and listed as available on Render `/health` |
+
+---
+
+## Historical Sprint Probes — Cloud Run (2026-11-27)
+
+All numbers below were measured on **2026-11-27** on the temporary hackathon sprint Cloud Run service (`https://fixsaathi-915991223959.us-east4.run.app`, project `geminisprints26blr-3820`, region `us-east4`). No mocks or estimated figures.
 
 ## 1. Direct Model Probes (3 runs each)
 

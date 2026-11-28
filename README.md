@@ -4,14 +4,14 @@
 
 **An AI repair copilot for appliance technicians in India: grounded diagnosis, a safety lock enforced by the server, and voice in English, Hindi and Kannada.**
 
-[**Sprint Cloud Run app**](https://fixsaathi-915991223959.us-east4.run.app) *(permanent Render + Neon URL will be added here once deployed & smoke-tested)* · [API docs](https://fixsaathi-915991223959.us-east4.run.app/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md) · [Model Usage](docs/MODEL_USAGE.md) · [Built During Hackathon](docs/BUILT_DURING_HACKATHON.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md)
+[**Live app**](https://fixsaathi-vu9s.onrender.com) · [API docs](https://fixsaathi-vu9s.onrender.com/docs) · [90s Demo Script](DEMO_SCRIPT.md) · [Model Usage](docs/MODEL_USAGE.md) · [Built During Hackathon](docs/BUILT_DURING_HACKATHON.md) · [Evaluation](docs/EVALUATION.md) · [Architecture](docs/ARCHITECTURE.md) · [Cloud Run Deploy](DEPLOY_CLOUDRUN.md)
 
 ![React](https://img.shields.io/badge/React_19-TypeScript-3178C6?logo=react&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-PostgreSQL-009688?logo=fastapi&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google_Gemini-RAG_+_Live_voice-4285F4?logo=google&logoColor=white)
 [![CI](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml/badge.svg)](https://github.com/priyamthakur275/FixSathi/actions/workflows/ci.yml)
 ![Tests](https://img.shields.io/badge/tests-496-2ea44f)
-![Deploy](https://img.shields.io/badge/deployed_on-Cloud_Run-4285F4?logo=googlecloud&logoColor=white)
+![Deploy](https://img.shields.io/badge/deployed_on-Render-46E3B7?logo=render&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 </div>
@@ -119,20 +119,20 @@ flowchart TD
 
 ## Built with Google (Proven Usage)
 
-Only models and Google Cloud services verified with real calls on `https://fixsaathi-915991223959.us-east4.run.app` are claimed below (Render + Neon Blueprint uses `gemini-3.5-flash-lite` as primary for `GEMINI_AGENT_MODEL` and `GEMINI_FAST_MODEL`). Full 3x probe measurements and error logs are recorded in [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md).
+Only models and services verified with real unmocked calls on `https://fixsaathi-vu9s.onrender.com` (3/3 consecutive `smoke_live.py` passes on 2026-11-28) are claimed below. During the hackathon sprint, FixSaathi was also temporarily deployed on **Google Cloud Run** and **Cloud SQL for PostgreSQL 16** (3x probe history in [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md)).
 
 | Role | Proven Model / Service | Verified Live Behavior |
 |---|---|---|
-| Streamed chat (English, Hindi, Hinglish) | `gemini-3.5-flash-lite` | Primary model in `render.yaml`; 3/3 direct probes OK (505–780 ms); verified on Cloud Run SSE stream with server-side safety lock |
-| Nameplate & error display Vision | `gemini-3.5-flash-lite` | Extracted `LG LS-Q18YNZA` + `CH38`, matched 5 KB records on Cloud Run |
-| Structured diagnosis | `gemini-3.5-flash-lite` | HTTP 201 on Cloud Run; UI "How this answer was made" panel shows the exact `model_identifier` and latency |
-| Real-time voice & video relay | `gemini-3.8-live` (`v1beta` WebSocket) | Verified live on Cloud Run `WS /api/v1/live/{id}` (`session_ready`, `transcription`, `audio_chunk` at 24 kHz PCM) |
-| Spoken replies (TTS) | `gemini-3.8-flash-tts` (`v1beta`, `Charon`) | Verified live on Cloud Run `GET /speech` (HTTP 200, `audio/wav`); falls back to browser device voice if a key lacks TTS access |
+| Streamed chat (English, Devanagari Hindi, Hinglish) | `gemini-3.5-flash-lite` | Verified in 3/3 consecutive Render SSE smoke runs (`devanagari=True`, server-side safety lock enforced) |
+| Nameplate & error display Vision | `gemini-3.5-flash-lite` | Verified in 3/3 Render runs (`LG LS-Q18YNZA` + `CH38`, matched 5 KB records) |
+| Structured diagnosis | `gemini-3.5-flash-lite` | Verified in 3/3 Render runs (`2,458–3,699 ms`, 3 faults); provenance panel displays `model_identifier` and latency |
+| Real-time voice & video relay | `gemini-3.8-live` (`v1beta` WebSocket) | Verified live in 3/3 Render runs on `WS /api/v1/live/{id}` (`session_ready`, `transcription`, `audio_chunk`) |
+| Spoken replies (TTS) | `gemini-3.8-flash-tts` (`v1beta`, `Charon`) | Verified live in 3/3 Render runs on `GET /speech` (HTTP 200, `audio/wav`, `1.84–4.30 MB`); device voice fallback |
+| Knowledge embeddings | `gemini-embedding-2` | Reported available on Render `/health`; configured for hybrid retrieval (`VECTOR_SEARCH_MODE=auto`) alongside PostgreSQL FTS |
 | Server-side safety guardrail | `StreamScreener` + `power_rules.py` | Deterministic server check on every streamed sentence and step before anything reaches the client |
-| Sprint hosting & database | **Google Cloud Run**, **Cloud SQL for PostgreSQL 16**, **Secret Manager**, **Cloud Build / Artifact Registry** | Single-container deploy (`us-east4`) connected via Cloud SQL Unix socket; zero secrets in repo or image |
-| Prototyping | **Antigravity** | Used to prototype the Cloud Run deployment, reliability hardening, and UI polish ([hackathon timeline](docs/BUILT_DURING_HACKATHON.md)) |
+| Prototyping | **Antigravity** | Used to prototype the live Gemini integration, Cloud Run & Render deployments, reliability hardening, and UI polish |
 
-**Not claimed (measured honestly in [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md)):** `gemini-4-neon` and `gemini-4-carbon` returned `429 RESOURCE_EXHAUSTED` (0/3) on the sprint API key; `gemini-4-hydrogen` answered 0/3 probes under 8 s (timeouts / `503 UNAVAILABLE`); `gemini-decision-1` returned `404 NOT_FOUND` on `v1beta`. Therefore the permanent [`render.yaml`](render.yaml) sets both `GEMINI_AGENT_MODEL` and `GEMINI_FAST_MODEL` to `gemini-3.5-flash-lite`.
+**Not claimed:** `gemini-4-neon` and `gemini-4-carbon` returned `429 RESOURCE_EXHAUSTED` (0/3) on the sprint API key, `gemini-4-hydrogen` answered 0/3 probes under 8 s, `gemini-decision-1` returned `404 NOT_FOUND` on `v1beta`, and `gemini-3.1-flash-image` was not probed live.
 
 Scripted demo scenarios are no longer placed in the primary workspace navigation and live solely behind the clearly labelled **Offline backup** footer link (`/demo`).
 
@@ -143,18 +143,18 @@ Summarised directly from `git log` on branch `antigravity-v2` (full commit-by-co
 - **Before Nov 27:**
   - **Pre-hackathon baseline (`7bc3aed`, imported 2026-11-26):** `FixSathi-main` — the core FastAPI + React + PostgreSQL app built earlier for Google Startup Buildathon India 2026 (auth, sessions, 377-record repair KB, hybrid retrieval, server-side power-isolation safety lock, diagnosis/steps/reports, Gemini Live relay, TTS, and 350+ tests).
   - **Nov 26 UI & design foundation (`0723148`, `98cbf4e`, `5473d4f`, `b647b90`):** Unified token system, high-contrast Sunlight mode, Hindi-first greeting, strict power-state colors, mobile-first 5-stage workspace, diagnosis "Why" panel, SVG part cards, and manager funnel.
-- **During the hackathon (Nov 25–27, 2026 + permanent submission prep):**
+- **During the hackathon (Nov 25–28, 2026):**
   - **Live Vision, streaming, evaluation & Hindi polish (`1ce695b`, `4ae2765`, `945f6b4`, `cb11d11`, `c742595`, `05b9d36`, `2d71534`, `3fc7d8b`):** Gemini Vision nameplate & error-display reader with technician verification, server-screened SSE chat streaming (`StreamScreener`), public `/evaluation` page, expected-readings reference cards, spoken Hindi technician vocabulary, and unmocked `smoke_live.py`.
-  - **Cloud Run + Cloud SQL deployment & stage reliability (`67a9254`, `ce9083d`, `32c78a9`, `2c1d96a`, `6548c53`, `4501cd4`, `8d67bee`):** Single-container `Dockerfile`, Cloud SQL PostgreSQL 16 via Unix socket, Secret Manager wiring, per-op timeouts, 5-minute circuit breaker, SSE `working` heartbeats, "How this answer was made" provenance panel, 503 jittered retries, and 429 skip.
-  - **Permanent Render + Neon Blueprint (`render.yaml`):** Configured single-service Render deployment backed by external Neon PostgreSQL (`?sslmode=require`) and `gemini-3.5-flash-lite`.
+  - **Cloud Run + Cloud SQL sprint deployment & stage reliability (`67a9254`, `ce9083d`, `32c78a9`, `2c1d96a`, `6548c53`, `4501cd4`, `8d67bee`):** Single-container `Dockerfile`, temporary Cloud Run + Cloud SQL deployment, per-op timeouts, 5-minute circuit breaker, SSE `working` heartbeats, "How this answer was made" provenance panel, 503 jittered retries, and 429 skip.
+  - **Permanent Render deployment & submission polish (`a565765` → HEAD):** Configured `render.yaml` for `gemini-3.5-flash-lite` and external Postgres, verified 3x end-to-end smoke passes on `https://fixsaathi-vu9s.onrender.com`, aligned `README.md`, `DEMO_SCRIPT.md`, and GitHub Actions workflows.
 
 ## Engineering
 
 - **Backend:** FastAPI, SQLAlchemy 2, Alembic, PostgreSQL 16, `google-genai`. JWT access and refresh tokens, organisation-scoped access for managers, rate-limited sign-in, a per-account AI quota so one public sign-up cannot use up the Gemini key, uploads checked by content and re-encoded without location data.
 - **Frontend:** React 19, TypeScript, Vite, Tailwind 4, Framer Motion, Recharts. Mobile-first, works on a phone browser. Archivo at two widths (expanded for headings and figures); red and green are kept for power state only, and the safety panel draws the breaker the technician has switched off. A command palette (Ctrl K / Cmd K) reaches every page and past repair, and the team dashboard refreshes itself every minute. Checked with axe-core: no WCAG 2 AA violations on the main screens in either theme (the wordmark logo excepted).
-- **Tests:** 496 automated tests: 405 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 91 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the live Cloud Run smoke script (`backend/scripts/smoke_live.py`).
+- **Tests:** 496 automated tests: 405 backend tests run the real Alembic migrations on PostgreSQL with Gemini replaced by a deterministic fake, and 91 frontend tests (Vitest, Testing Library). Plus the offline evaluation and the live smoke script (`backend/scripts/smoke_live.py`).
 - **Data pipeline:** `scripts/process_datasets.py` normalises the sources into one schema with licence and verification status per record; `scripts/dataset_quality_report.py` reports coverage. See [docs/DATASET_ARCHITECTURE.md](docs/DATASET_ARCHITECTURE.md).
-- **Deployment:** one single-origin container (`Dockerfile`) deployed to **Google Cloud Run** (`https://fixsaathi-915991223959.us-east4.run.app`, `us-east4`) connected via Unix socket to **Cloud SQL for PostgreSQL 16**, built with Cloud Build / Artifact Registry, with `GEMINI_API_KEY`, `SECRET_KEY`, and `DATABASE_URL` stored in **Secret Manager** ([`DEPLOY_CLOUDRUN.md`](DEPLOY_CLOUDRUN.md)). Also includes [`render.yaml`](render.yaml) for Render deploys.
+- **Deployment:** one single-origin Docker service ([`Dockerfile`](Dockerfile), [`render.yaml`](render.yaml)) deployed live on **Render** (`https://fixsaathi-vu9s.onrender.com`, Singapore, auto-deploying from `antigravity-v2`) with Render free PostgreSQL (`fixsaathi-db`). Also deployed temporarily on **Google Cloud Run** and **Cloud SQL for PostgreSQL 16** during the hackathon sprint ([`DEPLOY_CLOUDRUN.md`](DEPLOY_CLOUDRUN.md)).
 
 ```
 frontend/   React app
@@ -203,13 +203,14 @@ cd ../frontend && npm test && npm run build && npm run lint
 - **Small pilot only.** Seven technicians tried it once on a fault of their choice and were reached through personal contacts. It has not yet been used day to day on paid jobs.
 - **The safety statements are the technician's word.** FixSaathi cannot measure voltage or verify isolation, and the app and reports say so.
 - **The knowledge base is small** (377 records, two-thirds of them washing-machine error codes). Answers outside it are marked as not grounded.
-- **Model availability & language script quirks.** On the sprint API key, `gemini-4-neon` and `gemini-4-carbon` returned `429 RESOURCE_EXHAUSTED`, `gemini-4-hydrogen` timed out or returned `503 UNAVAILABLE`, and `gemini-decision-1` returned `404 NOT_FOUND` on `v1beta`. Furthermore, Devanagari Hindi prompts occasionally receive a Roman Hinglish reply from `gemini-3.5-flash-lite` (observed in 1 of 3 back-to-back Cloud Run smoke runs).
-- **Free-tier cold starts.** Render's free web plan sleeps after 15 idle minutes, and Neon's free PostgreSQL auto-suspends after inactivity; the first request after an idle period can take 30–50 seconds.
+- **Free-plan cold start.** Render's free web plan sleeps after 15 idle minutes; waking it takes up to ~50 seconds (`.github/workflows/keepalive.yml` pings `/health` every 4 minutes to keep it awake).
+- **Database expiry date.** The current live database (`fixsaathi-db`) runs on Render's free PostgreSQL tier, which expires about 30 days after creation (around **2026-12-28** unless upgraded or pointed to an external PostgreSQL host such as Neon via `DATABASE_URL`).
+- **Model availability & language script quirks.** `gemini-4-neon`, `gemini-4-carbon`, `gemini-4-hydrogen`, and `gemini-decision-1` are not relied on (see [docs/MODEL_USAGE.md](docs/MODEL_USAGE.md)), and Devanagari Hindi prompts can occasionally receive a Roman Hinglish reply depending on model output.
 - **No live-testing mode, by design.** Some checks (running current with a clamp meter, PCB voltages) need the supply on. FixSaathi does not guide work on live circuits; it tells the technician what the reading should be checked against and leaves live work to their training and judgement.
 
 ## Team
 
-Built by **Prerana P Jois** and **Priyam Thakur** (Team Tensor Trailblazers, BMS College of Engineering, Bengaluru) for the Google Startup Buildathon India 2026, where the project reached the end of Round 2. The Google Cloud Run deployment, live Gemini 4 / 3.5 integration, and UI polish were prototyped with **Antigravity**.
+Built by **Prerana P Jois** and **Priyam Thakur** (Team Tensor Trailblazers, BMS College of Engineering, Bengaluru) for the Google Startup Buildathon India 2026, where the project reached the end of Round 2. The live Gemini integration, temporary Google Cloud Run sprint deployment, Render deployment, and UI polish were prototyped with **Antigravity**.
 
 ## Data and licence
 
